@@ -1,0 +1,106 @@
+'use client';
+import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
+import api from '../../../../lib/api';
+
+const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+
+const PLAN_BADGE: Record<string, string> = {
+  trial: 'badge-gray', founding: 'badge-gold', starter: 'badge-blue', growth: 'badge-green', pro: 'badge-purple',
+};
+
+interface Tenant { _id: string; businessName: string; email: string; phone: string; planId: string; isActive: boolean; ordersThisMonth: number; createdAt: string; category: string; }
+
+export default function TenantsPage() {
+  const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [plan, setPlan] = useState('');
+  const LIMIT = 30;
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await api.get('/admin/tenants', { params: { page, limit: LIMIT, search: search || undefined, plan: plan || undefined } });
+      setTenants(res.data.tenants);
+      setTotal(res.data.total);
+    } catch { /**/ }
+    setLoading(false);
+  }, [page, search, plan]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const pages = Math.ceil(total / LIMIT);
+
+  return (
+    <div className="animate-fade-in">
+      <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <h1 className="page-title">Tenants</h1>
+          <p className="page-sub">{total} total tenants</p>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+        <input
+          className="admin-input"
+          style={{ maxWidth: 280 }}
+          placeholder="Search by name, email, phone…"
+          value={search}
+          onChange={e => { setSearch(e.target.value); setPage(1); }}
+        />
+        <select className="admin-input" style={{ maxWidth: 140 }} value={plan} onChange={e => { setPlan(e.target.value); setPage(1); }}>
+          <option value="">All Plans</option>
+          {['trial','founding','starter','growth','pro'].map(p => <option key={p} value={p}>{p}</option>)}
+        </select>
+        <button className="btn btn-ghost btn-sm" onClick={load}>Refresh</button>
+      </div>
+
+      <div className="admin-card">
+        {loading ? (
+          <div style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+        ) : (
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Business</th><th>Email</th><th>Phone</th><th>Plan</th>
+                <th>Orders/mo</th><th>Status</th><th>Joined</th><th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {tenants.map(t => (
+                <tr key={t._id}>
+                  <td><span style={{ fontWeight: 500, color: 'var(--ink)' }}>{t.businessName}</span></td>
+                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{t.email}</td>
+                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{t.phone}</td>
+                  <td><span className={`badge ${PLAN_BADGE[t.planId] || 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>{t.planId}</span></td>
+                  <td style={{ fontFamily: 'var(--font-mono)' }}>{t.ordersThisMonth}</td>
+                  <td><span className={`badge ${t.isActive ? 'badge-green' : 'badge-red'}`}>{t.isActive ? 'Active' : 'Inactive'}</span></td>
+                  <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{fmtDate(t.createdAt)}</td>
+                  <td>
+                    <Link href={`/superadmin/tenants/${t._id}`} className="btn btn-ghost btn-sm">View →</Link>
+                  </td>
+                </tr>
+              ))}
+              {tenants.length === 0 && (
+                <tr><td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>No tenants found</td></tr>
+              )}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {/* Pagination */}
+      {pages > 1 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center', marginTop: 16 }}>
+          <button className="btn btn-ghost btn-sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>← Prev</button>
+          <span style={{ fontSize: 13, color: 'var(--ink-3)' }}>Page {page} of {pages}</span>
+          <button className="btn btn-ghost btn-sm" disabled={page >= pages} onClick={() => setPage(p => p + 1)}>Next →</button>
+        </div>
+      )}
+    </div>
+  );
+}
