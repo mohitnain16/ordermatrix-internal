@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(node -e \"const x = require\\('./node_modules/eslint-config-next/core-web-vitals.js'\\); console.log\\(typeof x, Array.isArray\\(x\\), Object.keys\\(x\\).slice\\(0,5\\)\\)\")"
+    ]
+  }
+}
