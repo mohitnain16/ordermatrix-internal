@@ -24,7 +24,8 @@ export default function LoginPage() {
       const res = await api.post('/admin/auth/login', { email, password });
       setAuth(res.data.token, res.data.admin);
       // Also set cookie for middleware
-      document.cookie = `om_admin_token=${res.data.token}; path=/; max-age=28800; SameSite=Strict`;
+      const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+      document.cookie = `om_admin_token=${res.data.token}; path=/; max-age=28800; SameSite=Strict${secure}`;
       router.replace('/superadmin');
     } catch (err: any) {
       setError(err?.response?.data?.error || 'Login failed. Check your credentials.');
