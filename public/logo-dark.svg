@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 220" width="920" height="220" role="img" aria-label="Ordermatrix">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&amp;family=DM+Sans:wght@400;500;600&amp;display=swap');
+    </style>
+  </defs>
+  
+  <circle cx="110" cy="110" r="92.000" fill="none" stroke="#F4F1EB" stroke-width="11.000"/>
+  <g fill="#F4F1EB">
+    <circle cx="72.000" cy="72.000" r="7.000"/>
+    <circle cx="110.000" cy="72.000" r="7.000"/>
+    <circle cx="72.000" cy="110.000" r="7.000"/>
+    <circle cx="110.000" cy="110.000" r="7.000"/>
+    <circle cx="148.000" cy="110.000" r="7.000"/>
+    <circle cx="72.000" cy="148.000" r="7.000"/>
+    <circle cx="110.000" cy="148.000" r="7.000"/>
+    <circle cx="148.000" cy="148.000" r="7.000"/>
+  </g>
+  <circle cx="148.000" cy="72.000" r="11.000" fill="#EC6240"/>
+  <text x="240" y="138" font-family="Bricolage Grotesque, sans-serif" font-size="108" font-weight="600" letter-spacing="-3.5" fill="#F4F1EB">ordermatrix</text>
+</svg>

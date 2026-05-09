@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240" role="img" aria-label="Ordermatrix">
+  
+  <circle cx="120.0" cy="120.0" r="88.800" fill="none" stroke="#F4F1EB" stroke-width="10.617"/>
+  <g fill="#F4F1EB">
+    <circle cx="83.322" cy="83.322" r="6.757"/>
+    <circle cx="120.000" cy="83.322" r="6.757"/>
+    <circle cx="83.322" cy="120.000" r="6.757"/>
+    <circle cx="120.000" cy="120.000" r="6.757"/>
+    <circle cx="156.678" cy="120.000" r="6.757"/>
+    <circle cx="83.322" cy="156.678" r="6.757"/>
+    <circle cx="120.000" cy="156.678" r="6.757"/>
+    <circle cx="156.678" cy="156.678" r="6.757"/>
+  </g>
+  <circle cx="156.678" cy="83.322" r="10.617" fill="#EC6240"/>
+</svg>

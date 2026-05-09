@@ -38,13 +38,9 @@ export default function LoginPage() {
       <div style={{ width: '100%', maxWidth: 400 }}>
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 36 }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 38, height: 38, borderRadius: 10, background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 900, color: '#fff' }}>O</div>
-            <div>
-              <div style={{ fontSize: 18, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em' }}>Ordermatrix</div>
-              <div style={{ fontSize: 11, color: 'var(--sidebar-text)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Admin Console</div>
-            </div>
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-dark.svg" alt="Ordermatrix" style={{ height: 36, width: 'auto', display: 'inline-block' }} />
+          <div style={{ fontSize: 11, color: 'var(--sidebar-text)', letterSpacing: '0.12em', textTransform: 'uppercase', marginTop: 8 }}>Admin Console</div>
         </div>
 
         <div style={{ background: '#181c28', border: '1px solid var(--sidebar-border)', borderRadius: 14, padding: 32 }}>

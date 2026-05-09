@@ -2,7 +2,21 @@
   "permissions": {
     "allow": [
       "Bash(npm run *)",
-      "Bash(node -e \"const x = require\\('./node_modules/eslint-config-next/core-web-vitals.js'\\); console.log\\(typeof x, Array.isArray\\(x\\), Object.keys\\(x\\).slice\\(0,5\\)\\)\")"
+      "Bash(node -e \"const x = require\\('./node_modules/eslint-config-next/core-web-vitals.js'\\); console.log\\(typeof x, Array.isArray\\(x\\), Object.keys\\(x\\).slice\\(0,5\\)\\)\")",
+      "Bash(node -e \"const p = require\\('./package.json'\\); console.log\\('next:', p.dependencies.next\\)\")",
+      "Bash(npm show *)",
+      "Bash(node -e \"const v=JSON.parse\\(require\\('fs'\\).readFileSync\\('/dev/stdin','utf8'\\)\\); console.log\\(v.filter\\(x=>x.startsWith\\('15.'\\)\\).slice\\(-5\\).join\\('\\\\n'\\)\\)\")",
+      "Bash(node -e \"const v=JSON.parse\\(require\\('fs'\\).readFileSync\\('/dev/stdin','utf8'\\)\\); const stable=v.filter\\(x=>x.startsWith\\('15.'\\) && !x.includes\\('canary'\\) && !x.includes\\('beta'\\) && !x.includes\\('alpha'\\)\\); console.log\\(stable.slice\\(-5\\).join\\('\\\\n'\\)\\)\")",
+      "Bash(npm audit *)",
+      "Bash(node -e \"const a=JSON.parse\\(require\\('fs'\\).readFileSync\\('/dev/stdin','utf8'\\)\\); const vulns=a.vulnerabilities||{}; Object.entries\\(vulns\\).forEach\\(\\([k,v]\\)=>{ if\\(v.severity==='high'||v.severity==='critical'\\) console.log\\(v.severity.toUpperCase\\(\\), k, v.range, '-', v.url||''\\) }\\)\")",
+      "Bash(npm install *)",
+      "Bash(find /Users/mohitnain/Documents/ORDERMATRIX -maxdepth 4 -type d -name \"*brand*\" -o -type d -name \"*logo*\" -o -type d -name \"*assets*\" 2>/dev/null | grep -v node_modules | grep -v .git)",
+      "Read(//Users/mohitnain/Documents/ORDERMATRIX/**)",
+      "Bash(cp /Users/mohitnain/Documents/ORDERMATRIX/ordermatrix-brand/logos/favicon/favicon.ico /Users/mohitnain/Documents/ORDERMATRIX/ordermatrix-internal/public/favicon.ico)",
+      "Bash(cp /Users/mohitnain/Documents/ORDERMATRIX/ordermatrix-brand/logos/favicon/favicon.ico /Users/mohitnain/Documents/ORDERMATRIX/ordermatrix-internal/app/favicon.ico)",
+      "Bash(cp /Users/mohitnain/Documents/ORDERMATRIX/ordermatrix-brand/logos/favicon/favicon-32.png /Users/mohitnain/Documents/ORDERMATRIX/ordermatrix-internal/public/favicon-32.png)",
+      "Bash(cp /Users/mohitnain/Documents/ORDERMATRIX/ordermatrix-brand/logos/favicon/favicon-16.png /Users/mohitnain/Documents/ORDERMATRIX/ordermatrix-internal/public/favicon-16.png)",
+      "Bash(cp /Users/mohitnain/Documents/ORDERMATRIX/ordermatrix-brand/logos/favicon/apple-touch-icon-180.png /Users/mohitnain/Documents/ORDERMATRIX/ordermatrix-internal/public/apple-touch-icon.png)"
     ]
   }
 }
