@@ -82,4 +82,8 @@ export function middleware(req: NextRequest): NextResponse {
   return response;
 }
 
-export const config = { matcher: ['/((?!_next|favicon.ico|public).*)'] };
+export const config = {
+  matcher: [
+    '/((?!_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?|ttf|eot)).*)',
+  ],
+};
