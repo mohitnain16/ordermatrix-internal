@@ -5,7 +5,7 @@ import { getAdmin, clearAuth, hasRole, ROLE_LABEL } from '../../lib/auth';
 import {
   LayoutDashboard, Building2, CreditCard, Users, FileText,
   TrendingUp, Headphones, LogOut, ChevronRight,
-  Activity, AlertTriangle, Megaphone,
+  Activity, AlertTriangle, Megaphone, Mail,
 } from 'lucide-react';
 
 const NAV = [
@@ -18,6 +18,7 @@ const NAV = [
       { href: '/superadmin/subscriptions',  label: 'Subscriptions',  icon: CreditCard },
       { href: '/superadmin/users',          label: 'All Users',      icon: Users },
       { href: '/superadmin/audit-log',      label: 'Audit Log',      icon: FileText },
+      { href: '/superadmin/enquiries',      label: 'Enquiries',      icon: Mail },
     ],
   },
   {

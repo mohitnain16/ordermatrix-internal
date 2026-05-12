@@ -25,7 +25,7 @@ function StatCard({ label, value, sub, color = '#e8593a' }: { label: string; val
 }
 
 const PLAN_COLOR: Record<string, string> = {
-  trial: '#9ca3af', founding: '#b45309', starter: '#2563eb', growth: '#16a34a', pro: '#7c3aed',
+  trial: '#9ca3af', starter: '#6b7280', growth: '#16a34a', scale: '#7c3aed', pro: '#b45309',
 };
 
 export default function PulsePage() {

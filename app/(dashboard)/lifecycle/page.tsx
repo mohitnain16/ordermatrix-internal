@@ -20,7 +20,7 @@ type Tenant = {
 };
 
 const PLAN_BADGE: Record<string, string> = {
-  trial: 'badge-gray', founding: 'badge-gold', starter: 'badge-blue', growth: 'badge-green', pro: 'badge-purple',
+  trial: 'badge-gray', starter: 'badge-gray', growth: 'badge-green', scale: 'badge-purple', pro: 'badge-gold',
 };
 
 function healthColor(score: number) {

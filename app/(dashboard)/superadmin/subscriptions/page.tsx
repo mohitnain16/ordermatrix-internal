@@ -50,7 +50,7 @@ export default function SubscriptionsPage() {
         </select>
         <select className="admin-input" style={{ maxWidth: 140 }} value={plan} onChange={e => { setPlan(e.target.value); setPage(1); }}>
           <option value="">All Plans</option>
-          {['founding','starter','growth','pro'].map(p => <option key={p} value={p}>{p}</option>)}
+          {['starter','growth','scale','pro'].map(p => <option key={p} value={p}>{p}</option>)}
         </select>
       </div>
 

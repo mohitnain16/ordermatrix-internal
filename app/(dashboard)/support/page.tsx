@@ -6,7 +6,7 @@ import api from '../../../lib/api';
 const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '—';
 
 const PLAN_BADGE: Record<string, string> = {
-  trial: 'badge-gray', founding: 'badge-gold', starter: 'badge-blue', growth: 'badge-green', pro: 'badge-purple',
+  trial: 'badge-gray', starter: 'badge-gray', growth: 'badge-green', scale: 'badge-purple', pro: 'badge-gold',
 };
 
 export default function SupportPage() {

@@ -18,7 +18,7 @@ type Announcement = {
 const SEVERITY_BADGE: Record<string, string> = {
   info: 'badge-blue', warning: 'badge-gold', success: 'badge-green', error: 'badge-red',
 };
-const PLANS = ['all', 'trial', 'founding', 'starter', 'growth', 'pro'];
+const PLANS = ['all', 'trial', 'starter', 'growth', 'scale', 'pro'];
 
 const emptyAnn = { title: '', message: '', type: 'banner', severity: 'info', targetPlans: [] as string[], expiresAt: '' };
 
