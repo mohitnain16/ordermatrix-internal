@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import api from '../../../../../lib/api';
 import { getAdmin, hasRole } from '../../../../../lib/auth';
+import { Sk, SkStatCard, SkDetailCard } from '../../../../../components/ui/Skeleton';
 
 const fmt = (n: number) => `₹${new Intl.NumberFormat('en-IN').format(n || 0)}`;
 const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
@@ -74,19 +75,44 @@ export default function TenantDetailPage() {
     setSaving(false);
   }
 
-  if (loading) return <div style={{ padding: 60, textAlign: 'center', color: 'var(--ink-4)' }}>Loading tenant…</div>;
-  if (!data) return <div style={{ padding: 40, color: 'var(--red)' }}>Tenant not found</div>;
+  if (loading) return (
+    <div className="animate-fade-in">
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
+        <div>
+          <Sk w={80} h={11} mb={8} />
+          <Sk w={220} h={24} mb={6} />
+          <Sk w={200} h={13} />
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <Sk w={90} h={32} r={7} /><Sk w={90} h={32} r={7} /><Sk w={100} h={32} r={7} />
+        </div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
+        {[0,1,2,3].map(i => <SkStatCard key={i} />)}
+      </div>
+      <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--line)', marginBottom: 20 }}>
+        {[0,1,2].map(i => <div key={i} style={{ padding: '9px 16px' }}><Sk w={70} h={13} /></div>)}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <SkDetailCard rows={6} />
+        <SkDetailCard rows={3} />
+      </div>
+    </div>
+  );
+  if (!data) return (
+    <div className="empty-state" style={{ padding: 80 }}>
+      <div className="empty-state-icon">🏢</div>
+      <div className="empty-state-title">Tenant not found</div>
+      <button className="btn btn-ghost btn-sm" style={{ marginTop: 12 }} onClick={() => router.back()}>← Go back</button>
+    </div>
+  );
 
   const { tenant, subscription: sub, userCount, orderCount, notes } = data;
   const canEdit = hasRole(admin, 'superadmin', 'ops_admin');
 
   return (
     <div className="animate-fade-in">
-      {toastMsg && (
-        <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 1000, background: 'var(--ink)', color: '#fff', padding: '12px 20px', borderRadius: 10, fontSize: 13, boxShadow: 'var(--shadow-lg)' }}>
-          {toastMsg}
-        </div>
-      )}
+      {toastMsg && <div className="toast toast-default">{toastMsg}</div>}
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
@@ -207,7 +233,7 @@ export default function TenantDetailPage() {
                 style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--line)', borderRadius: 8, fontSize: 13, color: 'var(--ink)', background: 'var(--surface)', outline: 'none', resize: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
               />
               <button className="btn btn-primary btn-sm" style={{ marginTop: 8 }} onClick={addNote} disabled={saving}>
-                {saving ? 'Saving…' : 'Add Note'}
+                {saving ? <><span className="spinner" />Saving…</> : 'Add Note'}
               </button>
             </div>
           )}

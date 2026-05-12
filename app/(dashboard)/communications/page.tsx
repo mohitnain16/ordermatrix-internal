@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import api from '../../../lib/api';
+import { SkRows } from '../../../components/ui/Skeleton';
 
 type Announcement = {
   _id: string;
@@ -29,6 +30,7 @@ export default function CommunicationsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showAnnForm, setShowAnnForm] = useState(false);
   const [annLoading, setAnnLoading] = useState(false);
+  const [annListLoading, setAnnListLoading] = useState(true);
 
   // Broadcast state
   const [broadcast, setBroadcast] = useState({ channel: 'email', message: '', subject: '', filterPlan: 'all', filterTrial: '' });
@@ -39,10 +41,12 @@ export default function CommunicationsPage() {
   useEffect(() => { loadAnnouncements(); }, []);
 
   async function loadAnnouncements() {
+    setAnnListLoading(true);
     try {
       const res = await api.get('/admin/communications/announcements');
       setAnnouncements(res.data.announcements);
     } catch { /**/ }
+    setAnnListLoading(false);
   }
 
   async function previewBroadcast() {
@@ -172,7 +176,7 @@ export default function CommunicationsPage() {
             <div style={{ display: 'flex', gap: 10 }}>
               <button className="btn btn-ghost btn-sm" onClick={previewBroadcast}>Preview Recipients</button>
               <button className="btn btn-primary" onClick={sendBroadcast} disabled={bcLoading || !broadcast.message}>
-                {bcLoading ? 'Sending…' : 'Send Broadcast'}
+                {bcLoading ? <><span className="spinner" />Sending…</> : 'Send Broadcast'}
               </button>
             </div>
 
@@ -272,7 +276,7 @@ export default function CommunicationsPage() {
               <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
                 <button className="btn btn-ghost btn-sm" onClick={() => { setShowAnnForm(false); setEditingId(null); }}>Cancel</button>
                 <button className="btn btn-primary btn-sm" onClick={saveAnnouncement} disabled={annLoading || !annForm.title || !annForm.message}>
-                  {annLoading ? 'Saving…' : editingId ? 'Update' : 'Publish'}
+                  {annLoading ? <><span className="spinner" />{editingId ? 'Saving…' : 'Publishing…'}</> : editingId ? 'Update' : 'Publish'}
                 </button>
               </div>
             </div>
@@ -284,7 +288,7 @@ export default function CommunicationsPage() {
                 <tr><th>Title</th><th>Type</th><th>Severity</th><th>Target</th><th>Expires</th><th>Status</th><th>Actions</th></tr>
               </thead>
               <tbody>
-                {announcements.map(a => (
+                {annListLoading ? <SkRows rows={5} cols={7} /> : announcements.map(a => (
                   <tr key={a._id}>
                     <td>
                       <div style={{ fontWeight: 500 }}>{a.title}</div>
@@ -308,8 +312,14 @@ export default function CommunicationsPage() {
                     </td>
                   </tr>
                 ))}
-                {announcements.length === 0 && (
-                  <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>No announcements yet</td></tr>
+                {!annListLoading && announcements.length === 0 && (
+                  <tr><td colSpan={7}>
+                    <div className="empty-state">
+                      <div className="empty-state-icon">📢</div>
+                      <div className="empty-state-title">No announcements yet</div>
+                      <div className="empty-state-sub">Create one to broadcast to tenants</div>
+                    </div>
+                  </td></tr>
                 )}
               </tbody>
             </table>

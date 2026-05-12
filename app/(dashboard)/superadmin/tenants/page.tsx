@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import api from '../../../../lib/api';
+import { SkRows } from '../../../../components/ui/Skeleton';
 
 const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
@@ -60,37 +61,41 @@ export default function TenantsPage() {
       </div>
 
       <div className="admin-card">
-        {loading ? (
-          <div style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
-        ) : (
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Business</th><th>Email</th><th>Phone</th><th>Plan</th>
-                <th>Orders/mo</th><th>Status</th><th>Joined</th><th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {tenants.map(t => (
-                <tr key={t._id}>
-                  <td><span style={{ fontWeight: 500, color: 'var(--ink)' }}>{t.businessName}</span></td>
-                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{t.email}</td>
-                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{t.phone}</td>
-                  <td><span className={`badge ${PLAN_BADGE[t.planId] || 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>{t.planId}</span></td>
-                  <td style={{ fontFamily: 'var(--font-mono)' }}>{t.ordersThisMonth}</td>
-                  <td><span className={`badge ${t.isActive ? 'badge-green' : 'badge-red'}`}>{t.isActive ? 'Active' : 'Inactive'}</span></td>
-                  <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{fmtDate(t.createdAt)}</td>
-                  <td>
-                    <Link href={`/superadmin/tenants/${t._id}`} className="btn btn-ghost btn-sm">View →</Link>
-                  </td>
-                </tr>
-              ))}
-              {tenants.length === 0 && (
-                <tr><td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>No tenants found</td></tr>
-              )}
-            </tbody>
-          </table>
-        )}
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>Business</th><th>Email</th><th>Phone</th><th>Plan</th>
+              <th>Orders/mo</th><th>Status</th><th>Joined</th><th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? <SkRows rows={10} cols={8} /> : (
+              <>
+                {tenants.map(t => (
+                  <tr key={t._id}>
+                    <td><span style={{ fontWeight: 500, color: 'var(--ink)' }}>{t.businessName}</span></td>
+                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{t.email}</td>
+                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{t.phone}</td>
+                    <td><span className={`badge ${PLAN_BADGE[t.planId] || 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>{t.planId}</span></td>
+                    <td style={{ fontFamily: 'var(--font-mono)' }}>{t.ordersThisMonth}</td>
+                    <td><span className={`badge ${t.isActive ? 'badge-green' : 'badge-red'}`}>{t.isActive ? 'Active' : 'Inactive'}</span></td>
+                    <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{fmtDate(t.createdAt)}</td>
+                    <td><Link href={`/superadmin/tenants/${t._id}`} className="btn btn-ghost btn-sm">View →</Link></td>
+                  </tr>
+                ))}
+                {tenants.length === 0 && (
+                  <tr><td colSpan={8}>
+                    <div className="empty-state">
+                      <div className="empty-state-icon">🏢</div>
+                      <div className="empty-state-title">No tenants found</div>
+                      <div className="empty-state-sub">Try adjusting your search or filter</div>
+                    </div>
+                  </td></tr>
+                )}
+              </>
+            )}
+          </tbody>
+        </table>
       </div>
 
       {/* Pagination */}

@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import api from '../../../../lib/api';
+import { SkRows } from '../../../../components/ui/Skeleton';
 
 const fmtTs = (d: string) => d ? new Date(d).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
 
@@ -36,34 +37,41 @@ export default function AuditLogPage() {
       </div>
 
       <div className="admin-card">
-        {loading ? (
-          <div style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
-        ) : (
-          <table className="admin-table">
-            <thead><tr><th>Admin</th><th>Action</th><th>Status</th><th>IP</th><th>Time</th></tr></thead>
-            <tbody>
-              {logs.map(l => (
-                <tr key={l._id}>
-                  <td>
-                    <div style={{ fontWeight: 500, color: 'var(--ink)', fontSize: 12 }}>{l.actor?.name || '—'}</div>
-                    <div style={{ fontSize: 11, color: 'var(--ink-4)' }}>{l.actorEmail}</div>
-                  </td>
-                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-2)', maxWidth: 320, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {l.action}
-                  </td>
-                  <td>
-                    <span className={`badge ${l.statusCode < 300 ? 'badge-green' : l.statusCode < 500 ? 'badge-gold' : 'badge-red'}`}>
-                      {l.statusCode}
-                    </span>
-                  </td>
-                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-4)' }}>{l.ip}</td>
-                  <td style={{ fontSize: 11, color: 'var(--ink-4)' }}>{fmtTs(l.timestamp)}</td>
-                </tr>
-              ))}
-              {logs.length === 0 && <tr><td colSpan={5} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>No audit entries</td></tr>}
-            </tbody>
-          </table>
-        )}
+        <table className="admin-table">
+          <thead><tr><th>Admin</th><th>Action</th><th>Status</th><th>IP</th><th>Time</th></tr></thead>
+          <tbody>
+            {loading ? <SkRows rows={12} cols={5} /> : (
+              <>
+                {logs.map(l => (
+                  <tr key={l._id}>
+                    <td>
+                      <div style={{ fontWeight: 500, color: 'var(--ink)', fontSize: 12 }}>{l.actor?.name || '—'}</div>
+                      <div style={{ fontSize: 11, color: 'var(--ink-4)' }}>{l.actorEmail}</div>
+                    </td>
+                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-2)', maxWidth: 320, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {l.action}
+                    </td>
+                    <td>
+                      <span className={`badge ${l.statusCode < 300 ? 'badge-green' : l.statusCode < 500 ? 'badge-gold' : 'badge-red'}`}>
+                        {l.statusCode}
+                      </span>
+                    </td>
+                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-4)' }}>{l.ip}</td>
+                    <td style={{ fontSize: 11, color: 'var(--ink-4)' }}>{fmtTs(l.timestamp)}</td>
+                  </tr>
+                ))}
+                {logs.length === 0 && (
+                  <tr><td colSpan={5}>
+                    <div className="empty-state">
+                      <div className="empty-state-icon">📋</div>
+                      <div className="empty-state-title">No audit entries yet</div>
+                    </div>
+                  </td></tr>
+                )}
+              </>
+            )}
+          </tbody>
+        </table>
       </div>
 
       {pages > 1 && (

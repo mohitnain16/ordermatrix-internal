@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import api from '../../../lib/api';
+import { SkRows } from '../../../components/ui/Skeleton';
 
 type Tenant = {
   _id: string;
@@ -104,23 +105,13 @@ export default function LifecyclePage() {
         ))}
       </div>
 
-      {loading ? (
-        <div style={{ padding: 60, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
-      ) : (
-        <>
-          {tab === 'onboarding' && (
-            <div className="admin-card">
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>Business</th>
-                    <th>Plan</th>
-                    <th>Steps</th>
-                    <th>Score</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
+      {tab === 'onboarding' && (
+        <div className="admin-card">
+          <table className="admin-table">
+            <thead><tr><th>Business</th><th>Plan</th><th>Steps</th><th>Score</th><th></th></tr></thead>
+            <tbody>
+              {loading ? <SkRows rows={8} cols={5} /> : (
+                <>
                   {incompleteOnboarding.map(t => (
                     <tr key={t._id}>
                       <td style={{ fontWeight: 500 }}>{t.businessName}<div style={{ fontSize: 11, color: 'var(--ink-4)' }}>{t.email}</div></td>
@@ -131,91 +122,78 @@ export default function LifecyclePage() {
                         <Step done={t.onboarding.whatsappConnected} label="WhatsApp" />
                         <Step done={t.onboarding.teamAdded} label="Team" />
                       </td>
-                      <td>
-                        <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: t.onboardingScore === 4 ? 'var(--green)' : t.onboardingScore >= 2 ? 'var(--gold)' : 'var(--red)' }}>
-                          {t.onboardingScore}/4
-                        </span>
-                      </td>
+                      <td><span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: t.onboardingScore === 4 ? 'var(--green)' : t.onboardingScore >= 2 ? 'var(--gold)' : 'var(--red)' }}>{t.onboardingScore}/4</span></td>
                       <td><Link href={`/superadmin/tenants/${t._id}`} className="btn btn-ghost btn-sm">View →</Link></td>
                     </tr>
                   ))}
                   {incompleteOnboarding.length === 0 && (
-                    <tr><td colSpan={5} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>All tenants have completed onboarding ✓</td></tr>
+                    <tr><td colSpan={5}>
+                      <div className="empty-state">
+                        <div className="empty-state-icon">🎉</div>
+                        <div className="empty-state-title">All tenants completed onboarding</div>
+                      </div>
+                    </td></tr>
                   )}
-                </tbody>
-              </table>
-            </div>
-          )}
+                </>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
 
-          {tab === 'health' && (
-            <div className="admin-card">
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>Business</th>
-                    <th>Plan</th>
-                    <th>Health</th>
-                    <th>Orders/wk</th>
-                    <th>Last Active</th>
-                    <th>WhatsApp</th>
-                    <th></th>
+      {tab === 'health' && (
+        <div className="admin-card">
+          <table className="admin-table">
+            <thead><tr><th>Business</th><th>Plan</th><th>Health</th><th>Orders/wk</th><th>Last Active</th><th>WhatsApp</th><th></th></tr></thead>
+            <tbody>
+              {loading ? <SkRows rows={8} cols={7} /> : (
+                [...tenants].sort((a, b) => a.health - b.health).map(t => (
+                  <tr key={t._id}>
+                    <td style={{ fontWeight: 500 }}>{t.businessName}</td>
+                    <td><span className={`badge ${PLAN_BADGE[t.planId] || 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>{t.planId}</span></td>
+                    <td style={{ minWidth: 160 }}><HealthBar score={t.health} /></td>
+                    <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{t.ordersWeek}</td>
+                    <td style={{ fontSize: 12, color: t.daysSinceActive > 7 ? 'var(--red)' : 'var(--ink-3)' }}>{t.lastActive ? `${t.daysSinceActive}d ago` : 'Never'}</td>
+                    <td><span style={{ fontSize: 13 }}>{t.onboarding.whatsappConnected ? '✓' : '—'}</span></td>
+                    <td><Link href={`/superadmin/tenants/${t._id}`} className="btn btn-ghost btn-sm">View →</Link></td>
                   </tr>
-                </thead>
-                <tbody>
-                  {[...tenants].sort((a, b) => a.health - b.health).map(t => (
-                    <tr key={t._id}>
-                      <td style={{ fontWeight: 500 }}>{t.businessName}</td>
-                      <td><span className={`badge ${PLAN_BADGE[t.planId] || 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>{t.planId}</span></td>
-                      <td style={{ minWidth: 160 }}><HealthBar score={t.health} /></td>
-                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{t.ordersWeek}</td>
-                      <td style={{ fontSize: 12, color: t.daysSinceActive > 7 ? 'var(--red)' : 'var(--ink-3)' }}>
-                        {t.lastActive ? `${t.daysSinceActive}d ago` : 'Never'}
-                      </td>
-                      <td>
-                        <span style={{ fontSize: 13 }}>{t.onboarding.whatsappConnected ? '✓' : '—'}</span>
-                      </td>
-                      <td><Link href={`/superadmin/tenants/${t._id}`} className="btn btn-ghost btn-sm">View →</Link></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
 
-          {tab === 'churn' && (
-            <div className="admin-card">
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>Business</th>
-                    <th>Plan</th>
-                    <th>Days Inactive</th>
-                    <th>Orders/wk</th>
-                    <th>Health</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
+      {tab === 'churn' && (
+        <div className="admin-card">
+          <table className="admin-table">
+            <thead><tr><th>Business</th><th>Plan</th><th>Days Inactive</th><th>Orders/wk</th><th>Health</th><th></th></tr></thead>
+            <tbody>
+              {loading ? <SkRows rows={8} cols={6} /> : (
+                <>
                   {churnList.sort((a, b) => b.daysSinceActive - a.daysSinceActive).map(t => (
                     <tr key={t._id}>
                       <td style={{ fontWeight: 500 }}>{t.businessName}<div style={{ fontSize: 11, color: 'var(--ink-4)' }}>{t.email}</div></td>
                       <td><span className={`badge ${PLAN_BADGE[t.planId] || 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>{t.planId}</span></td>
-                      <td>
-                        <span className={`badge ${t.daysSinceActive >= 14 ? 'badge-red' : 'badge-gold'}`}>{t.daysSinceActive}d</span>
-                      </td>
+                      <td><span className={`badge ${t.daysSinceActive >= 14 ? 'badge-red' : 'badge-gold'}`}>{t.daysSinceActive}d</span></td>
                       <td style={{ fontFamily: 'var(--font-mono)' }}>{t.ordersWeek}</td>
                       <td><HealthBar score={t.health} /></td>
                       <td><Link href={`/superadmin/tenants/${t._id}`} className="btn btn-ghost btn-sm">View →</Link></td>
                     </tr>
                   ))}
                   {churnList.length === 0 && (
-                    <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>No paid tenants at churn risk ✓</td></tr>
+                    <tr><td colSpan={6}>
+                      <div className="empty-state">
+                        <div className="empty-state-icon">✓</div>
+                        <div className="empty-state-title">No paid tenants at churn risk</div>
+                      </div>
+                    </td></tr>
                   )}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </>
+                </>
+              )}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

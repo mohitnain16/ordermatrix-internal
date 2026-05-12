@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import api from '../../../../lib/api';
+import { SkRows } from '../../../../components/ui/Skeleton';
 
 const fmt = (n: number) => `₹${new Intl.NumberFormat('en-IN').format(n || 0)}`;
 const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
@@ -55,38 +56,39 @@ export default function SubscriptionsPage() {
       </div>
 
       <div className="admin-card">
-        {loading ? (
-          <div style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
-        ) : (
-          <table className="admin-table">
-            <thead>
-              <tr><th>Tenant</th><th>Plan</th><th>Status</th><th>Cycle</th><th>Amount</th><th>Period End</th><th>Action</th></tr>
-            </thead>
-            <tbody>
-              {subs.map(s => (
-                <tr key={s._id}>
-                  <td>
-                    <div style={{ fontWeight: 500, color: 'var(--ink)' }}>{s.tenantId?.businessName || '—'}</div>
-                    <div style={{ fontSize: 11, color: 'var(--ink-4)' }}>{s.tenantId?.email}</div>
-                  </td>
-                  <td><span style={{ textTransform: 'capitalize', fontWeight: 500 }}>{s.planId}</span></td>
-                  <td><span className={`badge ${STATUS_BADGE[s.status] || 'badge-gray'}`}>{s.status}</span></td>
-                  <td style={{ textTransform: 'capitalize', fontSize: 12 }}>{s.billingCycle || '—'}</td>
-                  <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{s.amount ? fmt(s.amount) : '—'}</td>
-                  <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{fmtDate(s.currentPeriodEnd)}</td>
-                  <td>
-                    {s.tenantId?._id && (
-                      <Link href={`/superadmin/tenants/${s.tenantId._id}`} className="btn btn-ghost btn-sm">View →</Link>
-                    )}
-                  </td>
-                </tr>
-              ))}
-              {subs.length === 0 && (
-                <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>No subscriptions</td></tr>
-              )}
-            </tbody>
-          </table>
-        )}
+        <table className="admin-table">
+          <thead>
+            <tr><th>Tenant</th><th>Plan</th><th>Status</th><th>Cycle</th><th>Amount</th><th>Period End</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+            {loading ? <SkRows rows={10} cols={7} /> : (
+              <>
+                {subs.map(s => (
+                  <tr key={s._id}>
+                    <td>
+                      <div style={{ fontWeight: 500, color: 'var(--ink)' }}>{s.tenantId?.businessName || '—'}</div>
+                      <div style={{ fontSize: 11, color: 'var(--ink-4)' }}>{s.tenantId?.email}</div>
+                    </td>
+                    <td><span style={{ textTransform: 'capitalize', fontWeight: 500 }}>{s.planId}</span></td>
+                    <td><span className={`badge ${STATUS_BADGE[s.status] || 'badge-gray'}`}>{s.status}</span></td>
+                    <td style={{ textTransform: 'capitalize', fontSize: 12 }}>{s.billingCycle || '—'}</td>
+                    <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{s.amount ? fmt(s.amount) : '—'}</td>
+                    <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{fmtDate(s.currentPeriodEnd)}</td>
+                    <td>{s.tenantId?._id && <Link href={`/superadmin/tenants/${s.tenantId._id}`} className="btn btn-ghost btn-sm">View →</Link>}</td>
+                  </tr>
+                ))}
+                {subs.length === 0 && (
+                  <tr><td colSpan={7}>
+                    <div className="empty-state">
+                      <div className="empty-state-icon">💳</div>
+                      <div className="empty-state-title">No subscriptions found</div>
+                    </div>
+                  </td></tr>
+                )}
+              </>
+            )}
+          </tbody>
+        </table>
       </div>
 
       {pages > 1 && (

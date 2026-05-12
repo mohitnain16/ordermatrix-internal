@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import api from '../../../lib/api';
+import { SkRows } from '../../../components/ui/Skeleton';
 
 const fmt = (n: number) => `₹${new Intl.NumberFormat('en-IN').format(n || 0)}`;
 const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' }) : '—';
@@ -58,8 +59,8 @@ export default function BillingOpsPage() {
   return (
     <div className="animate-fade-in">
       {dunningModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
-          <div style={{ background: 'var(--surface)', borderRadius: 14, padding: 28, width: 420, boxShadow: 'var(--shadow-lg)' }}>
+        <div className="modal-backdrop">
+          <div className="modal-box" style={{ padding: 28, width: 420 }}>
             <h3 style={{ margin: '0 0 4px', fontSize: 16, fontWeight: 700 }}>Send Dunning</h3>
             <p style={{ margin: '0 0 20px', fontSize: 13, color: 'var(--ink-3)' }}>{dunningModal.name}</p>
             <div style={{ marginBottom: 16 }}>
@@ -83,11 +84,7 @@ export default function BillingOpsPage() {
         </div>
       )}
 
-      {actionMsg && (
-        <div style={{ position: 'fixed', bottom: 24, right: 24, background: 'var(--green)', color: '#fff', padding: '10px 18px', borderRadius: 8, fontSize: 13, fontWeight: 600, zIndex: 300 }}>
-          {actionMsg}
-        </div>
-      )}
+      {actionMsg && <div className="toast toast-success">{actionMsg}</div>}
 
       <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
@@ -124,25 +121,19 @@ export default function BillingOpsPage() {
         ))}
       </div>
 
-      {loading ? (
-        <div style={{ padding: 60, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
-      ) : (
-        <>
-          {(tab === 'failed' || tab === 'dunning') && (
-            <div className="admin-card">
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>Business</th>
-                    <th>Plan</th>
-                    <th>Amount</th>
-                    <th>Retries</th>
-                    <th>Failed</th>
-                    {tab === 'dunning' && <th>Dunning Sent</th>}
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
+      {(tab === 'failed' || tab === 'dunning') && (
+        <div className="admin-card">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Business</th><th>Plan</th><th>Amount</th><th>Retries</th><th>Failed</th>
+                {tab === 'dunning' && <th>Dunning Sent</th>}
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? <SkRows rows={6} cols={tab === 'dunning' ? 7 : 6} /> : (
+                <>
                   {failed.map((f: any) => (
                     <tr key={f.subscriptionId}>
                       <td style={{ fontWeight: 500 }}>
@@ -167,9 +158,7 @@ export default function BillingOpsPage() {
                       <td>
                         <div style={{ display: 'flex', gap: 6 }}>
                           {tab === 'dunning' && (
-                            <button className="btn btn-ghost btn-sm" onClick={() => setDunningModal({ tenantId: f.tenant?._id, name: f.tenant?.businessName })}>
-                              Dunning
-                            </button>
+                            <button className="btn btn-ghost btn-sm" onClick={() => setDunningModal({ tenantId: f.tenant?._id, name: f.tenant?.businessName })}>Dunning</button>
                           )}
                           {tab === 'failed' && (
                             <button className="btn btn-ghost btn-sm" onClick={() => retry(f.tenant?._id)}>Retry</button>
@@ -180,20 +169,29 @@ export default function BillingOpsPage() {
                     </tr>
                   ))}
                   {failed.length === 0 && (
-                    <tr><td colSpan={tab === 'dunning' ? 7 : 6} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>No failed payments ✓</td></tr>
+                    <tr><td colSpan={tab === 'dunning' ? 7 : 6}>
+                      <div className="empty-state">
+                        <div className="empty-state-icon">✓</div>
+                        <div className="empty-state-title">No failed payments</div>
+                      </div>
+                    </td></tr>
                   )}
-                </tbody>
-              </table>
-            </div>
-          )}
+                </>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
 
-          {tab === 'seats' && (
-            <div className="admin-card">
-              <table className="admin-table">
-                <thead>
-                  <tr><th>Business</th><th>Plan</th><th>Seats Used</th><th>Limit</th><th>Usage</th><th></th></tr>
-                </thead>
-                <tbody>
+      {tab === 'seats' && (
+        <div className="admin-card">
+          <table className="admin-table">
+            <thead>
+              <tr><th>Business</th><th>Plan</th><th>Seats Used</th><th>Limit</th><th>Usage</th><th></th></tr>
+            </thead>
+            <tbody>
+              {loading ? <SkRows rows={6} cols={6} /> : (
+                <>
                   {seats.map((t: any) => (
                     <tr key={t._id}>
                       <td style={{ fontWeight: 500 }}>{t.businessName}<div style={{ fontSize: 11, color: 'var(--ink-4)' }}>{t.email}</div></td>
@@ -212,13 +210,18 @@ export default function BillingOpsPage() {
                     </tr>
                   ))}
                   {seats.length === 0 && (
-                    <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>No tenants near seat limit ✓</td></tr>
+                    <tr><td colSpan={6}>
+                      <div className="empty-state">
+                        <div className="empty-state-icon">✓</div>
+                        <div className="empty-state-title">No tenants near seat limit</div>
+                      </div>
+                    </td></tr>
                   )}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </>
+                </>
+              )}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

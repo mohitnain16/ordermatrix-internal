@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import api from '../../../lib/api';
+import { Sk, SkStatCard, SkRows, SkCardHeader } from '../../../components/ui/Skeleton';
 
 const fmt = (n: number) => `₹${new Intl.NumberFormat('en-IN').format(n || 0)}`;
 const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '—';
@@ -43,8 +44,49 @@ export default function PulsePage() {
     setLoading(false);
   }
 
-  if (loading) return <div style={{ padding: 60, textAlign: 'center', color: 'var(--ink-4)' }}>Loading platform pulse…</div>;
-  if (!data) return <div style={{ padding: 60, textAlign: 'center', color: 'var(--red)' }}>Failed to load data</div>;
+  if (loading) return (
+    <div className="animate-fade-in">
+      <div className="page-header" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+        <div><Sk w={180} h={22} mb={6} /><Sk w={260} h={13} /></div>
+        <Sk w={70} h={30} r={7} />
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 20 }}>
+        {[0,1,2,3].map(i => <SkStatCard key={i} />)}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 24 }}>
+        {[0,1,2,3].map(i => <SkStatCard key={i} />)}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div className="admin-card">
+          <SkCardHeader />
+          <div style={{ padding: '12px 18px' }}>
+            {[0,1,2,3,4].map(i => (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+                <Sk w="48%" h={12} /><Sk w={24} h={12} />
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="admin-card">
+          <SkCardHeader />
+          {[0,1,2,3,4].map(i => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 18px', borderBottom: '1px solid var(--line)' }}>
+              <div style={{ flex: 1 }}><Sk w="55%" h={13} mb={5} /><Sk w="38%" h={10} /></div>
+              <Sk w={42} h={20} r={5} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+  if (!data) return (
+    <div className="empty-state" style={{ padding: 80 }}>
+      <div className="empty-state-icon">⚠</div>
+      <div className="empty-state-title">Failed to load platform data</div>
+      <div className="empty-state-sub">Check your connection and try again</div>
+      <button className="btn btn-ghost btn-sm" style={{ marginTop: 12 }} onClick={load}>Retry</button>
+    </div>
+  );
 
   return (
     <div className="animate-fade-in">

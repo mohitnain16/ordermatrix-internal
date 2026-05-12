@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import api from '../../../lib/api';
+import { Sk, SkStatCard, SkRows } from '../../../components/ui/Skeleton';
 
 const fmt = (n: number) => `₹${new Intl.NumberFormat('en-IN').format(n || 0)}`;
 const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '—';
@@ -38,13 +39,33 @@ export default function SalesPage() {
     } catch { /**/ }
   }
 
-  if (loading) return <div style={{ padding: 60, textAlign: 'center', color: 'var(--ink-4)' }}>Loading sales data…</div>;
+  if (loading) return (
+    <div className="animate-fade-in">
+      <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div><Sk w={60} h={22} mb={6} /><Sk w={280} h={13} /></div>
+        <Sk w={70} h={30} r={7} />
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginBottom: 24 }}>
+        {[0,1,2,3,4].map(i => <SkStatCard key={i} />)}
+      </div>
+      <div style={{ display: 'flex', borderBottom: '1px solid var(--line)', marginBottom: 20 }}>
+        <div style={{ padding: '9px 18px' }}><Sk w={100} h={13} /></div>
+        <div style={{ padding: '9px 18px' }}><Sk w={110} h={13} /></div>
+      </div>
+      <div className="admin-card">
+        <table className="admin-table">
+          <thead><tr><th>Business</th><th>Email</th><th>Orders</th><th>Days Left</th><th>Lead Status</th><th>Action</th></tr></thead>
+          <tbody><SkRows rows={8} cols={6} /></tbody>
+        </table>
+      </div>
+    </div>
+  );
 
   return (
     <div className="animate-fade-in">
       {noteModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
-          <div style={{ background: 'var(--surface)', borderRadius: 14, padding: 28, width: 400, boxShadow: 'var(--shadow-lg)' }}>
+        <div className="modal-backdrop">
+          <div className="modal-box" style={{ padding: 28, width: 400 }}>
             <h3 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 700 }}>Add Follow-up Note</h3>
             <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--ink-3)' }}>{noteModal.name}</p>
             <textarea rows={4} value={noteText} onChange={e => setNoteText(e.target.value)} placeholder="Note…" style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--line)', borderRadius: 8, fontSize: 13, resize: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }} />

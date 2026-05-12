@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import api from '../../../../lib/api';
+import { SkRows } from '../../../../components/ui/Skeleton';
 
 const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
@@ -49,31 +50,38 @@ export default function UsersPage() {
       </div>
 
       <div className="admin-card">
-        {loading ? (
-          <div style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
-        ) : (
-          <table className="admin-table">
-            <thead><tr><th>Name</th><th>Email</th><th>Tenant</th><th>Role</th><th>Status</th><th>Joined</th><th></th></tr></thead>
-            <tbody>
-              {users.map(u => (
-                <tr key={u._id}>
-                  <td style={{ fontWeight: 500, color: 'var(--ink)' }}>{u.name}</td>
-                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{u.email}</td>
-                  <td style={{ fontSize: 12, color: 'var(--ink-3)' }}>{u.tenantId?.businessName || '—'}</td>
-                  <td><span className={`badge ${u.role === 'superadmin' ? 'badge-purple' : u.role === 'admin' ? 'badge-blue' : 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>{u.role}</span></td>
-                  <td><span className={`badge ${u.isActive ? 'badge-green' : 'badge-red'}`}>{u.isActive ? 'Active' : 'Inactive'}</span></td>
-                  <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{fmtDate(u.createdAt)}</td>
-                  <td>
-                    <button className={`btn btn-sm ${u.isActive ? 'btn-danger' : 'btn-ghost'}`} onClick={() => toggleUser(u._id, u.isActive)}>
-                      {u.isActive ? 'Ban' : 'Restore'}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {users.length === 0 && <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>No users found</td></tr>}
-            </tbody>
-          </table>
-        )}
+        <table className="admin-table">
+          <thead><tr><th>Name</th><th>Email</th><th>Tenant</th><th>Role</th><th>Status</th><th>Joined</th><th></th></tr></thead>
+          <tbody>
+            {loading ? <SkRows rows={10} cols={7} /> : (
+              <>
+                {users.map(u => (
+                  <tr key={u._id}>
+                    <td style={{ fontWeight: 500, color: 'var(--ink)' }}>{u.name}</td>
+                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{u.email}</td>
+                    <td style={{ fontSize: 12, color: 'var(--ink-3)' }}>{u.tenantId?.businessName || '—'}</td>
+                    <td><span className={`badge ${u.role === 'superadmin' ? 'badge-purple' : u.role === 'admin' ? 'badge-blue' : 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>{u.role}</span></td>
+                    <td><span className={`badge ${u.isActive ? 'badge-green' : 'badge-red'}`}>{u.isActive ? 'Active' : 'Inactive'}</span></td>
+                    <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{fmtDate(u.createdAt)}</td>
+                    <td>
+                      <button className={`btn btn-sm ${u.isActive ? 'btn-danger' : 'btn-ghost'}`} onClick={() => toggleUser(u._id, u.isActive)}>
+                        {u.isActive ? 'Ban' : 'Restore'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {users.length === 0 && (
+                  <tr><td colSpan={7}>
+                    <div className="empty-state">
+                      <div className="empty-state-icon">👤</div>
+                      <div className="empty-state-title">No users found</div>
+                    </div>
+                  </td></tr>
+                )}
+              </>
+            )}
+          </tbody>
+        </table>
       </div>
 
       {pages > 1 && (

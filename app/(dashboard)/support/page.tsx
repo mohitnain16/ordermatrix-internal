@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import api from '../../../lib/api';
+import { SkRows } from '../../../components/ui/Skeleton';
 
 const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '—';
 
@@ -14,15 +15,18 @@ export default function SupportPage() {
   const [results, setResults] = useState<any[]>([]);
   const [issues, setIssues] = useState<any>(null);
   const [searching, setSearching] = useState(false);
+  const [issuesLoading, setIssuesLoading] = useState(true);
   const [tab, setTab] = useState<'lookup' | 'issues'>('lookup');
 
   useEffect(() => { loadIssues(); }, []);
 
   async function loadIssues() {
+    setIssuesLoading(true);
     try {
       const res = await api.get('/admin/support/issues');
       setIssues(res.data);
     } catch { /**/ }
+    setIssuesLoading(false);
   }
 
   async function search() {
@@ -62,7 +66,7 @@ export default function SupportPage() {
               onKeyDown={e => e.key === 'Enter' && search()}
             />
             <button className="btn btn-primary" onClick={search} disabled={searching}>
-              {searching ? 'Searching…' : 'Search'}
+              {searching ? <><span className="spinner" />Searching…</> : 'Search'}
             </button>
           </div>
 
@@ -86,12 +90,24 @@ export default function SupportPage() {
             </div>
           )}
           {results.length === 0 && query && !searching && (
-            <div style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>No results for "{query}"</div>
+            <div className="empty-state">
+              <div className="empty-state-icon">🔍</div>
+              <div className="empty-state-title">No results for "{query}"</div>
+              <div className="empty-state-sub">Try a different name, email, or phone number</div>
+            </div>
           )}
         </>
       )}
 
-      {tab === 'issues' && issues && (
+      {tab === 'issues' && issuesLoading && (
+        <div className="admin-card">
+          <table className="admin-table">
+            <thead><tr><th>Business</th><th>Email</th><th>Trial Ended</th><th>Orders</th><th></th></tr></thead>
+            <tbody><SkRows rows={5} cols={5} /></tbody>
+          </table>
+        </div>
+      )}
+      {tab === 'issues' && !issuesLoading && issues && (
         <div>
           {/* Expired Trials */}
           <div style={{ marginBottom: 24 }}>
