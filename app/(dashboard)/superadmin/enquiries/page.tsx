@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import api from '../../../../lib/api';
+import { Sk, SkRows } from '../../../../components/ui/Skeleton';
 
 const fmtDate = (d: string) =>
   d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
@@ -63,7 +64,7 @@ export default function EnquiriesPage() {
   const [noteText, setNoteText] = useState('');
   const [addingNote, setAddingNote] = useState(false);
 
-  const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -80,6 +81,12 @@ export default function EnquiriesPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  function handleSearchChange(val: string) {
+    setPage(1);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => setSearch(val), 350);
+  }
+
   async function openEnquiry(id: string) {
     setDetailLoading(true);
     setSelected(null);
@@ -88,9 +95,11 @@ export default function EnquiriesPage() {
     try {
       const res = await api.get(`/admin/enquiries/${id}`);
       setSelected(res.data.enquiry);
-      // Update local list status
       setEnquiries(prev => prev.map(e => e._id === id && e.status === 'new' ? { ...e, status: 'read' } : e));
-      setStatusCounts(prev => ({ ...prev, new: Math.max(0, prev.new - (enquiries.find(e => e._id === id)?.status === 'new' ? 1 : 0)) }));
+      setStatusCounts(prev => ({
+        ...prev,
+        new: Math.max(0, prev.new - (enquiries.find(e => e._id === id)?.status === 'new' ? 1 : 0)),
+      }));
     } catch { /**/ }
     setDetailLoading(false);
   }
@@ -134,32 +143,28 @@ export default function EnquiriesPage() {
 
   const pages = Math.ceil(total / LIMIT);
 
-  function handleSearchChange(val: string) {
-    setSearch(val);
-    setPage(1);
-    if (searchTimeout.current) clearTimeout(searchTimeout.current);
-  }
-
   return (
     <div className="animate-fade-in" style={{ display: 'flex', gap: 20, height: 'calc(100vh - 80px)', overflow: 'hidden' }}>
 
-      {/* ── Left: List ───────────────────────────────────────────────── */}
+      {/* ── Left: List ─────────────────────────────────────────────── */}
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+
+        {/* Header */}
         <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <div>
             <h1 className="page-title">Enquiries</h1>
-            <p className="page-sub">{total} total · {statusCounts.new} new</p>
+            <p className="page-sub">{total} total · <span style={{ color: 'var(--blue)', fontWeight: 600 }}>{statusCounts.new} new</span></p>
           </div>
           <button className="btn btn-ghost btn-sm" onClick={load}>Refresh</button>
         </div>
 
-        {/* Status tabs */}
-        <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexShrink: 0 }}>
+        {/* Status filter tabs */}
+        <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexShrink: 0, flexWrap: 'wrap' }}>
           <button
             className={`btn btn-sm ${statusFilter === '' ? 'btn-primary' : 'btn-ghost'}`}
             onClick={() => { setStatusFilter(''); setPage(1); }}
           >
-            All <span style={{ marginLeft: 4, opacity: .7 }}>{total}</span>
+            All <span style={{ marginLeft: 4, opacity: 0.7 }}>{total}</span>
           </button>
           {STATUSES.map(s => (
             <button
@@ -168,7 +173,12 @@ export default function EnquiriesPage() {
               onClick={() => { setStatusFilter(s); setPage(1); }}
               style={{ textTransform: 'capitalize' }}
             >
-              {s} <span style={{ marginLeft: 4, opacity: .7 }}>{statusCounts[s]}</span>
+              {s}
+              {s === 'new' && statusCounts.new > 0 && (
+                <span style={{ marginLeft: 4, background: 'var(--blue)', color: '#fff', borderRadius: 10, padding: '0 5px', fontSize: 10, fontWeight: 700 }}>
+                  {statusCounts.new}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -177,69 +187,74 @@ export default function EnquiriesPage() {
         <div style={{ marginBottom: 12, flexShrink: 0 }}>
           <input
             className="admin-input"
-            style={{ width: '100%', maxWidth: 360 }}
+            style={{ maxWidth: 360 }}
             placeholder="Search by name, email, subject, company…"
-            value={search}
+            defaultValue={search}
             onChange={e => handleSearchChange(e.target.value)}
           />
         </div>
 
         {/* Table */}
         <div className="admin-card" style={{ flex: 1, overflow: 'auto' }}>
-          {loading ? (
-            <div style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
-          ) : (
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Subject</th>
-                  <th>Date</th>
-                  <th>Status</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {enquiries.map(e => (
-                  <tr
-                    key={e._id}
-                    style={{
-                      cursor: 'pointer',
-                      background: selected?._id === e._id ? 'var(--surface-2, #f9f9f9)' : undefined,
-                      fontWeight: e.status === 'new' ? 600 : undefined,
-                    }}
-                    onClick={() => openEnquiry(e._id)}
-                  >
-                    <td>
-                      <span style={{ color: 'var(--ink)' }}>{e.name}</span>
-                      {e.company && <span style={{ display: 'block', fontSize: 11, color: 'var(--ink-4)', fontWeight: 400 }}>{e.company}</span>}
-                    </td>
-                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{e.email}</td>
-                    <td style={{ maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.subject}</td>
-                    <td style={{ fontSize: 12, color: 'var(--ink-4)', whiteSpace: 'nowrap' }}>{fmtDate(e.createdAt)}</td>
-                    <td>
-                      <span className={`badge ${STATUS_BADGE[e.status] || 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>
-                        {e.status}
-                      </span>
-                    </td>
-                    <td>
-                      <button className="btn btn-ghost btn-sm" onClick={ev => { ev.stopPropagation(); openEnquiry(e._id); }}>
-                        Open →
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {enquiries.length === 0 && (
-                  <tr>
-                    <td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>
-                      No enquiries found
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          )}
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Subject</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? <SkRows rows={10} cols={6} /> : (
+                <>
+                  {enquiries.map(e => (
+                    <tr
+                      key={e._id}
+                      style={{
+                        cursor: 'pointer',
+                        background: selected?._id === e._id ? 'var(--surface-2)' : undefined,
+                        fontWeight: e.status === 'new' ? 600 : undefined,
+                      }}
+                      onClick={() => openEnquiry(e._id)}
+                    >
+                      <td>
+                        <span style={{ color: 'var(--ink)' }}>{e.name}</span>
+                        {e.company && <span style={{ display: 'block', fontSize: 11, color: 'var(--ink-4)', fontWeight: 400 }}>{e.company}</span>}
+                      </td>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{e.email}</td>
+                      <td style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.subject}</td>
+                      <td style={{ fontSize: 12, color: 'var(--ink-4)', whiteSpace: 'nowrap' }}>{fmtDate(e.createdAt)}</td>
+                      <td>
+                        <span className={`badge ${STATUS_BADGE[e.status] || 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>
+                          {e.status}
+                        </span>
+                      </td>
+                      <td>
+                        <button
+                          className="btn btn-ghost btn-sm"
+                          onClick={ev => { ev.stopPropagation(); openEnquiry(e._id); }}
+                        >
+                          Open →
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {enquiries.length === 0 && (
+                    <tr><td colSpan={6}>
+                      <div className="empty-state">
+                        <div className="empty-state-icon">✉️</div>
+                        <div className="empty-state-title">No enquiries found</div>
+                        <div className="empty-state-sub">{statusFilter ? `No enquiries with status "${statusFilter}"` : 'All caught up!'}</div>
+                      </div>
+                    </td></tr>
+                  )}
+                </>
+              )}
+            </tbody>
+          </table>
         </div>
 
         {pages > 1 && (
@@ -251,45 +266,54 @@ export default function EnquiriesPage() {
         )}
       </div>
 
-      {/* ── Right: Detail Panel ──────────────────────────────────────── */}
-      <div
-        style={{
-          width: 440,
-          flexShrink: 0,
-          borderLeft: '1px solid var(--line)',
-          paddingLeft: 20,
-          overflowY: 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 16,
-        }}
-      >
-        {detailLoading && (
-          <div style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
-        )}
+      {/* ── Right: Detail Panel ────────────────────────────────────── */}
+      <div style={{
+        width: 440, flexShrink: 0,
+        borderLeft: '1px solid var(--line)', paddingLeft: 20,
+        overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16,
+      }}>
 
-        {!detailLoading && !selected && (
-          <div style={{ padding: '60px 0', textAlign: 'center', color: 'var(--ink-4)', fontSize: 14 }}>
-            Select an enquiry to view details
+        {/* Skeleton while detail loads */}
+        {detailLoading && (
+          <div style={{ paddingTop: 4 }}>
+            <Sk w="55%" h={18} mb={8} />
+            <Sk w="40%" h={13} mb={4} />
+            <Sk w="30%" h={11} mb={16} />
+            <div className="admin-card" style={{ padding: 16, marginBottom: 16 }}>
+              <Sk w="50%" h={14} mb={10} />
+              <Sk w="100%" h={12} mb={6} />
+              <Sk w="90%" h={12} mb={6} />
+              <Sk w="75%" h={12} />
+            </div>
+            <Sk w="35%" h={10} mb={10} />
+            <div style={{ display: 'flex', gap: 6 }}>
+              <Sk w={80} h={30} r={7} /><Sk w={80} h={30} r={7} /><Sk w={80} h={30} r={7} />
+            </div>
           </div>
         )}
 
+        {/* Empty state */}
+        {!detailLoading && !selected && (
+          <div className="empty-state" style={{ paddingTop: 80 }}>
+            <div className="empty-state-icon">👈</div>
+            <div className="empty-state-title">Select an enquiry</div>
+            <div className="empty-state-sub">Click any row to view details and reply</div>
+          </div>
+        )}
+
+        {/* Detail content */}
         {!detailLoading && selected && (
           <>
-            {/* Header */}
+            {/* Contact header */}
             <div style={{ paddingTop: 4 }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: 16, color: 'var(--ink)', marginBottom: 2 }}>{selected.name}</div>
-                  <a href={`mailto:${selected.email}`} style={{ fontSize: 13, color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
+                  <div style={{ fontWeight: 700, fontSize: 16, color: 'var(--ink)', marginBottom: 3 }}>{selected.name}</div>
+                  <a href={`mailto:${selected.email}`} style={{ fontSize: 13, color: 'var(--accent)', fontFamily: 'var(--font-mono)', textDecoration: 'none' }}>
                     {selected.email}
                   </a>
-                  {selected.phone && (
-                    <div style={{ fontSize: 12, color: 'var(--ink-4)', marginTop: 2 }}>{selected.phone}</div>
-                  )}
-                  {selected.company && (
-                    <div style={{ fontSize: 12, color: 'var(--ink-4)' }}>{selected.company}</div>
-                  )}
+                  {selected.phone && <div style={{ fontSize: 12, color: 'var(--ink-4)', marginTop: 2 }}>{selected.phone}</div>}
+                  {selected.company && <div style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 1 }}>{selected.company}</div>}
                 </div>
                 <span className={`badge ${STATUS_BADGE[selected.status] || 'badge-gray'}`} style={{ textTransform: 'capitalize', flexShrink: 0 }}>
                   {selected.status}
@@ -297,29 +321,24 @@ export default function EnquiriesPage() {
               </div>
               <div style={{ fontSize: 11, color: 'var(--ink-4)', marginTop: 6 }}>
                 Received {fmtTime(selected.createdAt)}
-                {selected.ip && ` · IP ${selected.ip}`}
+                {selected.ip && ` · ${selected.ip}`}
               </div>
             </div>
 
-            {/* Subject + Message */}
+            {/* Message */}
             <div className="admin-card" style={{ padding: 16 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, color: 'var(--ink)' }}>{selected.subject}</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)', marginBottom: 10 }}>{selected.subject}</div>
               <p style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--ink-3)', margin: 0, whiteSpace: 'pre-wrap' }}>{selected.message}</p>
             </div>
 
             {/* Status actions */}
             <div>
-              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink-4)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-4)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>
                 Change Status
               </div>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 {STATUSES.filter(s => s !== selected.status).map(s => (
-                  <button
-                    key={s}
-                    className="btn btn-ghost btn-sm"
-                    style={{ textTransform: 'capitalize' }}
-                    onClick={() => updateStatus(s)}
-                  >
+                  <button key={s} className="btn btn-ghost btn-sm" style={{ textTransform: 'capitalize' }} onClick={() => updateStatus(s)}>
                     Mark {s}
                   </button>
                 ))}
@@ -329,7 +348,7 @@ export default function EnquiriesPage() {
             {/* Reply */}
             <div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink-4)', textTransform: 'uppercase', letterSpacing: '.06em' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-4)', textTransform: 'uppercase', letterSpacing: '.06em' }}>
                   Reply
                 </div>
                 {!showReply && (
@@ -340,19 +359,14 @@ export default function EnquiriesPage() {
               </div>
 
               {selected.repliedAt && !showReply && (
-                <div style={{ fontSize: 12, color: 'var(--ink-4)', background: 'var(--surface-2, #f5f5f5)', padding: '8px 12px', borderRadius: 8 }}>
-                  Replied {fmtTime(selected.repliedAt)} by {selected.repliedBy}
+                <div style={{ fontSize: 12, color: 'var(--ink-4)', background: 'var(--surface-2)', padding: '8px 12px', borderRadius: 8 }}>
+                  Replied {fmtTime(selected.repliedAt)}{selected.repliedBy ? ` by ${selected.repliedBy}` : ''}
                 </div>
               )}
 
               {showReply && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <input
-                    className="admin-input"
-                    placeholder="Subject"
-                    value={replySubject}
-                    onChange={e => setReplySubject(e.target.value)}
-                  />
+                  <input className="admin-input" placeholder="Subject" value={replySubject} onChange={e => setReplySubject(e.target.value)} />
                   <textarea
                     className="admin-input"
                     rows={6}
@@ -362,12 +376,8 @@ export default function EnquiriesPage() {
                     style={{ resize: 'vertical', fontFamily: 'inherit' }}
                   />
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <button
-                      className="btn btn-sm btn-primary"
-                      disabled={sending || !replyMsg.trim()}
-                      onClick={sendReply}
-                    >
-                      {sending ? 'Sending…' : 'Send Email'}
+                    <button className="btn btn-sm btn-primary" disabled={sending || !replyMsg.trim()} onClick={sendReply}>
+                      {sending ? <><span className="spinner" />Sending…</> : 'Send Email'}
                     </button>
                     <button className="btn btn-sm btn-ghost" onClick={() => { setShowReply(false); setReplyMsg(''); }}>
                       Cancel
@@ -379,20 +389,18 @@ export default function EnquiriesPage() {
 
             {/* Internal Notes */}
             <div>
-              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink-4)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-4)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10 }}>
                 Internal Notes
               </div>
 
               {selected.internalNotes.length === 0 && (
-                <div style={{ fontSize: 13, color: 'var(--ink-4)', marginBottom: 10 }}>No notes yet.</div>
+                <div style={{ fontSize: 12, color: 'var(--ink-4)', marginBottom: 10, fontStyle: 'italic' }}>No notes yet.</div>
               )}
 
               {selected.internalNotes.map(n => (
-                <div key={n._id} style={{ background: 'var(--surface-2, #f9f9f9)', borderRadius: 8, padding: '10px 12px', marginBottom: 8 }}>
+                <div key={n._id} style={{ background: 'var(--surface-2)', borderRadius: 8, padding: '10px 12px', marginBottom: 8, borderLeft: '3px solid var(--line)' }}>
                   <p style={{ margin: '0 0 4px', fontSize: 13, lineHeight: 1.6, color: 'var(--ink-3)', whiteSpace: 'pre-wrap' }}>{n.note}</p>
-                  <span style={{ fontSize: 11, color: 'var(--ink-4)' }}>
-                    {n.addedBy} · {fmtTime(n.createdAt)}
-                  </span>
+                  <span style={{ fontSize: 11, color: 'var(--ink-4)' }}>{n.addedBy} · {fmtTime(n.createdAt)}</span>
                 </div>
               ))}
 
@@ -400,18 +408,18 @@ export default function EnquiriesPage() {
                 <textarea
                   className="admin-input"
                   rows={2}
-                  placeholder="Add a note…"
+                  placeholder="Add an internal note…"
                   value={noteText}
                   onChange={e => setNoteText(e.target.value)}
-                  style={{ flex: 1, resize: 'none', fontFamily: 'inherit', fontSize: 13 }}
+                  style={{ flex: 1, resize: 'none', fontFamily: 'inherit' }}
                 />
                 <button
                   className="btn btn-sm btn-ghost"
                   disabled={addingNote || !noteText.trim()}
                   onClick={addNote}
-                  style={{ alignSelf: 'flex-end' }}
+                  style={{ alignSelf: 'flex-end', minWidth: 60 }}
                 >
-                  {addingNote ? '…' : 'Add'}
+                  {addingNote ? <span className="spinner spinner-dark" /> : 'Add'}
                 </button>
               </div>
             </div>

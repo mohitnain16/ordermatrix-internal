@@ -7,6 +7,7 @@ const TITLES: Record<string, string> = {
   '/superadmin/subscriptions':      'Subscriptions',
   '/superadmin/users':              'All Users',
   '/superadmin/audit-log':          'Audit Log',
+  '/superadmin/enquiries':          'Enquiries',
   '/sales':                         'Sales Overview',
   '/sales/pipeline':                'Trial Pipeline',
   '/support':                       'Support Lookup',
