@@ -223,10 +223,10 @@ export default function EnquiriesPage() {
                       >
                         <td>
                           <span style={{ color: 'var(--ink)' }}>{e.name}</span>
-                          {e.company && <span style={{ display: 'block', fontSize: 11, color: 'var(--ink-4)', fontWeight: 400 }}>{e.company}</span>}
+                          {e.company && <span className="cell-sub">{e.company}</span>}
                         </td>
                         <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{e.email}</td>
-                        <td style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.subject}</td>
+                        <td className="text-truncate" style={{ maxWidth: 200 }}>{e.subject}</td>
                         <td style={{ fontSize: 12, color: 'var(--ink-4)', whiteSpace: 'nowrap' }}>{fmtDate(e.createdAt)}</td>
                         <td>
                           <span className={`badge ${STATUS_BADGE[e.status] || 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>
@@ -400,9 +400,9 @@ export default function EnquiriesPage() {
               )}
 
               {selected.internalNotes.map(n => (
-                <div key={n._id} style={{ background: 'var(--surface-2)', borderRadius: 8, padding: '10px 12px', marginBottom: 8, borderLeft: '3px solid var(--line)' }}>
-                  <p style={{ margin: '0 0 4px', fontSize: 13, lineHeight: 1.6, color: 'var(--ink-3)', whiteSpace: 'pre-wrap' }}>{n.note}</p>
-                  <span style={{ fontSize: 11, color: 'var(--ink-4)' }}>{n.addedBy} · {fmtTime(n.createdAt)}</span>
+                <div key={n._id} className="note-card">
+                  <p className="note-card-body" style={{ whiteSpace: 'pre-wrap' }}>{n.note}</p>
+                  <span className="note-card-meta">{n.addedBy} · {fmtTime(n.createdAt)}</span>
                 </div>
               ))}
 

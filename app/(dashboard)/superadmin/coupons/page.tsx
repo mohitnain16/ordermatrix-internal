@@ -29,7 +29,6 @@ const EMPTY_FORM = {
   expiresAt: '',
 };
 
-const LabelStyle = { display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 6 } as const;
 
 export default function CouponsPage() {
   const [coupons, setCoupons] = useState<Coupon[]>([]);
@@ -105,7 +104,7 @@ export default function CouponsPage() {
             <div className="modal-body stack-4">
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <label style={LabelStyle}>CODE *</label>
+                  <label className="form-label">CODE *</label>
                   <input
                     className="admin-input"
                     value={form.code}
@@ -115,7 +114,7 @@ export default function CouponsPage() {
                   />
                 </div>
                 <div>
-                  <label style={LabelStyle}>TYPE *</label>
+                  <label className="form-label">TYPE *</label>
                   <select
                     className="admin-input"
                     value={form.discountType}
@@ -129,7 +128,7 @@ export default function CouponsPage() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <label style={LabelStyle}>VALUE *</label>
+                  <label className="form-label">VALUE *</label>
                   <input
                     className="admin-input"
                     type="number" min={0}
@@ -139,7 +138,7 @@ export default function CouponsPage() {
                   />
                 </div>
                 <div>
-                  <label style={LabelStyle}>MAX USES</label>
+                  <label className="form-label">MAX USES</label>
                   <input
                     className="admin-input"
                     type="number" min={1}
@@ -151,7 +150,7 @@ export default function CouponsPage() {
               </div>
 
               <div>
-                <label style={LabelStyle}>APPLICABLE PLANS (comma-separated, empty = all)</label>
+                <label className="form-label">APPLICABLE PLANS (comma-separated, empty = all)</label>
                 <input
                   className="admin-input"
                   value={form.applicablePlans}
@@ -161,7 +160,7 @@ export default function CouponsPage() {
               </div>
 
               <div>
-                <label style={LabelStyle}>EXPIRES AT</label>
+                <label className="form-label">EXPIRES AT</label>
                 <input
                   className="admin-input"
                   type="date"
@@ -205,7 +204,7 @@ export default function CouponsPage() {
                   <tr key={c._id}>
                     <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 13, color: 'var(--ink)' }}>{c.code}</td>
                     <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--green)' }}>{discountLabel(c)}</td>
-                    <td style={{ fontSize: 12, color: 'var(--ink-3)' }}>{c.applicablePlans.length ? c.applicablePlans.join(', ') : 'All plans'}</td>
+                    <td className="cell-sub">{c.applicablePlans.length ? c.applicablePlans.join(', ') : 'All plans'}</td>
                     <td style={{ fontFamily: 'var(--font-mono)' }}>
                       {c.usedCount}{c.maxUses !== null ? `/${c.maxUses}` : ''}
                     </td>

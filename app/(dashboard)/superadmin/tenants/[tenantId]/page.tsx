@@ -219,9 +219,9 @@ export default function TenantDetailPage() {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--line)', marginBottom: 20 }}>
+      <div className="tab-bar">
         {(['overview', 'subscription', 'notes', 'deliveries', ...(hasRole(admin, 'superadmin') ? ['flags'] : [])] as const).map((t: any) => (
-          <button key={t} onClick={() => setTab(t)} style={{ padding: '9px 16px', fontSize: 13, fontWeight: tab === t ? 600 : 400, color: tab === t ? 'var(--accent)' : 'var(--ink-3)', background: 'none', border: 'none', borderBottom: `2px solid ${tab === t ? 'var(--accent)' : 'transparent'}`, cursor: 'pointer', fontFamily: 'inherit', textTransform: 'capitalize', marginBottom: -1 }}>
+          <button key={t} onClick={() => setTab(t)} className={`tab-btn${tab === t ? ' active' : ''}`} style={{ fontWeight: tab === t ? 600 : 400, color: tab === t ? 'var(--accent)' : 'var(--ink-3)', borderBottom: `2px solid ${tab === t ? 'var(--accent)' : 'transparent'}`, textTransform: 'capitalize' }}>
             {t}
           </button>
         ))}
@@ -245,7 +245,7 @@ export default function TenantDetailPage() {
               ].map(([k, v]) => (
                 <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 10 }}>
                   <span style={{ color: 'var(--ink-4)' }}>{k}</span>
-                  <span style={{ color: 'var(--ink)', fontWeight: 500 }}>{v || '—'}</span>
+                  <span className="cell-main">{v || '—'}</span>
                 </div>
               ))}
             </div>
@@ -262,7 +262,7 @@ export default function TenantDetailPage() {
               ].map(([k, v]) => (
                 <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 10 }}>
                   <span style={{ color: 'var(--ink-4)' }}>{k}</span>
-                  <span style={{ color: 'var(--ink)', fontWeight: 500 }}>{v || '—'}</span>
+                  <span className="cell-main">{v || '—'}</span>
                 </div>
               ))}
             </div>
@@ -327,7 +327,7 @@ export default function TenantDetailPage() {
               : (notes || []).map((n: any) => (
                   <div key={n._id} style={{ padding: '14px 18px', borderBottom: '1px solid var(--line)' }}>
                     <div style={{ fontSize: 13, color: 'var(--ink-2)', marginBottom: 6, lineHeight: 1.5 }}>{n.note}</div>
-                    <div style={{ fontSize: 11, color: 'var(--ink-4)' }}>{n.addedByEmail} · {fmtDate(n.createdAt)}</div>
+                    <div className="cell-sub">{n.addedByEmail} · {fmtDate(n.createdAt)}</div>
                   </div>
                 ))
             }
@@ -367,9 +367,9 @@ export default function TenantDetailPage() {
                 </table>
               </div>
               {dlTotal > 20 && (
-                <div className="card-footer flex-between">
-                  <span style={{ fontSize: 13, color: 'var(--ink-4)' }}>{(dlPage - 1) * 20 + 1}–{Math.min(dlPage * 20, dlTotal)} of {dlTotal}</span>
-                  <div className="gap-2" style={{ display: 'flex' }}>
+                <div className="pagination">
+                  <span className="pagination-info">{(dlPage - 1) * 20 + 1}–{Math.min(dlPage * 20, dlTotal)} of {dlTotal}</span>
+                  <div className="pagination-controls">
                     <button className="btn btn-ghost btn-sm" disabled={dlPage === 1} onClick={() => loadDeliveries(dlPage - 1)}>← Prev</button>
                     <button className="btn btn-ghost btn-sm" disabled={dlPage * 20 >= dlTotal} onClick={() => loadDeliveries(dlPage + 1)}>Next →</button>
                   </div>
@@ -393,7 +393,7 @@ export default function TenantDetailPage() {
                 {['whatsapp_automation_early_access', 'analytics_starter_unlock', 'advance_bookings_trial', 'dedicated_onboarding'].map(flag => (
                   <div key={flag} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid var(--line)' }}>
                     <div>
-                      <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--ink)', fontFamily: 'var(--font-mono)' }}>{flag}</div>
+                      <div className="cell-main" style={{ fontFamily: 'var(--font-mono)' }}>{flag}</div>
                     </div>
                     <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
                       <input

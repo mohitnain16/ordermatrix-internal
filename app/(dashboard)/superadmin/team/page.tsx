@@ -25,7 +25,6 @@ const ROLE_LABEL: Record<string, string> = {
 
 type AdminMember = { _id: string; name: string; email: string; role: string; isActive: boolean; createdAt: string };
 
-const LabelStyle = { display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 6 } as const;
 
 export default function TeamPage() {
   const [team, setTeam]         = useState<AdminMember[]>([]);
@@ -117,7 +116,7 @@ export default function TeamPage() {
                 <>
                   {team.map(m => (
                     <tr key={m._id} style={{ opacity: m.isActive ? 1 : 0.5 }}>
-                      <td style={{ fontWeight: 500, color: 'var(--ink)' }}>
+                      <td className="cell-main">
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <div style={{ width: 28, height: 28, borderRadius: '50%', background: (ROLE_COLOR as Record<string,string>)[m.role] || '#6b7280', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#000', flexShrink: 0 }}>
                             {m.name.charAt(0).toUpperCase()}
@@ -128,7 +127,7 @@ export default function TeamPage() {
                       <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{m.email}</td>
                       <td><span className={`badge ${ROLE_BADGE[m.role] || 'badge-gray'}`}>{ROLE_LABEL[m.role] || m.role}</span></td>
                       <td><span className={`badge ${m.isActive ? 'badge-green' : 'badge-red'}`}>{m.isActive ? 'Active' : 'Inactive'}</span></td>
-                      <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{fmtDate(m.createdAt)}</td>
+                      <td className="cell-sub">{fmtDate(m.createdAt)}</td>
                       <td>
                         {m.role !== 'superadmin' && (
                           <div className="gap-2" style={{ display: 'flex' }}>
@@ -166,19 +165,19 @@ export default function TeamPage() {
             </div>
             <div className="modal-body stack-4">
               <div>
-                <label style={LabelStyle}>Name</label>
+                <label className="form-label">Name</label>
                 <input className="admin-input" placeholder="Full name" value={invite.name} onChange={e => setInvite(p => ({ ...p, name: e.target.value }))} />
               </div>
               <div>
-                <label style={LabelStyle}>Email</label>
+                <label className="form-label">Email</label>
                 <input className="admin-input" type="email" placeholder="admin@ordermatrix.in" value={invite.email} onChange={e => setInvite(p => ({ ...p, email: e.target.value }))} />
               </div>
               <div>
-                <label style={LabelStyle}>Temporary Password</label>
+                <label className="form-label">Temporary Password</label>
                 <input className="admin-input" type="password" placeholder="Min 8 characters" minLength={8} value={invite.password} onChange={e => setInvite(p => ({ ...p, password: e.target.value }))} />
               </div>
               <div>
-                <label style={LabelStyle}>Role</label>
+                <label className="form-label">Role</label>
                 <select className="admin-input" value={invite.role} onChange={e => setInvite(p => ({ ...p, role: e.target.value as AssignableRole }))}>
                   {ASSIGNABLE_ROLES.map(r => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
                 </select>
@@ -203,7 +202,7 @@ export default function TeamPage() {
               <button onClick={() => setEditTarget(null)} className="btn btn-ghost btn-sm btn-icon">✕</button>
             </div>
             <div className="modal-body">
-              <label style={LabelStyle}>Role</label>
+              <label className="form-label">Role</label>
               <select className="admin-input" value={editRole} onChange={e => setEditRole(e.target.value as AssignableRole)}>
                 {ASSIGNABLE_ROLES.map(r => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
               </select>

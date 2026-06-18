@@ -58,12 +58,12 @@ export default function UsersPage() {
               <>
                 {users.map(u => (
                   <tr key={u._id}>
-                    <td style={{ fontWeight: 500, color: 'var(--ink)' }}>{u.name}</td>
+                    <td className="cell-main">{u.name}</td>
                     <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{u.email}</td>
-                    <td style={{ fontSize: 12, color: 'var(--ink-3)' }}>{u.tenantId?.businessName || '—'}</td>
+                    <td className="cell-sub">{u.tenantId?.businessName || '—'}</td>
                     <td><span className={`badge ${u.role === 'superadmin' ? 'badge-purple' : u.role === 'admin' ? 'badge-blue' : 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>{u.role}</span></td>
                     <td><span className={`badge ${u.isActive ? 'badge-green' : 'badge-red'}`}>{u.isActive ? 'Active' : 'Inactive'}</span></td>
-                    <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{fmtDate(u.createdAt)}</td>
+                    <td className="cell-sub">{fmtDate(u.createdAt)}</td>
                     <td>
                       <button className={`btn btn-sm ${u.isActive ? 'btn-danger' : 'btn-ghost'}`} onClick={() => toggleUser(u._id, u.isActive)}>
                         {u.isActive ? 'Ban' : 'Restore'}
@@ -87,9 +87,9 @@ export default function UsersPage() {
       </div>
 
       {pages > 1 && (
-        <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 16 }}>
+        <div className="pagination">
           <button className="btn btn-ghost btn-sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>← Prev</button>
-          <span style={{ fontSize: 13, color: 'var(--ink-3)', display: 'flex', alignItems: 'center' }}>Page {page} of {pages}</span>
+          <span className="pagination-info">Page {page} of {pages}</span>
           <button className="btn btn-ghost btn-sm" disabled={page >= pages} onClick={() => setPage(p => p + 1)}>Next →</button>
         </div>
       )}

@@ -28,7 +28,6 @@ type OverrideForm = {
 
 const emptyOverride: OverrideForm = { planId: 'growth', billingPeriod: 'monthly', status: 'active', currentPeriodEnd: '', seats: 2, reason: '' };
 
-const LabelStyle = { display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 6 } as const;
 
 export default function SubscriptionsPage() {
   const [subs, setSubs]     = useState<any[]>([]);
@@ -133,14 +132,14 @@ export default function SubscriptionsPage() {
                   {subs.map(s => (
                     <tr key={s._id}>
                       <td>
-                        <div style={{ fontWeight: 500, color: 'var(--ink)' }}>{s.tenantId?.businessName || '—'}</div>
-                        <div style={{ fontSize: 11, color: 'var(--ink-4)' }}>{s.tenantId?.email}</div>
+                        <div className="cell-main">{s.tenantId?.businessName || '—'}</div>
+                        <div className="cell-sub">{s.tenantId?.email}</div>
                       </td>
                       <td><span style={{ textTransform: 'capitalize', fontWeight: 500 }}>{s.planId}</span></td>
                       <td><span className={`badge ${STATUS_BADGE[s.status] || 'badge-gray'}`}>{s.status}</span></td>
                       <td style={{ textTransform: 'capitalize', fontSize: 12 }}>{s.billingCycle || '—'}</td>
                       <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{s.amount ? fmt(s.amount) : '—'}</td>
-                      <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{fmtDate(s.currentPeriodEnd)}</td>
+                      <td className="cell-sub">{fmtDate(s.currentPeriodEnd)}</td>
                       <td>
                         <div className="gap-2" style={{ display: 'flex' }}>
                           {s.tenantId?._id && <Link href={`/superadmin/tenants/${s.tenantId._id}`} className="btn btn-ghost btn-sm">View →</Link>}
@@ -186,13 +185,13 @@ export default function SubscriptionsPage() {
             <div className="modal-body stack-4">
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <label style={LabelStyle}>Plan</label>
+                  <label className="form-label">Plan</label>
                   <select className="admin-input" value={overrideForm.planId} onChange={e => setOverrideForm(f => ({ ...f, planId: e.target.value }))}>
                     {PLANS.map(p => <option key={p} value={p} style={{ textTransform: 'capitalize' }}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label style={LabelStyle}>Billing Period</label>
+                  <label className="form-label">Billing Period</label>
                   <select className="admin-input" value={overrideForm.billingPeriod} onChange={e => setOverrideForm(f => ({ ...f, billingPeriod: e.target.value }))}>
                     {CYCLES.map(c => <option key={c} value={c} style={{ textTransform: 'capitalize' }}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>)}
                   </select>
@@ -200,22 +199,22 @@ export default function SubscriptionsPage() {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <label style={LabelStyle}>Status</label>
+                  <label className="form-label">Status</label>
                   <select className="admin-input" value={overrideForm.status} onChange={e => setOverrideForm(f => ({ ...f, status: e.target.value }))}>
                     {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label style={LabelStyle}>Seats</label>
+                  <label className="form-label">Seats</label>
                   <input type="number" min={1} max={100} className="admin-input" value={overrideForm.seats} onChange={e => setOverrideForm(f => ({ ...f, seats: parseInt(e.target.value) || 1 }))} />
                 </div>
               </div>
               <div>
-                <label style={LabelStyle}>Current Period End</label>
+                <label className="form-label">Current Period End</label>
                 <input type="date" className="admin-input" value={overrideForm.currentPeriodEnd} onChange={e => setOverrideForm(f => ({ ...f, currentPeriodEnd: e.target.value }))} />
               </div>
               <div>
-                <label style={LabelStyle}>Internal Reason <span style={{ color: 'var(--accent)' }}>*</span></label>
+                <label className="form-label">Internal Reason <span style={{ color: 'var(--accent)' }}>*</span></label>
                 <input className="admin-input" placeholder="e.g. Sales deal — 3 months free Growth" value={overrideForm.reason} onChange={e => setOverrideForm(f => ({ ...f, reason: e.target.value }))} />
               </div>
               <div style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)', borderRadius: 8, padding: '10px 14px', fontSize: 12, color: 'var(--ink-3)' }}>

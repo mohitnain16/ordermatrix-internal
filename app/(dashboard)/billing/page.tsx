@@ -98,7 +98,7 @@ export default function BillingOpsPage() {
               <p className="modal-sub">{dunningModal.name}</p>
             </div>
             <div className="modal-body">
-              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 10 }}>Day sequence</div>
+              <div className="form-label">Day sequence</div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {[1, 3, 7].map(day => (
                   <div key={day} style={{ flex: 1, minWidth: 100 }}>
@@ -143,14 +143,14 @@ export default function BillingOpsPage() {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', borderBottom: '1px solid var(--line)', marginBottom: 20 }}>
+      <div className="tab-bar">
         {([
           { key: 'failed',   label: `Failed Payments (${failed.length})` },
           { key: 'dunning',  label: 'Dunning' },
           { key: 'seats',    label: `Seat Usage (${seats.length})` },
           { key: 'invoices', label: 'Invoices' },
         ] as const).map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)} style={{ padding: '9px 18px', fontSize: 13, fontWeight: tab === t.key ? 600 : 400, color: tab === t.key ? 'var(--accent)' : 'var(--ink-3)', background: 'none', border: 'none', borderBottom: `2px solid ${tab === t.key ? 'var(--accent)' : 'transparent'}`, cursor: 'pointer', fontFamily: 'inherit', marginBottom: -1 }}>
+          <button key={t.key} onClick={() => setTab(t.key)} className={`tab-btn${tab === t.key ? ' active' : ''}`}>
             {t.label}
           </button>
         ))}
@@ -171,14 +171,14 @@ export default function BillingOpsPage() {
                 <>
                   {failed.map((f: any) => (
                     <tr key={f.subscriptionId}>
-                      <td style={{ fontWeight: 500 }}>
-                        {f.tenant?.businessName}
-                        <div style={{ fontSize: 11, color: 'var(--ink-4)' }}>{f.tenant?.email}</div>
+                      <td>
+                        <div className="cell-main">{f.tenant?.businessName}</div>
+                        <div className="cell-sub">{f.tenant?.email}</div>
                       </td>
                       <td style={{ textTransform: 'capitalize' }}>{f.planId}</td>
                       <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--red)' }}>{fmt(f.amount)}</td>
                       <td style={{ fontFamily: 'var(--font-mono)' }}>{f.retryCount}</td>
-                      <td style={{ fontSize: 12, color: 'var(--ink-3)' }}>{fmtDate(f.failedAt)}</td>
+                      <td className="cell-sub">{fmtDate(f.failedAt)}</td>
                       {tab === 'dunning' && (
                         <td>
                           {f.dunningSent?.length > 0 ? (
@@ -229,7 +229,7 @@ export default function BillingOpsPage() {
                 <>
                   {seats.map((t: any) => (
                     <tr key={t._id}>
-                      <td style={{ fontWeight: 500 }}>{t.businessName}<div style={{ fontSize: 11, color: 'var(--ink-4)' }}>{t.email}</div></td>
+                      <td><div className="cell-main">{t.businessName}</div><div className="cell-sub">{t.email}</div></td>
                       <td style={{ textTransform: 'capitalize' }}>{t.planId}</td>
                       <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{t.seatsUsed}</td>
                       <td style={{ fontFamily: 'var(--font-mono)' }}>{t.seatsLimit}</td>
@@ -287,7 +287,7 @@ export default function BillingOpsPage() {
                       <tbody>
                         {invResults.map((t: any) => (
                           <tr key={t._id}>
-                            <td style={{ fontWeight: 500 }}>{t.businessName}</td>
+                            <td className="cell-main">{t.businessName}</td>
                             <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{t.email}</td>
                             <td style={{ textTransform: 'capitalize' }}>{t.planId}</td>
                             <td><button className="btn btn-ghost btn-sm" onClick={() => loadInvoices(t)}>View Invoices →</button></td>

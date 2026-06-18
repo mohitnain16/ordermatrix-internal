@@ -160,8 +160,8 @@ export default function LeadCapturesPage() {
                           {TEMPLATE_LABEL[r.templateType] || r.templateType}
                         </span>
                       </td>
-                      <td style={{ fontSize: 12, color: 'var(--ink-3)' }}>{VOLUME_LABEL[r.monthlyOrderVolume] || r.monthlyOrderVolume || '—'}</td>
-                      <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{fmtDate(r.createdAt)}</td>
+                      <td className="cell-sub">{VOLUME_LABEL[r.monthlyOrderVolume] || r.monthlyOrderVolume || '—'}</td>
+                      <td className="cell-sub">{fmtDate(r.createdAt)}</td>
                       <td>
                         <span className={`badge ${r.converted ? 'badge-green' : 'badge-gray'}`}>
                           {r.converted ? 'Converted' : 'Lead'}
@@ -194,7 +194,7 @@ export default function LeadCapturesPage() {
         {totalPages > 1 && (
           <div className="card-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, color: 'var(--ink-4)' }}>
             <span>{skip + 1}–{Math.min(skip + LIMIT, total)} of {total}</span>
-            <div style={{ display: 'flex', gap: 6 }}>
+            <div className="pagination-controls">
               <button className="btn btn-ghost btn-sm" disabled={skip === 0} onClick={() => loadPage(skip - LIMIT)}>← Prev</button>
               <span style={{ padding: '4px 8px' }}>{currentPage} / {totalPages}</span>
               <button className="btn btn-ghost btn-sm" disabled={skip + LIMIT >= total} onClick={() => loadPage(skip + LIMIT)}>Next →</button>

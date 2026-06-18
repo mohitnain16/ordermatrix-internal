@@ -74,13 +74,13 @@ export default function TenantsPage() {
               <>
                 {tenants.map(t => (
                   <tr key={t._id}>
-                    <td><span style={{ fontWeight: 500, color: 'var(--ink)' }}>{t.businessName}</span></td>
+                    <td><span className="cell-main">{t.businessName}</span></td>
                     <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{t.email}</td>
                     <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{t.phone}</td>
                     <td><span className={`badge ${PLAN_BADGE[t.planId] || 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>{t.planId}</span></td>
                     <td style={{ fontFamily: 'var(--font-mono)' }}>{t.ordersThisMonth}</td>
                     <td><span className={`badge ${t.isActive ? 'badge-green' : 'badge-red'}`}>{t.isActive ? 'Active' : 'Inactive'}</span></td>
-                    <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{fmtDate(t.createdAt)}</td>
+                    <td className="cell-sub">{fmtDate(t.createdAt)}</td>
                     <td><Link href={`/superadmin/tenants/${t._id}`} className="btn btn-ghost btn-sm">View →</Link></td>
                   </tr>
                 ))}
@@ -102,9 +102,9 @@ export default function TenantsPage() {
 
       {/* Pagination */}
       {pages > 1 && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center', marginTop: 16 }}>
+        <div className="pagination">
           <button className="btn btn-ghost btn-sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>← Prev</button>
-          <span style={{ fontSize: 13, color: 'var(--ink-3)' }}>Page {page} of {pages}</span>
+          <span className="pagination-info">Page {page} of {pages}</span>
           <button className="btn btn-ghost btn-sm" disabled={page >= pages} onClick={() => setPage(p => p + 1)}>Next →</button>
         </div>
       )}

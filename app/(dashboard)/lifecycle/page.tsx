@@ -109,9 +109,9 @@ export default function LifecyclePage() {
             <tbody>
               {churnQueue.map(t => (
                 <tr key={t._id}>
-                  <td style={{ fontWeight: 500, color: 'var(--ink)' }}>
-                    {t.businessName}
-                    <div style={{ fontSize: 11, color: 'var(--ink-4)' }}>{t.email}</div>
+                  <td>
+                    <div className="cell-main">{t.businessName}</div>
+                    <div className="cell-sub">{t.email}</div>
                   </td>
                   <td><span className={`badge ${PLAN_BADGE[t.planId] || 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>{t.planId}</span></td>
                   <td style={{ minWidth: 140 }}><HealthBar score={t.health} /></td>
@@ -146,13 +146,13 @@ export default function LifecyclePage() {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', borderBottom: '1px solid var(--line)', marginBottom: 20 }}>
+      <div className="tab-bar">
         {([
           { key: 'onboarding', label: `Onboarding (${incompleteOnboarding.length} incomplete)` },
           { key: 'health', label: 'Health Scores' },
           { key: 'churn', label: `Churn Risk (${churnList.length})` },
         ] as const).map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)} style={{ padding: '9px 18px', fontSize: 13, fontWeight: tab === t.key ? 600 : 400, color: tab === t.key ? 'var(--accent)' : 'var(--ink-3)', background: 'none', border: 'none', borderBottom: `2px solid ${tab === t.key ? 'var(--accent)' : 'transparent'}`, cursor: 'pointer', fontFamily: 'inherit', marginBottom: -1 }}>
+          <button key={t.key} onClick={() => setTab(t.key)} className={`tab-btn${tab === t.key ? ' active' : ''}`}>
             {t.label}
           </button>
         ))}
@@ -167,7 +167,7 @@ export default function LifecyclePage() {
                 <>
                   {incompleteOnboarding.map(t => (
                     <tr key={t._id}>
-                      <td style={{ fontWeight: 500 }}>{t.businessName}<div style={{ fontSize: 11, color: 'var(--ink-4)' }}>{t.email}</div></td>
+                      <td><div className="cell-main">{t.businessName}</div><div className="cell-sub">{t.email}</div></td>
                       <td><span className={`badge ${PLAN_BADGE[t.planId] || 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>{t.planId}</span></td>
                       <td>
                         <Step done={t.onboarding.profileComplete} label="Profile" />
@@ -202,7 +202,7 @@ export default function LifecyclePage() {
               {loading ? <SkRows rows={8} cols={7} /> : (
                 [...tenants].sort((a, b) => a.health - b.health).map(t => (
                   <tr key={t._id}>
-                    <td style={{ fontWeight: 500 }}>{t.businessName}</td>
+                    <td className="cell-main">{t.businessName}</td>
                     <td><span className={`badge ${PLAN_BADGE[t.planId] || 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>{t.planId}</span></td>
                     <td style={{ minWidth: 160 }}><HealthBar score={t.health} /></td>
                     <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{t.ordersWeek}</td>
@@ -226,7 +226,7 @@ export default function LifecyclePage() {
                 <>
                   {churnList.sort((a, b) => b.daysSinceActive - a.daysSinceActive).map(t => (
                     <tr key={t._id}>
-                      <td style={{ fontWeight: 500 }}>{t.businessName}<div style={{ fontSize: 11, color: 'var(--ink-4)' }}>{t.email}</div></td>
+                      <td><div className="cell-main">{t.businessName}</div><div className="cell-sub">{t.email}</div></td>
                       <td><span className={`badge ${PLAN_BADGE[t.planId] || 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>{t.planId}</span></td>
                       <td><span className={`badge ${t.daysSinceActive >= 14 ? 'badge-red' : 'badge-gold'}`}>{t.daysSinceActive}d</span></td>
                       <td style={{ fontFamily: 'var(--font-mono)' }}>{t.ordersWeek}</td>

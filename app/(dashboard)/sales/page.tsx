@@ -221,13 +221,13 @@ export default function SalesPage() {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', borderBottom: '1px solid var(--line)', marginBottom: 20 }}>
+      <div className="tab-bar">
         {([
           { key: 'pipeline', label: 'Trial Pipeline' },
           { key: 'revenue',  label: 'Plan Breakdown' },
           { key: 'leads',    label: 'Hot Leads' },
         ] as const).map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)} style={{ padding: '9px 18px', fontSize: 13, fontWeight: tab === t.key ? 600 : 400, color: tab === t.key ? 'var(--accent)' : 'var(--ink-3)', background: 'none', border: 'none', borderBottom: `2px solid ${tab === t.key ? 'var(--accent)' : 'transparent'}`, cursor: 'pointer', fontFamily: 'inherit', marginBottom: -1 }}>
+          <button key={t.key} onClick={() => setTab(t.key)} className={`tab-btn${tab === t.key ? ' active' : ''}`}>
             {t.label}
           </button>
         ))}
@@ -243,9 +243,9 @@ export default function SalesPage() {
                   <tr key={t._id}>
                     <td>
                       <Link href={`/superadmin/tenants/${t._id}`} style={{ fontWeight: 500, color: 'var(--accent)', textDecoration: 'none' }}>{t.businessName}</Link>
-                      <div style={{ fontSize: 11, color: 'var(--ink-4)' }}>{fmtDate(t.createdAt)}</div>
+                      <div className="cell-sub">{fmtDate(t.createdAt)}</div>
                     </td>
-                    <td style={{ fontSize: 12, color: 'var(--ink-3)' }}>{t.email}</td>
+                    <td className="cell-sub">{t.email}</td>
                     <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: t.orderCount > 10 ? 'var(--green)' : 'var(--ink)' }}>{t.orderCount}</td>
                     <td>
                       <span className={`badge ${t.daysLeft <= 3 ? 'badge-red' : t.daysLeft <= 7 ? 'badge-gold' : 'badge-green'}`}>
@@ -293,16 +293,16 @@ export default function SalesPage() {
                           </span>
                         </td>
                         <td>
-                          <div style={{ fontWeight: 500 }}>{l.tenantId?.businessName}</div>
-                          <div style={{ fontSize: 11, color: 'var(--ink-4)' }}>{l.tenantId?.email}</div>
+                          <div className="cell-main">{l.tenantId?.businessName}</div>
+                          <div className="cell-sub">{l.tenantId?.email}</div>
                         </td>
-                        <td style={{ textTransform: 'capitalize', fontSize: 13 }}>{l.tenantId?.planId || '—'}</td>
+                        <td style={{ textTransform: 'capitalize' }} className="cell-main">{l.tenantId?.planId || '—'}</td>
                         <td>
                           <span className={`badge ${l.status === 'contacted' ? 'badge-blue' : l.status === 'converted' ? 'badge-green' : l.status === 'churned' ? 'badge-red' : 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>
                             {l.status}
                           </span>
                         </td>
-                        <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{fmtDate(l.updatedAt)}</td>
+                        <td className="cell-sub">{fmtDate(l.updatedAt)}</td>
                         <td>
                           <div style={{ display: 'flex', gap: 6 }}>
                             <button
@@ -341,7 +341,7 @@ export default function SalesPage() {
               <tbody>
                 {(revenue.planBreakdown || []).map((p: any) => (
                   <tr key={p._id}>
-                    <td style={{ textTransform: 'capitalize', fontWeight: 500 }}>{p._id}</td>
+                    <td style={{ textTransform: 'capitalize' }} className="cell-main">{p._id}</td>
                     <td style={{ fontFamily: 'var(--font-mono)' }}>{p.count}</td>
                     <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--green)' }}>{fmt(p.revenue || 0)}</td>
                   </tr>

@@ -46,10 +46,10 @@ export default function AuditLogPage() {
                 {logs.map(l => (
                   <tr key={l._id}>
                     <td>
-                      <div style={{ fontWeight: 500, color: 'var(--ink)', fontSize: 12 }}>{l.actor?.name || '—'}</div>
-                      <div style={{ fontSize: 11, color: 'var(--ink-4)' }}>{l.actorEmail}</div>
+                      <div className="cell-main" style={{ fontSize: 12 }}>{l.actor?.name || '—'}</div>
+                      <div className="cell-sub">{l.actorEmail}</div>
                     </td>
-                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-2)', maxWidth: 320, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <td className="text-truncate" style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-2)', maxWidth: 320 }}>
                       {l.action}
                     </td>
                     <td>
@@ -77,9 +77,9 @@ export default function AuditLogPage() {
       </div>
 
       {pages > 1 && (
-        <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 16 }}>
+        <div className="pagination">
           <button className="btn btn-ghost btn-sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>← Prev</button>
-          <span style={{ fontSize: 13, color: 'var(--ink-3)', display: 'flex', alignItems: 'center' }}>Page {page} of {pages}</span>
+          <span className="pagination-info">Page {page} of {pages}</span>
           <button className="btn btn-ghost btn-sm" disabled={page >= pages} onClick={() => setPage(p => p + 1)}>Next →</button>
         </div>
       )}
