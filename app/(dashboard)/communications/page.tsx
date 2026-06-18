@@ -130,8 +130,11 @@ export default function CommunicationsPage() {
 
       {tab === 'broadcast' && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 24 }}>
-          <div className="admin-card" style={{ padding: 24 }}>
-            <h3 style={{ margin: '0 0 20px', fontSize: 15, fontWeight: 700 }}>Compose Broadcast</h3>
+          <div className="admin-card">
+            <div className="card-header">
+              <h3 className="card-title">Compose Broadcast</h3>
+            </div>
+            <div className="card-body">
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
               <div>
@@ -204,32 +207,41 @@ export default function CommunicationsPage() {
                 )}
               </div>
             )}
+            </div>
           </div>
 
           <div>
-            <div className="admin-card" style={{ padding: 20 }}>
-              <h4 style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 700 }}>Audience</h4>
-              {preview ? (
-                <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--accent)', fontFamily: 'var(--font-mono)', marginBottom: 4 }}>{preview.count}</div>
-              ) : (
-                <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--ink-4)', fontFamily: 'var(--font-mono)', marginBottom: 4 }}>—</div>
-              )}
-              <div style={{ fontSize: 12, color: 'var(--ink-4)' }}>tenants match current filter</div>
-              <button className="btn btn-ghost btn-sm" style={{ marginTop: 12 }} onClick={previewBroadcast}>Recalculate</button>
+            <div className="admin-card">
+              <div className="card-header">
+                <h4 className="card-title">Audience</h4>
+              </div>
+              <div className="card-body">
+                {preview ? (
+                  <div className="stat-value mono" style={{ color: 'var(--accent)', marginBottom: 4 }}>{preview.count}</div>
+                ) : (
+                  <div className="stat-value mono" style={{ color: 'var(--ink-4)', marginBottom: 4 }}>—</div>
+                )}
+                <div style={{ fontSize: 12, color: 'var(--ink-4)' }}>tenants match current filter</div>
+                <button className="btn btn-ghost btn-sm" style={{ marginTop: 12 }} onClick={previewBroadcast}>Recalculate</button>
+              </div>
             </div>
-            <div className="admin-card" style={{ padding: 20, marginTop: 12 }}>
-              <h4 style={{ margin: '0 0 10px', fontSize: 13, fontWeight: 700 }}>Quick Segments</h4>
-              {[
-                { label: 'All Trials Expiring This Week', plan: 'all', trial: 'expiring' },
-                { label: 'All Paid Tenants', plan: 'all', trial: '' },
-                { label: 'Starter Plan', plan: 'starter', trial: '' },
-                { label: 'Growth Plan', plan: 'growth', trial: '' },
-              ].map(seg => (
-                <button key={seg.label} className="btn btn-ghost btn-sm" style={{ display: 'block', width: '100%', textAlign: 'left', marginBottom: 6 }}
-                  onClick={() => { setBroadcast(b => ({ ...b, filterPlan: seg.plan, filterTrial: seg.trial })); }}>
-                  {seg.label}
-                </button>
-              ))}
+            <div className="admin-card" style={{ marginTop: 12 }}>
+              <div className="card-header">
+                <h4 className="card-title">Quick Segments</h4>
+              </div>
+              <div className="card-body">
+                {[
+                  { label: 'All Trials Expiring This Week', plan: 'all', trial: 'expiring' },
+                  { label: 'All Paid Tenants', plan: 'all', trial: '' },
+                  { label: 'Starter Plan', plan: 'starter', trial: '' },
+                  { label: 'Growth Plan', plan: 'growth', trial: '' },
+                ].map(seg => (
+                  <button key={seg.label} className="btn btn-ghost btn-sm" style={{ display: 'block', width: '100%', textAlign: 'left', marginBottom: 6 }}
+                    onClick={() => { setBroadcast(b => ({ ...b, filterPlan: seg.plan, filterTrial: seg.trial })); }}>
+                    {seg.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -244,8 +256,11 @@ export default function CommunicationsPage() {
           </div>
 
           {showAnnForm && (
-            <div className="admin-card" style={{ padding: 24, marginBottom: 20 }}>
-              <h3 style={{ margin: '0 0 20px', fontSize: 15, fontWeight: 700 }}>{editingId ? 'Edit' : 'New'} Announcement</h3>
+            <div className="admin-card" style={{ marginBottom: 20 }}>
+              <div className="card-header">
+                <h3 className="card-title">{editingId ? 'Edit' : 'New'} Announcement</h3>
+              </div>
+              <div className="card-body">
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
                 <div>
                   <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 6 }}>Title</label>
@@ -286,7 +301,8 @@ export default function CommunicationsPage() {
                   <input type="date" className="admin-input" value={annForm.expiresAt} onChange={e => setAnnForm(f => ({ ...f, expiresAt: e.target.value }))} />
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              </div>
+              <div className="card-footer">
                 <button className="btn btn-ghost btn-sm" onClick={() => { setShowAnnForm(false); setEditingId(null); }}>Cancel</button>
                 <button className="btn btn-primary btn-sm" onClick={saveAnnouncement} disabled={annLoading || !annForm.title || !annForm.message}>
                   {annLoading ? <><span className="spinner" />{editingId ? 'Saving…' : 'Publishing…'}</> : editingId ? 'Update' : 'Publish'}

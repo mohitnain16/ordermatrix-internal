@@ -37,7 +37,7 @@ export default function TenantsPage() {
 
   return (
     <div className="animate-fade-in">
-      <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div className="page-header flex-between">
         <div>
           <h1 className="page-title">Tenants</h1>
           <p className="page-sub">{total} total tenants</p>
@@ -45,7 +45,7 @@ export default function TenantsPage() {
       </div>
 
       {/* Filters */}
-      <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+      <div className="table-filter-bar">
         <input
           className="admin-input"
           style={{ maxWidth: 280 }}
@@ -61,6 +61,7 @@ export default function TenantsPage() {
       </div>
 
       <div className="admin-card">
+        <div className="table-shell">
         <table className="admin-table">
           <thead>
             <tr>
@@ -96,6 +97,7 @@ export default function TenantsPage() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Pagination */}

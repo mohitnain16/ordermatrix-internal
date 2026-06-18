@@ -160,8 +160,8 @@ export default function TenantDetailPage() {
   );
   if (!data) return (
     <div className="empty-state" style={{ padding: 80 }}>
-      <div className="empty-state-icon">🏢</div>
-      <div className="empty-state-title">Tenant not found</div>
+      <div className="empty-icon">🏢</div>
+      <div className="empty-title">Tenant not found</div>
       <button className="btn btn-ghost btn-sm" style={{ marginTop: 12 }} onClick={() => router.back()}>← Go back</button>
     </div>
   );
@@ -174,7 +174,7 @@ export default function TenantDetailPage() {
       {toastMsg && <div className="toast toast-default">{toastMsg}</div>}
 
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
+      <div className="page-header">
         <div>
           <button onClick={() => router.back()} style={{ background: 'none', border: 'none', color: 'var(--ink-4)', fontSize: 13, cursor: 'pointer', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 4, padding: 0, fontFamily: 'inherit' }}>← Back to Tenants</button>
           <h1 className="page-title">{tenant.businessName}</h1>
@@ -209,10 +209,10 @@ export default function TenantDetailPage() {
           { label: 'Orders This Month', value: tenant.ordersThisMonth },
         ].map((s, i) => (
           <div key={i} className="stat-card">
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-4)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>{s.label}</div>
+            <div className="stat-label">{s.label}</div>
             {s.badge
-              ? <span className={`badge ${s.badge}`} style={{ fontSize: 13, fontWeight: 700, padding: '4px 12px', textTransform: 'capitalize' }}>{s.value}</span>
-              : <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--ink)', fontFamily: 'var(--font-mono)' }}>{s.value}</div>
+              ? <span className={`badge ${s.badge}`}>{s.value}</span>
+              : <div className="stat-value">{s.value}</div>
             }
           </div>
         ))}
@@ -230,61 +230,73 @@ export default function TenantDetailPage() {
       {/* Tab content */}
       {tab === 'overview' && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-          <div className="admin-card" style={{ padding: 20 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink-4)', marginBottom: 14, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Business Info</div>
-            {[
-              ['Owner', tenant.ownerName],
-              ['Category', tenant.category],
-              ['Slug', tenant.slug],
-              ['Joined', fmtDate(tenant.createdAt)],
-              ['Trial Ends', fmtDate(tenant.trialEndsAt)],
-              ['Status', tenant.isActive ? 'Active' : 'Inactive'],
-            ].map(([k, v]) => (
-              <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 10 }}>
-                <span style={{ color: 'var(--ink-4)' }}>{k}</span>
-                <span style={{ color: 'var(--ink)', fontWeight: 500 }}>{v || '—'}</span>
-              </div>
-            ))}
+          <div className="admin-card">
+            <div className="card-header">
+              <div className="card-title">Business Info</div>
+            </div>
+            <div className="card-body">
+              {[
+                ['Owner', tenant.ownerName],
+                ['Category', tenant.category],
+                ['Slug', tenant.slug],
+                ['Joined', fmtDate(tenant.createdAt)],
+                ['Trial Ends', fmtDate(tenant.trialEndsAt)],
+                ['Status', tenant.isActive ? 'Active' : 'Inactive'],
+              ].map(([k, v]) => (
+                <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 10 }}>
+                  <span style={{ color: 'var(--ink-4)' }}>{k}</span>
+                  <span style={{ color: 'var(--ink)', fontWeight: 500 }}>{v || '—'}</span>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="admin-card" style={{ padding: 20 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink-4)', marginBottom: 14, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Plan Limits</div>
-            {[
-              ['Orders/mo', tenant.planLimits?.orders === 0 ? 'Unlimited' : tenant.planLimits?.orders],
-              ['Seats', tenant.planLimits?.seats],
-              ['Features', (tenant.planLimits?.features || []).length + ' enabled'],
-            ].map(([k, v]) => (
-              <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 10 }}>
-                <span style={{ color: 'var(--ink-4)' }}>{k}</span>
-                <span style={{ color: 'var(--ink)', fontWeight: 500 }}>{v || '—'}</span>
-              </div>
-            ))}
+          <div className="admin-card">
+            <div className="card-header">
+              <div className="card-title">Plan Limits</div>
+            </div>
+            <div className="card-body">
+              {[
+                ['Orders/mo', tenant.planLimits?.orders === 0 ? 'Unlimited' : tenant.planLimits?.orders],
+                ['Seats', tenant.planLimits?.seats],
+                ['Features', (tenant.planLimits?.features || []).length + ' enabled'],
+              ].map(([k, v]) => (
+                <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 10 }}>
+                  <span style={{ color: 'var(--ink-4)' }}>{k}</span>
+                  <span style={{ color: 'var(--ink)', fontWeight: 500 }}>{v || '—'}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
 
       {tab === 'subscription' && (
-        <div className="admin-card" style={{ padding: 24 }}>
+        <div className="admin-card">
           {sub ? (
             <>
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink-4)', marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Subscription</div>
-              {[
-                ['Plan', sub.planName],
-                ['Status', sub.status],
-                ['Cycle', sub.billingCycle],
-                ['Amount', sub.amount ? fmt(sub.amount) : '—'],
-                ['Seats', sub.seats],
-                ['Period Start', fmtDate(sub.currentPeriodStart)],
-                ['Period End', fmtDate(sub.currentPeriodEnd)],
-                ['Razorpay Sub ID', sub.razorpaySubId || '—'],
-              ].map(([k, v]) => (
-                <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 10, borderBottom: '1px solid var(--line)', paddingBottom: 10 }}>
-                  <span style={{ color: 'var(--ink-4)' }}>{k}</span>
-                  <span style={{ color: 'var(--ink)', fontWeight: 500, fontFamily: k?.toString().includes('ID') ? 'var(--font-mono)' : undefined, fontSize: k?.toString().includes('ID') ? 11 : 13 }}>{v?.toString() || '—'}</span>
-                </div>
-              ))}
+              <div className="card-header">
+                <div className="card-title">Subscription</div>
+              </div>
+              <div className="card-body">
+                {[
+                  ['Plan', sub.planName],
+                  ['Status', sub.status],
+                  ['Cycle', sub.billingCycle],
+                  ['Amount', sub.amount ? fmt(sub.amount) : '—'],
+                  ['Seats', sub.seats],
+                  ['Period Start', fmtDate(sub.currentPeriodStart)],
+                  ['Period End', fmtDate(sub.currentPeriodEnd)],
+                  ['Razorpay Sub ID', sub.razorpaySubId || '—'],
+                ].map(([k, v]) => (
+                  <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 10, borderBottom: '1px solid var(--line)', paddingBottom: 10 }}>
+                    <span style={{ color: 'var(--ink-4)' }}>{k}</span>
+                    <span style={{ color: 'var(--ink)', fontWeight: 500, fontFamily: k?.toString().includes('ID') ? 'var(--font-mono)' : undefined, fontSize: k?.toString().includes('ID') ? 11 : 13 }}>{v?.toString() || '—'}</span>
+                  </div>
+                ))}
+              </div>
             </>
           ) : (
-            <div style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>No active subscription — on trial</div>
+            <div className="card-body" style={{ textAlign: 'center', color: 'var(--ink-4)' }}>No active subscription — on trial</div>
           )}
         </div>
       )}
@@ -292,22 +304,26 @@ export default function TenantDetailPage() {
       {tab === 'notes' && (
         <div>
           {canEdit && (
-            <div className="admin-card" style={{ padding: 16, marginBottom: 16 }}>
-              <textarea
-                value={note}
-                onChange={e => setNote(e.target.value)}
-                placeholder="Add a support note…"
-                rows={3}
-                style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--line)', borderRadius: 8, fontSize: 13, color: 'var(--ink)', background: 'var(--surface)', outline: 'none', resize: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
-              />
-              <button className="btn btn-primary btn-sm" style={{ marginTop: 8 }} onClick={addNote} disabled={saving}>
-                {saving ? <><span className="spinner" />Saving…</> : 'Add Note'}
-              </button>
+            <div className="admin-card" style={{ marginBottom: 16 }}>
+              <div className="card-body">
+                <textarea
+                  value={note}
+                  onChange={e => setNote(e.target.value)}
+                  placeholder="Add a support note…"
+                  rows={3}
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--line)', borderRadius: 8, fontSize: 13, color: 'var(--ink)', background: 'var(--surface)', outline: 'none', resize: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                />
+              </div>
+              <div className="card-footer">
+                <button className="btn btn-primary btn-sm" onClick={addNote} disabled={saving}>
+                  {saving ? <><span className="spinner" />Saving…</> : 'Add Note'}
+                </button>
+              </div>
             </div>
           )}
           <div className="admin-card">
             {(notes || []).length === 0
-              ? <div style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>No notes yet</div>
+              ? <div className="card-body" style={{ textAlign: 'center', color: 'var(--ink-4)' }}>No notes yet</div>
               : (notes || []).map((n: any) => (
                   <div key={n._id} style={{ padding: '14px 18px', borderBottom: '1px solid var(--line)' }}>
                     <div style={{ fontSize: 13, color: 'var(--ink-2)', marginBottom: 6, lineHeight: 1.5 }}>{n.note}</div>
@@ -325,33 +341,35 @@ export default function TenantDetailPage() {
             <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
           ) : (
             <div className="admin-card">
-              <table className="admin-table">
-                <thead>
-                  <tr><th>Time</th><th>Channel</th><th>Type</th><th>To</th><th>Status</th></tr>
-                </thead>
-                <tbody>
-                  {deliveries.map((d: any) => (
-                    <tr key={d._id}>
-                      <td style={{ fontSize: 12, color: 'var(--ink-4)', fontFamily: 'var(--font-mono)' }}>{timeAgo(d.sentAt)}</td>
-                      <td><span className={`badge ${d.channel === 'email' ? 'badge-blue' : 'badge-green'}`} style={{ textTransform: 'capitalize' }}>{d.channel}</span></td>
-                      <td style={{ fontSize: 12, color: 'var(--ink-3)' }}>{d.messageType}</td>
-                      <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{maskRecipient(d.recipient)}</td>
-                      <td>
-                        <span className={`badge ${d.status === 'delivered' ? 'badge-green' : d.status === 'failed' ? 'badge-red' : d.status === 'bounced' ? 'badge-gold' : 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>
-                          {d.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                  {deliveries.length === 0 && (
-                    <tr><td colSpan={5} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>No delivery logs yet</td></tr>
-                  )}
-                </tbody>
-              </table>
+              <div className="table-shell">
+                <table className="admin-table">
+                  <thead>
+                    <tr><th>Time</th><th>Channel</th><th>Type</th><th>To</th><th>Status</th></tr>
+                  </thead>
+                  <tbody>
+                    {deliveries.map((d: any) => (
+                      <tr key={d._id}>
+                        <td style={{ fontSize: 12, color: 'var(--ink-4)', fontFamily: 'var(--font-mono)' }}>{timeAgo(d.sentAt)}</td>
+                        <td><span className={`badge ${d.channel === 'email' ? 'badge-blue' : 'badge-green'}`} style={{ textTransform: 'capitalize' }}>{d.channel}</span></td>
+                        <td style={{ fontSize: 12, color: 'var(--ink-3)' }}>{d.messageType}</td>
+                        <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{maskRecipient(d.recipient)}</td>
+                        <td>
+                          <span className={`badge ${d.status === 'delivered' ? 'badge-green' : d.status === 'failed' ? 'badge-red' : d.status === 'bounced' ? 'badge-gold' : 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>
+                            {d.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                    {deliveries.length === 0 && (
+                      <tr><td colSpan={5} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>No delivery logs yet</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
               {dlTotal > 20 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderTop: '1px solid var(--line)', fontSize: 13, color: 'var(--ink-4)' }}>
-                  <span>{(dlPage - 1) * 20 + 1}–{Math.min(dlPage * 20, dlTotal)} of {dlTotal}</span>
-                  <div style={{ display: 'flex', gap: 6 }}>
+                <div className="card-footer flex-between">
+                  <span style={{ fontSize: 13, color: 'var(--ink-4)' }}>{(dlPage - 1) * 20 + 1}–{Math.min(dlPage * 20, dlTotal)} of {dlTotal}</span>
+                  <div className="gap-2" style={{ display: 'flex' }}>
                     <button className="btn btn-ghost btn-sm" disabled={dlPage === 1} onClick={() => loadDeliveries(dlPage - 1)}>← Prev</button>
                     <button className="btn btn-ghost btn-sm" disabled={dlPage * 20 >= dlTotal} onClick={() => loadDeliveries(dlPage + 1)}>Next →</button>
                   </div>
@@ -367,26 +385,30 @@ export default function TenantDetailPage() {
           {flagsLoading ? (
             <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
           ) : (
-            <div className="admin-card" style={{ padding: 24 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink-4)', marginBottom: 20, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Feature Flags</div>
-              {['whatsapp_automation_early_access', 'analytics_starter_unlock', 'advance_bookings_trial', 'dedicated_onboarding'].map(flag => (
-                <div key={flag} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid var(--line)' }}>
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--ink)', fontFamily: 'var(--font-mono)' }}>{flag}</div>
+            <div className="admin-card">
+              <div className="card-header">
+                <div className="card-title">Feature Flags</div>
+              </div>
+              <div className="card-body">
+                {['whatsapp_automation_early_access', 'analytics_starter_unlock', 'advance_bookings_trial', 'dedicated_onboarding'].map(flag => (
+                  <div key={flag} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid var(--line)' }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--ink)', fontFamily: 'var(--font-mono)' }}>{flag}</div>
+                    </div>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={flags[flag] === true}
+                        onChange={e => toggleFlag(flag, e.target.checked)}
+                        style={{ width: 16, height: 16, accentColor: 'var(--accent)', cursor: 'pointer' }}
+                      />
+                      <span style={{ fontSize: 12, color: flags[flag] ? 'var(--green)' : 'var(--ink-4)' }}>
+                        {flags[flag] ? 'Enabled' : 'Disabled'}
+                      </span>
+                    </label>
                   </div>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={flags[flag] === true}
-                      onChange={e => toggleFlag(flag, e.target.checked)}
-                      style={{ width: 16, height: 16, accentColor: 'var(--accent)', cursor: 'pointer' }}
-                    />
-                    <span style={{ fontSize: 12, color: flags[flag] ? 'var(--green)' : 'var(--ink-4)' }}>
-                      {flags[flag] ? 'Enabled' : 'Disabled'}
-                    </span>
-                  </label>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
         </div>

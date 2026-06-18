@@ -84,10 +84,10 @@ export default function LifecyclePage() {
       </div>
 
       {/* Churn Risk Queue */}
-      <div style={{ marginBottom: 24, border: '1px solid rgba(239,68,68,0.3)', borderLeft: '4px solid var(--red)', borderRadius: 10, overflow: 'hidden', background: 'rgba(239,68,68,0.03)' }}>
-        <div style={{ padding: '12px 18px', borderBottom: churnQueue.length > 0 ? '1px solid rgba(239,68,68,0.15)' : 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div className="admin-card" style={{ marginBottom: 24, borderLeft: '4px solid var(--red)', background: 'rgba(239,68,68,0.03)' }}>
+        <div className="card-header" style={{ borderBottom: churnQueue.length > 0 ? '1px solid rgba(239,68,68,0.15)' : 'none' }}>
           <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--red)' }}>Churn Risk Queue</span>
-          <span style={{ fontSize: 12, fontWeight: 700, background: 'rgba(239,68,68,0.12)', color: 'var(--red)', padding: '2px 8px', borderRadius: 20 }}>{churnQueue.length}</span>
+          <span className="badge badge-red" style={{ marginLeft: 4 }}>{churnQueue.length}</span>
           <span style={{ fontSize: 11, color: 'var(--ink-4)', marginLeft: 4 }}>health &lt; 40 or inactive 14d+ with no orders</span>
         </div>
         {loading ? (
@@ -139,8 +139,8 @@ export default function LifecyclePage() {
           { label: 'Healthy (70+)', value: tenants.filter(t => t.health >= 70).length, color: 'var(--green)' },
         ].map(s => (
           <div key={s.label} className="stat-card">
-            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--ink-4)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>{s.label}</div>
-            <div style={{ fontSize: 28, fontWeight: 800, color: s.color }}>{s.value}</div>
+            <div className="stat-label">{s.label}</div>
+            <div className="stat-value" style={{ color: s.color }}>{s.value}</div>
           </div>
         ))}
       </div>

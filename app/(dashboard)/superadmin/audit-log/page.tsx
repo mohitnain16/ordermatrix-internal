@@ -28,7 +28,7 @@ export default function AuditLogPage() {
 
   return (
     <div className="animate-fade-in">
-      <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div className="page-header flex-between">
         <div>
           <h1 className="page-title">Audit Log</h1>
           <p className="page-sub">All admin mutations — {total} total entries</p>
@@ -37,6 +37,7 @@ export default function AuditLogPage() {
       </div>
 
       <div className="admin-card">
+        <div className="table-shell">
         <table className="admin-table">
           <thead><tr><th>Admin</th><th>Action</th><th>Status</th><th>IP</th><th>Time</th></tr></thead>
           <tbody>
@@ -72,6 +73,7 @@ export default function AuditLogPage() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {pages > 1 && (

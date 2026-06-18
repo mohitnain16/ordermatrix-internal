@@ -132,8 +132,8 @@ export default function SupportPage() {
           {/* Notes panel */}
           {notesTenantId && (
             <div className="admin-card" style={{ marginTop: 16 }}>
-              <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 13, fontWeight: 600 }}>Notes — {notesTenantName}</span>
+              <div className="card-header flex-between">
+                <span className="card-title">Notes — {notesTenantName}</span>
                 <button className="btn btn-ghost btn-sm" onClick={() => setNotesTenantId(null)}>✕</button>
               </div>
               {notesLoading ? (
@@ -178,7 +178,7 @@ export default function SupportPage() {
         <div>
           {/* Expired Trials */}
           <div style={{ marginBottom: 24 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--red)', marginBottom: 12 }}>
+            <div className="card-title" style={{ color: 'var(--red)', marginBottom: 12 }}>
               Expired Trials ({issues.expiredTrials?.length || 0})
             </div>
             {issues.expiredTrials?.length > 0 ? (
@@ -203,7 +203,7 @@ export default function SupportPage() {
 
           {/* Past Due */}
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--gold)', marginBottom: 12 }}>
+            <div className="card-title" style={{ color: 'var(--gold)', marginBottom: 12 }}>
               Past Due Subscriptions ({issues.pastDue?.length || 0})
             </div>
             {issues.pastDue?.length > 0 ? (

@@ -173,7 +173,7 @@ export default function Sidebar() {
         width: expanded ? 200 : 0,
         overflow: 'hidden',
         transition: 'width 0.2s ease',
-        borderRight: expanded ? '1px solid var(--sidebar-border)' : 'none',
+        borderRight: '1px solid var(--sidebar-border)',
         display: 'flex', flexDirection: 'column', background: 'var(--sidebar-bg)',
       }}>
         <div style={{ width: 200, display: 'flex', flexDirection: 'column', height: '100%' }}>

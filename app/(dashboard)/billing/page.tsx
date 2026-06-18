@@ -92,10 +92,12 @@ export default function BillingOpsPage() {
     <div className="animate-fade-in">
       {dunningModal && (
         <div className="modal-backdrop">
-          <div className="modal-box" style={{ padding: 28, width: 420 }}>
-            <h3 style={{ margin: '0 0 4px', fontSize: 16, fontWeight: 700 }}>Send Dunning</h3>
-            <p style={{ margin: '0 0 20px', fontSize: 13, color: 'var(--ink-3)' }}>{dunningModal.name}</p>
-            <div style={{ marginBottom: 16 }}>
+          <div className="modal-box">
+            <div className="modal-header">
+              <h3 className="modal-title">Send Dunning</h3>
+              <p className="modal-sub">{dunningModal.name}</p>
+            </div>
+            <div className="modal-body">
               <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 10 }}>Day sequence</div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {[1, 3, 7].map(day => (
@@ -109,7 +111,7 @@ export default function BillingOpsPage() {
                 ))}
               </div>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
+            <div className="modal-footer">
               <button className="btn btn-ghost btn-sm" onClick={() => setDunningModal(null)}>Close</button>
             </div>
           </div>
@@ -134,8 +136,8 @@ export default function BillingOpsPage() {
           { label: 'At Seat Limit (80%+)', value: seats.length, color: 'var(--purple)' },
         ].map(s => (
           <div key={s.label} className="stat-card">
-            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--ink-4)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>{s.label}</div>
-            <div style={{ fontSize: 24, fontWeight: 800, color: s.color, fontFamily: 'var(--font-mono)' }}>{s.value}</div>
+            <div className="stat-label">{s.label}</div>
+            <div className="stat-value mono" style={{ color: s.color }}>{s.value}</div>
           </div>
         ))}
       </div>

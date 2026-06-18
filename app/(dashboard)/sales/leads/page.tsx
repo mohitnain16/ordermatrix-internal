@@ -97,8 +97,8 @@ export default function LeadCapturesPage() {
             { label: 'WhatsApp', value: stats.byTemplate?.['whatsapp-order-tracker'] || 0, color: 'var(--green)' },
           ].map(s => (
             <div key={s.label} className="stat-card">
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--ink-4)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>{s.label}</div>
-              <div style={{ fontSize: 24, fontWeight: 800, color: s.color, fontFamily: 'var(--font-mono)' }}>{s.value}</div>
+              <div className="stat-label">{s.label}</div>
+              <div className="stat-value" style={{ color: s.color }}>{s.value}</div>
             </div>
           ))}
         </div>
@@ -106,18 +106,20 @@ export default function LeadCapturesPage() {
 
       {/* Volume breakdown */}
       {stats?.byVolume && (
-        <div className="admin-card" style={{ padding: '12px 16px', marginBottom: 20, display: 'flex', gap: 24 }}>
-          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-4)' }}>Monthly Volume:</span>
-          {Object.entries(stats.byVolume).map(([k, v]: any) => (
-            <span key={k} style={{ fontSize: 12, color: 'var(--ink-3)' }}>
-              {VOLUME_LABEL[k] || k}: <strong style={{ color: 'var(--ink)', fontFamily: 'var(--font-mono)' }}>{v}</strong>
-            </span>
-          ))}
+        <div className="admin-card" style={{ marginBottom: 20 }}>
+          <div className="card-body" style={{ display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'center' }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-4)' }}>Monthly Volume:</span>
+            {Object.entries(stats.byVolume).map(([k, v]: any) => (
+              <span key={k} style={{ fontSize: 12, color: 'var(--ink-3)' }}>
+                {VOLUME_LABEL[k] || k}: <strong style={{ color: 'var(--ink)', fontFamily: 'var(--font-mono)' }}>{v}</strong>
+              </span>
+            ))}
+          </div>
         </div>
       )}
 
       {/* Filters */}
-      <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+      <div className="table-filter-bar">
         <input
           className="admin-input"
           style={{ maxWidth: 280 }}
@@ -141,50 +143,56 @@ export default function LeadCapturesPage() {
       </div>
 
       <div className="admin-card">
-        <table className="admin-table">
-          <thead>
-            <tr><th>Email</th><th>Business</th><th>Template</th><th>Volume</th><th>Date</th><th>Status</th><th></th></tr>
-          </thead>
-          <tbody>
-            {loading ? <SkRows rows={8} cols={7} /> : (
-              <>
-                {results.map(r => (
-                  <tr key={r._id}>
-                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{r.email}</td>
-                    <td style={{ fontWeight: 500 }}>{r.businessName || <span style={{ color: 'var(--ink-4)' }}>—</span>}</td>
-                    <td>
-                      <span className={`badge ${r.templateType === 'instagram-order-tracker' ? 'badge-purple' : 'badge-green'}`} style={{ fontSize: 11 }}>
-                        {TEMPLATE_LABEL[r.templateType] || r.templateType}
-                      </span>
-                    </td>
-                    <td style={{ fontSize: 12, color: 'var(--ink-3)' }}>{VOLUME_LABEL[r.monthlyOrderVolume] || r.monthlyOrderVolume || '—'}</td>
-                    <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{fmtDate(r.createdAt)}</td>
-                    <td>
-                      <span className={`badge ${r.converted ? 'badge-green' : 'badge-gray'}`}>
-                        {r.converted ? 'Converted' : 'Lead'}
-                      </span>
-                    </td>
-                    <td>
-                      <button
-                        className="btn btn-ghost btn-sm"
-                        disabled={togglingId === r._id}
-                        style={{ fontSize: 12, color: r.converted ? 'var(--ink-3)' : 'var(--green)' }}
-                        onClick={() => toggleConverted(r._id, r.converted)}
-                      >
-                        {togglingId === r._id ? '…' : r.converted ? 'Unmark' : 'Mark Converted'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {results.length === 0 && (
-                  <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>No lead captures found</td></tr>
-                )}
-              </>
-            )}
-          </tbody>
-        </table>
+        <div className="table-shell">
+          <table className="admin-table">
+            <thead>
+              <tr><th>Email</th><th>Business</th><th>Template</th><th>Volume</th><th>Date</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody>
+              {loading ? <SkRows rows={8} cols={7} /> : (
+                <>
+                  {results.map(r => (
+                    <tr key={r._id}>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{r.email}</td>
+                      <td style={{ fontWeight: 500 }}>{r.businessName || <span style={{ color: 'var(--ink-4)' }}>—</span>}</td>
+                      <td>
+                        <span className={`badge ${r.templateType === 'instagram-order-tracker' ? 'badge-purple' : 'badge-green'}`}>
+                          {TEMPLATE_LABEL[r.templateType] || r.templateType}
+                        </span>
+                      </td>
+                      <td style={{ fontSize: 12, color: 'var(--ink-3)' }}>{VOLUME_LABEL[r.monthlyOrderVolume] || r.monthlyOrderVolume || '—'}</td>
+                      <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{fmtDate(r.createdAt)}</td>
+                      <td>
+                        <span className={`badge ${r.converted ? 'badge-green' : 'badge-gray'}`}>
+                          {r.converted ? 'Converted' : 'Lead'}
+                        </span>
+                      </td>
+                      <td>
+                        <button
+                          className="btn btn-ghost btn-sm"
+                          disabled={togglingId === r._id}
+                          style={{ color: r.converted ? 'var(--ink-3)' : 'var(--green)' }}
+                          onClick={() => toggleConverted(r._id, r.converted)}
+                        >
+                          {togglingId === r._id ? '…' : r.converted ? 'Unmark' : 'Mark Converted'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {results.length === 0 && (
+                    <tr><td colSpan={7}>
+                      <div className="empty-state">
+                        <div className="empty-title">No lead captures found</div>
+                      </div>
+                    </td></tr>
+                  )}
+                </>
+              )}
+            </tbody>
+          </table>
+        </div>
         {totalPages > 1 && (
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderTop: '1px solid var(--line)', fontSize: 13, color: 'var(--ink-4)' }}>
+          <div className="card-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, color: 'var(--ink-4)' }}>
             <span>{skip + 1}–{Math.min(skip + LIMIT, total)} of {total}</span>
             <div style={{ display: 'flex', gap: 6 }}>
               <button className="btn btn-ghost btn-sm" disabled={skip === 0} onClick={() => loadPage(skip - LIMIT)}>← Prev</button>

@@ -110,7 +110,7 @@ export default function SubscriptionsPage() {
         <button className="btn btn-ghost btn-sm" onClick={load}>Refresh</button>
       </div>
 
-      <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+      <div className="table-filter-bar">
         <select className="admin-input" style={{ maxWidth: 140 }} value={status} onChange={e => { setStatus(e.target.value); setPage(1); }}>
           <option value="">All Status</option>
           {['active','cancelled','past_due','expired'].map(s => <option key={s} value={s}>{s}</option>)}
@@ -122,50 +122,52 @@ export default function SubscriptionsPage() {
       </div>
 
       <div className="admin-card">
-        <table className="admin-table">
-          <thead>
-            <tr><th>Tenant</th><th>Plan</th><th>Status</th><th>Cycle</th><th>Amount</th><th>Period End</th><th>Actions</th></tr>
-          </thead>
-          <tbody>
-            {loading ? <SkRows rows={10} cols={7} /> : (
-              <>
-                {subs.map(s => (
-                  <tr key={s._id}>
-                    <td>
-                      <div style={{ fontWeight: 500, color: 'var(--ink)' }}>{s.tenantId?.businessName || '—'}</div>
-                      <div style={{ fontSize: 11, color: 'var(--ink-4)' }}>{s.tenantId?.email}</div>
-                    </td>
-                    <td><span style={{ textTransform: 'capitalize', fontWeight: 500 }}>{s.planId}</span></td>
-                    <td><span className={`badge ${STATUS_BADGE[s.status] || 'badge-gray'}`}>{s.status}</span></td>
-                    <td style={{ textTransform: 'capitalize', fontSize: 12 }}>{s.billingCycle || '—'}</td>
-                    <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{s.amount ? fmt(s.amount) : '—'}</td>
-                    <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{fmtDate(s.currentPeriodEnd)}</td>
-                    <td>
-                      <div style={{ display: 'flex', gap: 6 }}>
-                        {s.tenantId?._id && <Link href={`/superadmin/tenants/${s.tenantId._id}`} className="btn btn-ghost btn-sm">View →</Link>}
-                        {canOverride && <button className="btn btn-ghost btn-sm" onClick={() => openOverride(s)}>Override</button>}
+        <div className="table-shell">
+          <table className="admin-table">
+            <thead>
+              <tr><th>Tenant</th><th>Plan</th><th>Status</th><th>Cycle</th><th>Amount</th><th>Period End</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              {loading ? <SkRows rows={10} cols={7} /> : (
+                <>
+                  {subs.map(s => (
+                    <tr key={s._id}>
+                      <td>
+                        <div style={{ fontWeight: 500, color: 'var(--ink)' }}>{s.tenantId?.businessName || '—'}</div>
+                        <div style={{ fontSize: 11, color: 'var(--ink-4)' }}>{s.tenantId?.email}</div>
+                      </td>
+                      <td><span style={{ textTransform: 'capitalize', fontWeight: 500 }}>{s.planId}</span></td>
+                      <td><span className={`badge ${STATUS_BADGE[s.status] || 'badge-gray'}`}>{s.status}</span></td>
+                      <td style={{ textTransform: 'capitalize', fontSize: 12 }}>{s.billingCycle || '—'}</td>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{s.amount ? fmt(s.amount) : '—'}</td>
+                      <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{fmtDate(s.currentPeriodEnd)}</td>
+                      <td>
+                        <div className="gap-2" style={{ display: 'flex' }}>
+                          {s.tenantId?._id && <Link href={`/superadmin/tenants/${s.tenantId._id}`} className="btn btn-ghost btn-sm">View →</Link>}
+                          {canOverride && <button className="btn btn-ghost btn-sm" onClick={() => openOverride(s)}>Override</button>}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {subs.length === 0 && (
+                    <tr><td colSpan={7}>
+                      <div className="empty-state">
+                        <div className="empty-state-icon">💳</div>
+                        <div className="empty-state-title">No subscriptions found</div>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-                {subs.length === 0 && (
-                  <tr><td colSpan={7}>
-                    <div className="empty-state">
-                      <div className="empty-state-icon">💳</div>
-                      <div className="empty-state-title">No subscriptions found</div>
-                    </div>
-                  </td></tr>
-                )}
-              </>
-            )}
-          </tbody>
-        </table>
+                    </td></tr>
+                  )}
+                </>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {pages > 1 && (
-        <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 16 }}>
+        <div className="flex-center gap-2" style={{ marginTop: 16 }}>
           <button className="btn btn-ghost btn-sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>← Prev</button>
-          <span style={{ fontSize: 13, color: 'var(--ink-3)', display: 'flex', alignItems: 'center' }}>Page {page} of {pages}</span>
+          <span style={{ fontSize: 13, color: 'var(--ink-3)' }}>Page {page} of {pages}</span>
           <button className="btn btn-ghost btn-sm" disabled={page >= pages} onClick={() => setPage(p => p + 1)}>Next →</button>
         </div>
       )}
@@ -173,15 +175,15 @@ export default function SubscriptionsPage() {
       {/* Override modal */}
       {overrideSub && (
         <div className="modal-backdrop" onClick={() => setOverrideSub(null)}>
-          <div className="modal-box" onClick={e => e.stopPropagation()} style={{ width: 480, padding: 0 }}>
-            <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="modal-box" onClick={e => e.stopPropagation()} style={{ width: 480 }}>
+            <div className="modal-header">
               <div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink)' }}>Subscription Override</div>
-                <div style={{ fontSize: 12, color: 'var(--ink-4)', marginTop: 2 }}>{overrideSub.tenantId?.businessName}</div>
+                <div className="modal-title">Subscription Override</div>
+                <div className="modal-sub">{overrideSub.tenantId?.businessName}</div>
               </div>
-              <button onClick={() => setOverrideSub(null)} style={{ background: 'none', border: 'none', color: 'var(--ink-4)', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>✕</button>
+              <button onClick={() => setOverrideSub(null)} className="btn btn-ghost btn-sm btn-icon">✕</button>
             </div>
-            <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div className="modal-body stack-4">
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
                   <label style={LabelStyle}>Plan</label>
@@ -220,7 +222,7 @@ export default function SubscriptionsPage() {
                 This is a permanent change. It will update both the Subscription and Tenant records immediately.
               </div>
             </div>
-            <div style={{ padding: '14px 24px 20px', display: 'flex', gap: 10, justifyContent: 'flex-end', borderTop: '1px solid var(--line)' }}>
+            <div className="modal-footer">
               <button className="btn btn-ghost btn-sm" onClick={() => setOverrideSub(null)}>Cancel</button>
               <button className="btn btn-primary btn-sm" onClick={handleOverride} disabled={overriding}>
                 {overriding ? <><span className="spinner" />Applying…</> : 'Apply Override'}

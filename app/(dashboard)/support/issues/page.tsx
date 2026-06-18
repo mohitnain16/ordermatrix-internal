@@ -49,8 +49,8 @@ export default function SupportIssuesPage() {
           { label: 'Past Due', value: pastDueCount, color: 'var(--gold)' },
         ].map(s => (
           <div key={s.label} className="stat-card">
-            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--ink-4)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>{s.label}</div>
-            <div style={{ fontSize: 28, fontWeight: 800, color: s.color, fontFamily: 'var(--font-mono)' }}>{s.value}</div>
+            <div className="stat-label">{s.label}</div>
+            <div className="stat-value mono" style={{ color: s.color }}>{s.value}</div>
           </div>
         ))}
       </div>
@@ -76,7 +76,7 @@ export default function SupportIssuesPage() {
       {/* Expired Trials section */}
       {showTrials && (
         <div style={{ marginBottom: 24 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--red)', marginBottom: 10 }}>
+          <div className="card-title" style={{ color: 'var(--red)', marginBottom: 10 }}>
             Expired Trials ({expiredCount})
           </div>
           {loading ? (
@@ -113,7 +113,7 @@ export default function SupportIssuesPage() {
       {/* Past Due section */}
       {showPastDue && (
         <div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--gold)', marginBottom: 10 }}>
+          <div className="card-title" style={{ color: 'var(--gold)', marginBottom: 10 }}>
             Past Due Subscriptions ({pastDueCount})
           </div>
           {loading ? (

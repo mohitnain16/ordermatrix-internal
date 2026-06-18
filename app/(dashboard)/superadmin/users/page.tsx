@@ -36,7 +36,7 @@ export default function UsersPage() {
 
   return (
     <div className="animate-fade-in">
-      <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div className="page-header flex-between">
         <div>
           <h1 className="page-title">All Users</h1>
           <p className="page-sub">{total} users across all tenants</p>
@@ -44,12 +44,13 @@ export default function UsersPage() {
         <button className="btn btn-ghost btn-sm" onClick={load}>Refresh</button>
       </div>
 
-      <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+      <div className="table-filter-bar">
         <input className="admin-input" style={{ maxWidth: 280 }} placeholder="Search by name or email…"
           value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} />
       </div>
 
       <div className="admin-card">
+        <div className="table-shell">
         <table className="admin-table">
           <thead><tr><th>Name</th><th>Email</th><th>Tenant</th><th>Role</th><th>Status</th><th>Joined</th><th></th></tr></thead>
           <tbody>
@@ -82,6 +83,7 @@ export default function UsersPage() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {pages > 1 && (
