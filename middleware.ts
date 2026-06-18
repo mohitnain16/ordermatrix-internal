@@ -3,9 +3,10 @@ import { NextRequest, NextResponse } from 'next/server';
 const PUBLIC = ['/login'];
 
 const ROLE_ROUTES: Record<string, string[]> = {
-  '/superadmin': ['superadmin', 'ops_admin'],
-  '/sales':      ['superadmin', 'ops_admin', 'sales'],
-  '/support':    ['superadmin', 'ops_admin', 'support'],
+  '/superadmin/enquiries': ['superadmin', 'ops_admin', 'support'],
+  '/superadmin':           ['superadmin', 'ops_admin'],
+  '/sales':                ['superadmin', 'ops_admin', 'sales'],
+  '/support':              ['superadmin', 'ops_admin', 'support'],
 };
 
 const isDev = process.env.NODE_ENV === 'development';
@@ -65,15 +66,22 @@ export function middleware(req: NextRequest): NextResponse {
   const token = req.cookies.get('om_admin_token')?.value;
   if (!token) return redirectToLogin(req, csp);
 
-  // Role check (real enforcement is on the API — this is just UX routing)
+  // Role check — use the most-specific (longest) matching prefix so a route like
+  // /superadmin/enquiries can grant access to roles that /superadmin would deny.
+  let matchedRoute = '';
+  let matchedRoles: string[] = [];
   for (const [route, roles] of Object.entries(ROLE_ROUTES)) {
-    if (pathname.startsWith(route)) {
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        if (!roles.includes(payload.role)) return redirectToLogin(req, csp);
-      } catch {
-        return redirectToLogin(req, csp);
-      }
+    if (pathname.startsWith(route) && route.length > matchedRoute.length) {
+      matchedRoute = route;
+      matchedRoles = roles;
+    }
+  }
+  if (matchedRoute) {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (!matchedRoles.includes(payload.role)) return redirectToLogin(req, csp);
+    } catch {
+      return redirectToLogin(req, csp);
     }
   }
 

@@ -3,9 +3,32 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import api from '../../../lib/api';
 import { Sk, SkStatCard, SkRows } from '../../../components/ui/Skeleton';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const fmt = (n: number) => `₹${new Intl.NumberFormat('en-IN').format(n || 0)}`;
 const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '—';
+const fmtL = (n: number) => {
+  if (n >= 100000) return `₹${(n / 100000).toFixed(1).replace(/\.0$/, '')}L`;
+  if (n >= 1000) return `₹${Math.round(n / 1000)}K`;
+  return `₹${n}`;
+};
+
+type TrendPoint = { date: string; mrr: number; arr: number; activeCount: number };
+
+function TrendTooltip({ active, payload, label }: { active?: boolean; payload?: any[]; label?: string }) {
+  if (!active || !payload?.length) return null;
+  const mrr = payload.find((p: any) => p.dataKey === 'mrr')?.value ?? 0;
+  const arr = payload.find((p: any) => p.dataKey === 'arr')?.value ?? 0;
+  const activeCount = payload[0]?.payload?.activeCount ?? 0;
+  return (
+    <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 8, padding: '10px 14px', fontSize: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
+      <div style={{ fontWeight: 700, marginBottom: 6, color: 'var(--ink-3)' }}>{label ? fmtDate(label) : ''}</div>
+      <div style={{ color: 'var(--accent)', marginBottom: 2 }}>MRR: {fmt(mrr)}</div>
+      <div style={{ color: 'var(--blue)', marginBottom: 4 }}>ARR: {fmt(arr)}</div>
+      <div style={{ color: 'var(--ink-4)' }}>Active paid: {activeCount}</div>
+    </div>
+  );
+}
 
 export default function SalesPage() {
   const [revenue, setRevenue] = useState<any>(null);
@@ -15,7 +38,12 @@ export default function SalesPage() {
   const [noteModal, setNoteModal] = useState<{ tenantId: string; name: string } | null>(null);
   const [noteText, setNoteText] = useState('');
 
+  const [trend, setTrend] = useState<TrendPoint[]>([]);
+  const [trendPeriod, setTrendPeriod] = useState<30 | 90 | 180>(30);
+  const [trendLoading, setTrendLoading] = useState(true);
+
   useEffect(() => { load(); }, []);
+  useEffect(() => { loadTrend(trendPeriod); }, [trendPeriod]);
 
   async function load() {
     setLoading(true);
@@ -28,6 +56,15 @@ export default function SalesPage() {
       setPipeline(pipe.data.pipeline);
     } catch { /**/ }
     setLoading(false);
+  }
+
+  async function loadTrend(period: number) {
+    setTrendLoading(true);
+    try {
+      const res = await api.get(`/admin/sales/revenue/trend?period=${period}`);
+      setTrend(res.data.trend || []);
+    } catch { /**/ }
+    setTrendLoading(false);
   }
 
   async function saveNote(tenantId: string) {
@@ -102,6 +139,51 @@ export default function SalesPage() {
           ))}
         </div>
       )}
+
+      {/* Revenue Trend */}
+      <div className="admin-card" style={{ padding: 24, marginBottom: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>Revenue Trend</h3>
+          <div style={{ display: 'flex', gap: 4 }}>
+            {([30, 90, 180] as const).map(p => (
+              <button key={p} onClick={() => setTrendPeriod(p)}
+                className={`btn btn-sm ${trendPeriod === p ? 'btn-primary' : 'btn-ghost'}`}
+                style={{ fontSize: 12, padding: '4px 12px' }}>
+                {p}d
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {trendLoading ? (
+          <div style={{ height: 260, background: 'var(--surface-3)', borderRadius: 8 }} />
+        ) : trend.length < 2 ? (
+          <div style={{ height: 260, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ fontSize: 28, marginBottom: 8 }}>📈</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-3)' }}>Trend data builds up over time — check back tomorrow</div>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={260}>
+            <LineChart data={trend} margin={{ top: 4, right: 16, bottom: 0, left: 10 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" />
+              <XAxis dataKey="date" tickFormatter={fmtDate} tick={{ fontSize: 11, fill: 'var(--ink-4)' }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+              <YAxis tickFormatter={fmtL} tick={{ fontSize: 11, fill: 'var(--ink-4)' }} tickLine={false} axisLine={false} width={56} />
+              <Tooltip content={<TrendTooltip />} />
+              <Line type="monotone" dataKey="mrr" name="MRR" stroke="var(--accent)" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="arr" name="ARR" stroke="var(--blue)" strokeWidth={2} dot={false} strokeDasharray="4 2" />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
+
+        <div style={{ display: 'flex', gap: 16, marginTop: 12, justifyContent: 'flex-end' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--ink-4)' }}>
+            <span style={{ width: 16, height: 2, background: 'var(--accent)', display: 'inline-block', borderRadius: 1 }} /> MRR
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--ink-4)' }}>
+            <span style={{ width: 16, height: 0, borderBottom: '2px dashed var(--blue)', display: 'inline-block' }} /> ARR
+          </span>
+        </div>
+      </div>
 
       {/* Tabs */}
       <div style={{ display: 'flex', borderBottom: '1px solid var(--line)', marginBottom: 20 }}>

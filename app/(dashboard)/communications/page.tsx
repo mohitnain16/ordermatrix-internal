@@ -60,6 +60,10 @@ export default function CommunicationsPage() {
 
   async function sendBroadcast() {
     if (!broadcast.message) return;
+    const count = preview?.count;
+    const label = count !== undefined ? `${count} tenant${count !== 1 ? 's' : ''}` : 'all matching tenants';
+    if (!confirm(`Send broadcast to ${label} via email? This cannot be undone.`)) return;
+    setBcResult(null);
     setBcLoading(true);
     try {
       const res = await api.post('/admin/communications/broadcast', broadcast);
@@ -173,20 +177,29 @@ export default function CommunicationsPage() {
               />
             </div>
 
-            <div style={{ display: 'flex', gap: 10 }}>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
               <button className="btn btn-ghost btn-sm" onClick={previewBroadcast}>Preview Recipients</button>
-              <button className="btn btn-primary" onClick={sendBroadcast} disabled={bcLoading || !broadcast.message}>
+              <button className="btn btn-primary" onClick={sendBroadcast} disabled={bcLoading || !broadcast.message || (preview !== null && preview.count === 0)}>
                 {bcLoading ? <><span className="spinner" />Sending…</> : 'Send Broadcast'}
               </button>
             </div>
+            {preview !== null && preview.count === 0 && (
+              <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--red)' }}>
+                No recipients match this segment — adjust filters before sending.
+              </p>
+            )}
+            {broadcast.channel !== 'email' && (
+              <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--ink-4)' }}>
+                WhatsApp broadcast is pending template approval — email only for now.
+              </p>
+            )}
 
             {bcResult && (
-              <div style={{ marginTop: 16, padding: '12px 16px', background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.3)', borderRadius: 8 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--green)', marginBottom: 4 }}>{bcResult.message}</div>
-                {bcResult.preview?.length > 0 && (
+              <div style={{ marginTop: 16, padding: '12px 16px', background: bcResult.failed > 0 && bcResult.emailSent === 0 ? 'rgba(239,68,68,0.08)' : 'rgba(52,211,153,0.1)', border: `1px solid ${bcResult.failed > 0 && bcResult.emailSent === 0 ? 'rgba(239,68,68,0.3)' : 'rgba(52,211,153,0.3)'}`, borderRadius: 8 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: bcResult.failed > 0 && bcResult.emailSent === 0 ? 'var(--red)' : 'var(--green)', marginBottom: bcResult.failed > 0 ? 4 : 0 }}>{bcResult.message}</div>
+                {bcResult.failed > 0 && (
                   <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>
-                    Preview: {bcResult.preview.map((t: any) => t.name).join(', ')}
-                    {bcResult.queued > 5 ? ` +${bcResult.queued - 5} more` : ''}
+                    {bcResult.failed} send{bcResult.failed !== 1 ? 's' : ''} failed — check server logs for details.
                   </div>
                 )}
               </div>

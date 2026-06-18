@@ -65,6 +65,11 @@ export default function LifecyclePage() {
     setLoading(false);
   }
 
+  // Churn queue: health < 40 OR (inactive 14+ days with zero orders this week)
+  const churnQueue = tenants
+    .filter(t => t.health < 40 || (t.daysSinceActive > 14 && t.ordersWeek === 0))
+    .sort((a, b) => a.health - b.health);
+
   const churnList = tenants.filter(t => t.churnRisk);
   const incompleteOnboarding = tenants.filter(t => t.onboardingScore < 4);
 
@@ -76,6 +81,54 @@ export default function LifecyclePage() {
           <p className="page-sub">Onboarding, health scores, churn risk</p>
         </div>
         <button className="btn btn-ghost btn-sm" onClick={load}>Refresh</button>
+      </div>
+
+      {/* Churn Risk Queue */}
+      <div style={{ marginBottom: 24, border: '1px solid rgba(239,68,68,0.3)', borderLeft: '4px solid var(--red)', borderRadius: 10, overflow: 'hidden', background: 'rgba(239,68,68,0.03)' }}>
+        <div style={{ padding: '12px 18px', borderBottom: churnQueue.length > 0 ? '1px solid rgba(239,68,68,0.15)' : 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--red)' }}>Churn Risk Queue</span>
+          <span style={{ fontSize: 12, fontWeight: 700, background: 'rgba(239,68,68,0.12)', color: 'var(--red)', padding: '2px 8px', borderRadius: 20 }}>{churnQueue.length}</span>
+          <span style={{ fontSize: 11, color: 'var(--ink-4)', marginLeft: 4 }}>health &lt; 40 or inactive 14d+ with no orders</span>
+        </div>
+        {loading ? (
+          <div style={{ padding: '14px 18px', fontSize: 12, color: 'var(--ink-4)' }}>Loading…</div>
+        ) : churnQueue.length === 0 ? (
+          <div style={{ padding: '14px 18px', fontSize: 13, color: 'var(--ink-4)' }}>No tenants at risk</div>
+        ) : (
+          <table className="admin-table" style={{ margin: 0 }}>
+            <thead>
+              <tr>
+                <th>Business</th>
+                <th>Plan</th>
+                <th>Health</th>
+                <th>Last Active</th>
+                <th>Orders/7d</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {churnQueue.map(t => (
+                <tr key={t._id}>
+                  <td style={{ fontWeight: 500, color: 'var(--ink)' }}>
+                    {t.businessName}
+                    <div style={{ fontSize: 11, color: 'var(--ink-4)' }}>{t.email}</div>
+                  </td>
+                  <td><span className={`badge ${PLAN_BADGE[t.planId] || 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>{t.planId}</span></td>
+                  <td style={{ minWidth: 140 }}><HealthBar score={t.health} /></td>
+                  <td>
+                    <span style={{ fontSize: 12, color: t.daysSinceActive > 14 ? 'var(--red)' : 'var(--gold)', fontWeight: 600 }}>
+                      {t.lastActive ? `${t.daysSinceActive}d ago` : 'Never'}
+                    </span>
+                  </td>
+                  <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: t.ordersWeek === 0 ? 'var(--red)' : 'var(--ink)' }}>
+                    {t.ordersWeek}
+                  </td>
+                  <td><Link href={`/superadmin/tenants/${t._id}`} className="btn btn-ghost btn-sm">View Tenant →</Link></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* Summary cards */}

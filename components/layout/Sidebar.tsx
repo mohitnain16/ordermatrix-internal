@@ -1,11 +1,11 @@
 'use client';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { getAdmin, clearAuth, hasRole, ROLE_LABEL } from '../../lib/auth';
+import { getAdmin, clearAuth, hasRole, ROLE_LABEL, type AdminRole } from '../../lib/auth';
 import {
   LayoutDashboard, Building2, CreditCard, Users, FileText,
   TrendingUp, Headphones, LogOut, ChevronRight,
-  Activity, AlertTriangle, Megaphone, Mail,
+  Activity, AlertTriangle, Megaphone, Mail, ShieldCheck, Tag,
 } from 'lucide-react';
 
 const NAV = [
@@ -18,7 +18,8 @@ const NAV = [
       { href: '/superadmin/subscriptions',  label: 'Subscriptions',  icon: CreditCard },
       { href: '/superadmin/users',          label: 'All Users',      icon: Users },
       { href: '/superadmin/audit-log',      label: 'Audit Log',      icon: FileText },
-      { href: '/superadmin/enquiries',      label: 'Enquiries',      icon: Mail },
+      { href: '/superadmin/coupons',        label: 'Coupons',        icon: Tag,         roles: ['superadmin', 'ops_admin'] as const },
+      { href: '/superadmin/team',            label: 'Team',           icon: ShieldCheck, roles: ['superadmin'] as const },
     ],
   },
   {
@@ -35,7 +36,8 @@ const NAV = [
     section: 'SUPPORT',
     roles: ['superadmin', 'ops_admin', 'support'],
     items: [
-      { href: '/support',  label: 'Support',  icon: Headphones },
+      { href: '/support',                  label: 'Support',    icon: Headphones },
+      { href: '/superadmin/enquiries',     label: 'Enquiries',  icon: Mail },
     ],
   },
 ];
@@ -80,13 +82,13 @@ export default function Sidebar() {
       {/* Nav */}
       <nav style={{ flex: 1, overflowY: 'auto', padding: '12px 10px' }}>
         {NAV.map((group) => {
-          if (!admin || !hasRole(admin, ...(group.roles as any[]))) return null;
+          if (!admin || !hasRole(admin, ...(group.roles as readonly AdminRole[]))) return null;
           return (
             <div key={group.section} style={{ marginBottom: 20 }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: '#3d4460', letterSpacing: '0.1em', padding: '0 8px', marginBottom: 6 }}>
                 {group.section}
               </div>
-              {group.items.map((item) => {
+              {group.items.filter(item => !item.roles || hasRole(admin, ...(item.roles as readonly AdminRole[]))).map((item) => {
                 const Icon = item.icon;
                 const active = isActive(item.href);
                 return (

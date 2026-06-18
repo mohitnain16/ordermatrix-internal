@@ -2,23 +2,52 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import api from '../../../../lib/api';
+import { getAdmin, hasRole } from '../../../../lib/auth';
 import { SkRows } from '../../../../components/ui/Skeleton';
 
 const fmt = (n: number) => `₹${new Intl.NumberFormat('en-IN').format(n || 0)}`;
 const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+const toISODate = (d: string) => d ? new Date(d).toISOString().slice(0, 10) : '';
 
 const STATUS_BADGE: Record<string, string> = {
   active: 'badge-green', cancelled: 'badge-red', past_due: 'badge-gold', expired: 'badge-gray', inactive: 'badge-gray',
 };
 
+const PLANS = ['starter', 'growth', 'pro'] as const;
+const STATUSES = ['active', 'trialing', 'past_due', 'cancelled'] as const;
+const CYCLES = ['monthly', 'annual'] as const;
+
+type OverrideForm = {
+  planId: string;
+  billingPeriod: string;
+  status: string;
+  currentPeriodEnd: string;
+  seats: number;
+  reason: string;
+};
+
+const emptyOverride: OverrideForm = { planId: 'growth', billingPeriod: 'monthly', status: 'active', currentPeriodEnd: '', seats: 2, reason: '' };
+
+const LabelStyle = { display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 6 } as const;
+
 export default function SubscriptionsPage() {
-  const [subs, setSubs] = useState<any[]>([]);
-  const [total, setTotal] = useState(0);
+  const [subs, setSubs]     = useState<any[]>([]);
+  const [total, setTotal]   = useState(0);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState('');
-  const [plan, setPlan] = useState('');
-  const [page, setPage] = useState(1);
+  const [plan, setPlan]     = useState('');
+  const [page, setPage]     = useState(1);
   const LIMIT = 30;
+
+  const admin    = getAdmin();
+  const canOverride = hasRole(admin, 'superadmin', 'ops_admin');
+
+  const [overrideSub, setOverrideSub]   = useState<any | null>(null);
+  const [overrideForm, setOverrideForm] = useState<OverrideForm>(emptyOverride);
+  const [overriding, setOverriding]     = useState(false);
+  const [toastMsg, setToastMsg]         = useState('');
+
+  function toast(msg: string) { setToastMsg(msg); setTimeout(() => setToastMsg(''), 3500); }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -32,10 +61,47 @@ export default function SubscriptionsPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  function openOverride(sub: any) {
+    setOverrideForm({
+      planId:           sub.planId || 'growth',
+      billingPeriod:    sub.billingCycle || 'monthly',
+      status:           sub.status || 'active',
+      currentPeriodEnd: toISODate(sub.currentPeriodEnd),
+      seats:            sub.seats || 1,
+      reason:           '',
+    });
+    setOverrideSub(sub);
+  }
+
+  async function handleOverride() {
+    if (!overrideForm.reason.trim()) { toast('Internal reason is required'); return; }
+    if (!overrideSub) return;
+    setOverriding(true);
+    try {
+      await api.patch(`/admin/subscriptions/${overrideSub._id}/override`, {
+        planId:          overrideForm.planId,
+        billingPeriod:   overrideForm.billingPeriod,
+        status:          overrideForm.status,
+        currentPeriodEnd: overrideForm.currentPeriodEnd || undefined,
+        seats:           overrideForm.seats,
+        reason:          overrideForm.reason,
+      });
+      const planLabel = overrideForm.planId.charAt(0).toUpperCase() + overrideForm.planId.slice(1);
+      toast(`Override applied — now on ${planLabel} (${overrideForm.status})`);
+      setOverrideSub(null);
+      load();
+    } catch (e: any) {
+      toast(e?.response?.data?.error || 'Override failed');
+    }
+    setOverriding(false);
+  }
+
   const pages = Math.ceil(total / LIMIT);
 
   return (
     <div className="animate-fade-in">
+      {toastMsg && <div className="toast toast-default">{toastMsg}</div>}
+
       <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <h1 className="page-title">Subscriptions</h1>
@@ -51,14 +117,14 @@ export default function SubscriptionsPage() {
         </select>
         <select className="admin-input" style={{ maxWidth: 140 }} value={plan} onChange={e => { setPlan(e.target.value); setPage(1); }}>
           <option value="">All Plans</option>
-          {['starter','growth','scale','pro'].map(p => <option key={p} value={p}>{p}</option>)}
+          {PLANS.map(p => <option key={p} value={p}>{p}</option>)}
         </select>
       </div>
 
       <div className="admin-card">
         <table className="admin-table">
           <thead>
-            <tr><th>Tenant</th><th>Plan</th><th>Status</th><th>Cycle</th><th>Amount</th><th>Period End</th><th>Action</th></tr>
+            <tr><th>Tenant</th><th>Plan</th><th>Status</th><th>Cycle</th><th>Amount</th><th>Period End</th><th>Actions</th></tr>
           </thead>
           <tbody>
             {loading ? <SkRows rows={10} cols={7} /> : (
@@ -74,7 +140,12 @@ export default function SubscriptionsPage() {
                     <td style={{ textTransform: 'capitalize', fontSize: 12 }}>{s.billingCycle || '—'}</td>
                     <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{s.amount ? fmt(s.amount) : '—'}</td>
                     <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{fmtDate(s.currentPeriodEnd)}</td>
-                    <td>{s.tenantId?._id && <Link href={`/superadmin/tenants/${s.tenantId._id}`} className="btn btn-ghost btn-sm">View →</Link>}</td>
+                    <td>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        {s.tenantId?._id && <Link href={`/superadmin/tenants/${s.tenantId._id}`} className="btn btn-ghost btn-sm">View →</Link>}
+                        {canOverride && <button className="btn btn-ghost btn-sm" onClick={() => openOverride(s)}>Override</button>}
+                      </div>
+                    </td>
                   </tr>
                 ))}
                 {subs.length === 0 && (
@@ -96,6 +167,66 @@ export default function SubscriptionsPage() {
           <button className="btn btn-ghost btn-sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>← Prev</button>
           <span style={{ fontSize: 13, color: 'var(--ink-3)', display: 'flex', alignItems: 'center' }}>Page {page} of {pages}</span>
           <button className="btn btn-ghost btn-sm" disabled={page >= pages} onClick={() => setPage(p => p + 1)}>Next →</button>
+        </div>
+      )}
+
+      {/* Override modal */}
+      {overrideSub && (
+        <div className="modal-backdrop" onClick={() => setOverrideSub(null)}>
+          <div className="modal-box" onClick={e => e.stopPropagation()} style={{ width: 480, padding: 0 }}>
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink)' }}>Subscription Override</div>
+                <div style={{ fontSize: 12, color: 'var(--ink-4)', marginTop: 2 }}>{overrideSub.tenantId?.businessName}</div>
+              </div>
+              <button onClick={() => setOverrideSub(null)} style={{ background: 'none', border: 'none', color: 'var(--ink-4)', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>✕</button>
+            </div>
+            <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={LabelStyle}>Plan</label>
+                  <select className="admin-input" value={overrideForm.planId} onChange={e => setOverrideForm(f => ({ ...f, planId: e.target.value }))}>
+                    {PLANS.map(p => <option key={p} value={p} style={{ textTransform: 'capitalize' }}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={LabelStyle}>Billing Period</label>
+                  <select className="admin-input" value={overrideForm.billingPeriod} onChange={e => setOverrideForm(f => ({ ...f, billingPeriod: e.target.value }))}>
+                    {CYCLES.map(c => <option key={c} value={c} style={{ textTransform: 'capitalize' }}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={LabelStyle}>Status</label>
+                  <select className="admin-input" value={overrideForm.status} onChange={e => setOverrideForm(f => ({ ...f, status: e.target.value }))}>
+                    {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={LabelStyle}>Seats</label>
+                  <input type="number" min={1} max={100} className="admin-input" value={overrideForm.seats} onChange={e => setOverrideForm(f => ({ ...f, seats: parseInt(e.target.value) || 1 }))} />
+                </div>
+              </div>
+              <div>
+                <label style={LabelStyle}>Current Period End</label>
+                <input type="date" className="admin-input" value={overrideForm.currentPeriodEnd} onChange={e => setOverrideForm(f => ({ ...f, currentPeriodEnd: e.target.value }))} />
+              </div>
+              <div>
+                <label style={LabelStyle}>Internal Reason <span style={{ color: 'var(--accent)' }}>*</span></label>
+                <input className="admin-input" placeholder="e.g. Sales deal — 3 months free Growth" value={overrideForm.reason} onChange={e => setOverrideForm(f => ({ ...f, reason: e.target.value }))} />
+              </div>
+              <div style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)', borderRadius: 8, padding: '10px 14px', fontSize: 12, color: 'var(--ink-3)' }}>
+                This is a permanent change. It will update both the Subscription and Tenant records immediately.
+              </div>
+            </div>
+            <div style={{ padding: '14px 24px 20px', display: 'flex', gap: 10, justifyContent: 'flex-end', borderTop: '1px solid var(--line)' }}>
+              <button className="btn btn-ghost btn-sm" onClick={() => setOverrideSub(null)}>Cancel</button>
+              <button className="btn btn-primary btn-sm" onClick={handleOverride} disabled={overriding}>
+                {overriding ? <><span className="spinner" />Applying…</> : 'Apply Override'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -21,10 +21,21 @@ export default function TenantDetailPage() {
   const [loading, setLoading] = useState(true);
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
-  const [tab, setTab] = useState<'overview' | 'subscription' | 'notes'>('overview');
+  const [tab, setTab] = useState<'overview' | 'subscription' | 'notes' | 'deliveries' | 'flags'>('overview');
   const [toastMsg, setToastMsg] = useState('');
+  const [trialDays, setTrialDays] = useState(14);
+  const [deliveries, setDeliveries] = useState<any[]>([]);
+  const [dlPage, setDlPage] = useState(1);
+  const [dlTotal, setDlTotal] = useState(0);
+  const [dlLoading, setDlLoading] = useState(false);
+  const [flags, setFlags] = useState<Record<string, boolean>>({});
+  const [flagsLoading, setFlagsLoading] = useState(false);
 
   useEffect(() => { load(); }, [tenantId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (tab === 'deliveries') loadDeliveries(1); }, [tab]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (tab === 'flags') loadFlags(); }, [tab]);
 
   async function load() {
     setLoading(true);
@@ -47,9 +58,11 @@ export default function TenantDetailPage() {
   }
 
   async function extendTrial() {
+    const days = Math.max(1, Math.min(90, trialDays));
+    if (!confirm(`Extend trial by ${days} day${days === 1 ? '' : 's'}?`)) return;
     try {
-      await api.patch(`/admin/subscriptions/extend-trial/${tenantId}`, { days: 14 });
-      toast('Trial extended by 14 days');
+      await api.patch(`/admin/subscriptions/extend-trial/${tenantId}`, { days });
+      toast(`Trial extended by ${days} day${days === 1 ? '' : 's'}`);
       load();
     } catch { toast('Failed to extend trial'); }
   }
@@ -73,6 +86,52 @@ export default function TenantDetailPage() {
       load();
     } catch { toast('Failed to add note'); }
     setSaving(false);
+  }
+
+  async function loadDeliveries(page: number) {
+    setDlLoading(true);
+    setDlPage(page);
+    try {
+      const res = await api.get(`/admin/delivery-logs?tenantId=${tenantId}&page=${page}&limit=20`);
+      setDeliveries(res.data.logs || []);
+      setDlTotal(res.data.total || 0);
+    } catch { /**/ }
+    setDlLoading(false);
+  }
+
+  async function loadFlags() {
+    setFlagsLoading(true);
+    try {
+      const res = await api.get(`/admin/tenants/${tenantId}/flags`);
+      setFlags(res.data.flags || {});
+    } catch { /**/ }
+    setFlagsLoading(false);
+  }
+
+  async function toggleFlag(flag: string, enabled: boolean) {
+    const prev = { ...flags };
+    setFlags(f => ({ ...f, [flag]: enabled }));
+    try {
+      await api.patch(`/admin/tenants/${tenantId}/flags`, { flag, enabled });
+    } catch {
+      setFlags(prev);
+      toast('Failed to update flag');
+    }
+  }
+
+  function timeAgo(d: string) {
+    const ms = Date.now() - new Date(d).getTime();
+    const m = Math.floor(ms / 60000);
+    if (m < 1) return 'just now';
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    return `${Math.floor(h / 24)}d ago`;
+  }
+
+  function maskRecipient(s: string) {
+    if (!s) return '—';
+    return s.slice(0, 3) + '***';
   }
 
   if (loading) return (
@@ -126,7 +185,16 @@ export default function TenantDetailPage() {
             <button className={`btn btn-sm ${tenant.isActive ? 'btn-danger' : 'btn-ghost'}`} onClick={toggleActive}>
               {tenant.isActive ? 'Deactivate' : 'Activate'}
             </button>
-            {tenant.planId === 'trial' && <button className="btn btn-ghost btn-sm" onClick={extendTrial}>+14d Trial</button>}
+            {tenant.planId === 'trial' && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <input
+                  type="number" min={1} max={90} value={trialDays}
+                  onChange={e => setTrialDays(Math.max(1, Math.min(90, parseInt(e.target.value) || 14)))}
+                  style={{ width: 52, padding: '4px 6px', border: '1px solid var(--line)', borderRadius: 6, fontSize: 12, color: 'var(--ink)', background: 'var(--surface)', textAlign: 'center', fontFamily: 'var(--font-mono)' }}
+                />
+                <button className="btn btn-ghost btn-sm" onClick={extendTrial}>+{trialDays}d Trial</button>
+              </div>
+            )}
             <button className="btn btn-ghost btn-sm" onClick={impersonate}>Impersonate</button>
           </div>
         )}
@@ -152,7 +220,7 @@ export default function TenantDetailPage() {
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--line)', marginBottom: 20 }}>
-        {(['overview', 'subscription', 'notes'] as const).map(t => (
+        {(['overview', 'subscription', 'notes', 'deliveries', ...(hasRole(admin, 'superadmin') ? ['flags'] : [])] as const).map((t: any) => (
           <button key={t} onClick={() => setTab(t)} style={{ padding: '9px 16px', fontSize: 13, fontWeight: tab === t ? 600 : 400, color: tab === t ? 'var(--accent)' : 'var(--ink-3)', background: 'none', border: 'none', borderBottom: `2px solid ${tab === t ? 'var(--accent)' : 'transparent'}`, cursor: 'pointer', fontFamily: 'inherit', textTransform: 'capitalize', marginBottom: -1 }}>
             {t}
           </button>
@@ -248,6 +316,79 @@ export default function TenantDetailPage() {
                 ))
             }
           </div>
+        </div>
+      )}
+
+      {tab === 'deliveries' && (
+        <div>
+          {dlLoading ? (
+            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+          ) : (
+            <div className="admin-card">
+              <table className="admin-table">
+                <thead>
+                  <tr><th>Time</th><th>Channel</th><th>Type</th><th>To</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                  {deliveries.map((d: any) => (
+                    <tr key={d._id}>
+                      <td style={{ fontSize: 12, color: 'var(--ink-4)', fontFamily: 'var(--font-mono)' }}>{timeAgo(d.sentAt)}</td>
+                      <td><span className={`badge ${d.channel === 'email' ? 'badge-blue' : 'badge-green'}`} style={{ textTransform: 'capitalize' }}>{d.channel}</span></td>
+                      <td style={{ fontSize: 12, color: 'var(--ink-3)' }}>{d.messageType}</td>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{maskRecipient(d.recipient)}</td>
+                      <td>
+                        <span className={`badge ${d.status === 'delivered' ? 'badge-green' : d.status === 'failed' ? 'badge-red' : d.status === 'bounced' ? 'badge-gold' : 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>
+                          {d.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                  {deliveries.length === 0 && (
+                    <tr><td colSpan={5} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>No delivery logs yet</td></tr>
+                  )}
+                </tbody>
+              </table>
+              {dlTotal > 20 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderTop: '1px solid var(--line)', fontSize: 13, color: 'var(--ink-4)' }}>
+                  <span>{(dlPage - 1) * 20 + 1}–{Math.min(dlPage * 20, dlTotal)} of {dlTotal}</span>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button className="btn btn-ghost btn-sm" disabled={dlPage === 1} onClick={() => loadDeliveries(dlPage - 1)}>← Prev</button>
+                    <button className="btn btn-ghost btn-sm" disabled={dlPage * 20 >= dlTotal} onClick={() => loadDeliveries(dlPage + 1)}>Next →</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === 'flags' && hasRole(admin, 'superadmin') && (
+        <div>
+          {flagsLoading ? (
+            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+          ) : (
+            <div className="admin-card" style={{ padding: 24 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink-4)', marginBottom: 20, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Feature Flags</div>
+              {['whatsapp_automation_early_access', 'analytics_starter_unlock', 'advance_bookings_trial', 'dedicated_onboarding'].map(flag => (
+                <div key={flag} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid var(--line)' }}>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--ink)', fontFamily: 'var(--font-mono)' }}>{flag}</div>
+                  </div>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={flags[flag] === true}
+                      onChange={e => toggleFlag(flag, e.target.checked)}
+                      style={{ width: 16, height: 16, accentColor: 'var(--accent)', cursor: 'pointer' }}
+                    />
+                    <span style={{ fontSize: 12, color: flags[flag] ? 'var(--green)' : 'var(--ink-4)' }}>
+                      {flags[flag] ? 'Enabled' : 'Disabled'}
+                    </span>
+                  </label>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
