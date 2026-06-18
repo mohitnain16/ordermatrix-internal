@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { getAdmin, clearAuth, hasRole, ROLE_LABEL } from '../../lib/auth';
+import { getAdmin, clearAuth, hasRole, ROLE_LABEL, type AdminRole } from '../../lib/auth';
 import {
   LayoutDashboard, Building2, CreditCard, Users, FileText,
   TrendingUp, Headphones, LogOut, ChevronRight,
@@ -81,13 +81,13 @@ export default function Sidebar() {
       {/* Nav */}
       <nav style={{ flex: 1, overflowY: 'auto', padding: '12px 10px' }}>
         {NAV.map((group) => {
-          if (!admin || !hasRole(admin, ...(group.roles as any[]))) return null;
+          if (!admin || !hasRole(admin, ...(group.roles as readonly AdminRole[]))) return null;
           return (
             <div key={group.section} style={{ marginBottom: 20 }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: '#3d4460', letterSpacing: '0.1em', padding: '0 8px', marginBottom: 6 }}>
                 {group.section}
               </div>
-              {group.items.filter(item => !item.roles || hasRole(admin, ...(item.roles as any[]))).map((item) => {
+              {group.items.filter(item => !item.roles || hasRole(admin, ...(item.roles as readonly AdminRole[]))).map((item) => {
                 const Icon = item.icon;
                 const active = isActive(item.href);
                 return (
