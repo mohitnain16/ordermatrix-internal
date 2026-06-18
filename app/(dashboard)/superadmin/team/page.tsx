@@ -57,6 +57,9 @@ export default function TeamPage() {
     if (!invite.name.trim() || !invite.email.trim() || !invite.password.trim()) {
       toast('Name, email and password are required'); return;
     }
+    if (invite.password.length < 8) {
+      toast('Password must be at least 8 characters'); return;
+    }
     setInviting(true);
     try {
       await api.post('/admin/team', invite);
@@ -170,7 +173,7 @@ export default function TeamPage() {
               </div>
               <div>
                 <label style={LabelStyle}>Temporary Password</label>
-                <input className="admin-input" type="password" placeholder="Min 8 characters" value={invite.password} onChange={e => setInvite(p => ({ ...p, password: e.target.value }))} />
+                <input className="admin-input" type="password" placeholder="Min 8 characters" minLength={8} value={invite.password} onChange={e => setInvite(p => ({ ...p, password: e.target.value }))} />
               </div>
               <div>
                 <label style={LabelStyle}>Role</label>
