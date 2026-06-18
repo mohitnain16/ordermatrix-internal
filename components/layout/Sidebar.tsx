@@ -18,7 +18,6 @@ const NAV = [
       { href: '/superadmin/subscriptions',  label: 'Subscriptions',  icon: CreditCard },
       { href: '/superadmin/users',          label: 'All Users',      icon: Users },
       { href: '/superadmin/audit-log',      label: 'Audit Log',      icon: FileText },
-      { href: '/superadmin/enquiries',      label: 'Enquiries',      icon: Mail },
     ],
   },
   {
@@ -35,7 +34,8 @@ const NAV = [
     section: 'SUPPORT',
     roles: ['superadmin', 'ops_admin', 'support'],
     items: [
-      { href: '/support',  label: 'Support',  icon: Headphones },
+      { href: '/support',                  label: 'Support',    icon: Headphones },
+      { href: '/superadmin/enquiries',     label: 'Enquiries',  icon: Mail },
     ],
   },
 ];
