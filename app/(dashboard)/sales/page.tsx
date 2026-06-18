@@ -34,16 +34,20 @@ export default function SalesPage() {
   const [revenue, setRevenue] = useState<any>(null);
   const [pipeline, setPipeline] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<'pipeline' | 'revenue'>('pipeline');
+  const [tab, setTab] = useState<'pipeline' | 'revenue' | 'leads'>('pipeline');
   const [noteModal, setNoteModal] = useState<{ tenantId: string; name: string } | null>(null);
   const [noteText, setNoteText] = useState('');
 
   const [trend, setTrend] = useState<TrendPoint[]>([]);
   const [trendPeriod, setTrendPeriod] = useState<30 | 90 | 180>(30);
   const [trendLoading, setTrendLoading] = useState(true);
+  const [leads, setLeads] = useState<any[]>([]);
+  const [leadsLoading, setLeadsLoading] = useState(false);
+  const [scoringId, setScoringId] = useState<string | null>(null);
 
   useEffect(() => { load(); }, []);
   useEffect(() => { loadTrend(trendPeriod); }, [trendPeriod]);
+  useEffect(() => { if (tab === 'leads') loadLeads(); }, [tab]);
 
   async function load() {
     setLoading(true);
@@ -65,6 +69,33 @@ export default function SalesPage() {
       setTrend(res.data.trend || []);
     } catch { /**/ }
     setTrendLoading(false);
+  }
+
+  function scoreColor(s: number) {
+    if (s >= 70) return 'var(--green)';
+    if (s >= 40) return 'var(--gold)';
+    return 'var(--red)';
+  }
+
+  async function loadLeads() {
+    setLeadsLoading(true);
+    try {
+      const res = await api.get('/admin/sales/leads');
+      setLeads(res.data.leads || []);
+    } catch { /**/ }
+    setLeadsLoading(false);
+  }
+
+  async function recalculateScore(tenantId: string) {
+    setScoringId(tenantId);
+    try {
+      const res = await api.post(`/admin/sales/leads/${tenantId}/score`);
+      const newScore = res.data.score;
+      setLeads(prev => prev.map(l =>
+        l.tenantId?._id === tenantId ? { ...l, activityScore: newScore } : l
+      ));
+    } catch { /**/ }
+    setScoringId(null);
   }
 
   async function saveNote(tenantId: string) {
@@ -187,9 +218,13 @@ export default function SalesPage() {
 
       {/* Tabs */}
       <div style={{ display: 'flex', borderBottom: '1px solid var(--line)', marginBottom: 20 }}>
-        {(['pipeline', 'revenue'] as const).map(t => (
-          <button key={t} onClick={() => setTab(t)} style={{ padding: '9px 18px', fontSize: 13, fontWeight: tab === t ? 600 : 400, color: tab === t ? 'var(--accent)' : 'var(--ink-3)', background: 'none', border: 'none', borderBottom: `2px solid ${tab === t ? 'var(--accent)' : 'transparent'}`, cursor: 'pointer', fontFamily: 'inherit', textTransform: 'capitalize', marginBottom: -1 }}>
-            {t === 'pipeline' ? 'Trial Pipeline' : 'Plan Breakdown'}
+        {([
+          { key: 'pipeline', label: 'Trial Pipeline' },
+          { key: 'revenue',  label: 'Plan Breakdown' },
+          { key: 'leads',    label: 'Hot Leads' },
+        ] as const).map(t => (
+          <button key={t.key} onClick={() => setTab(t.key)} style={{ padding: '9px 18px', fontSize: 13, fontWeight: tab === t.key ? 600 : 400, color: tab === t.key ? 'var(--accent)' : 'var(--ink-3)', background: 'none', border: 'none', borderBottom: `2px solid ${tab === t.key ? 'var(--accent)' : 'transparent'}`, cursor: 'pointer', fontFamily: 'inherit', marginBottom: -1 }}>
+            {t.label}
           </button>
         ))}
       </div>
@@ -223,6 +258,57 @@ export default function SalesPage() {
                 </tr>
               ))}
               {pipeline.length === 0 && <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>No trial tenants</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {tab === 'leads' && (
+        <div className="admin-card">
+          <table className="admin-table">
+            <thead>
+              <tr><th>Score</th><th>Business</th><th>Current Plan</th><th>Status</th><th>Last Updated</th><th></th></tr>
+            </thead>
+            <tbody>
+              {leadsLoading ? <SkRows rows={6} cols={6} /> : (
+                <>
+                  {leads.map(l => (
+                    <tr key={l._id}>
+                      <td>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: 15, color: scoreColor(l.activityScore) }}>
+                          {l.activityScore}
+                        </span>
+                      </td>
+                      <td>
+                        <div style={{ fontWeight: 500 }}>{l.tenantId?.businessName}</div>
+                        <div style={{ fontSize: 11, color: 'var(--ink-4)' }}>{l.tenantId?.email}</div>
+                      </td>
+                      <td style={{ textTransform: 'capitalize', fontSize: 13 }}>{l.tenantId?.planId || '—'}</td>
+                      <td>
+                        <span className={`badge ${l.status === 'contacted' ? 'badge-blue' : l.status === 'converted' ? 'badge-green' : l.status === 'churned' ? 'badge-red' : 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>
+                          {l.status}
+                        </span>
+                      </td>
+                      <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{fmtDate(l.updatedAt)}</td>
+                      <td>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button
+                            className="btn btn-ghost btn-sm"
+                            disabled={scoringId === l.tenantId?._id}
+                            onClick={() => recalculateScore(l.tenantId?._id)}
+                          >
+                            {scoringId === l.tenantId?._id ? '…' : 'Recalculate'}
+                          </button>
+                          <Link href={`/superadmin/tenants/${l.tenantId?._id}`} className="btn btn-ghost btn-sm">View Tenant →</Link>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {leads.length === 0 && (
+                    <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>No leads yet — scores are calculated from order activity</td></tr>
+                  )}
+                </>
+              )}
             </tbody>
           </table>
         </div>

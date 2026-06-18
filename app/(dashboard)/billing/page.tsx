@@ -8,12 +8,19 @@ const fmt = (n: number) => `₹${new Intl.NumberFormat('en-IN').format(n || 0)}`
 const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' }) : '—';
 
 export default function BillingOpsPage() {
-  const [tab, setTab] = useState<'failed' | 'seats' | 'dunning'>('failed');
+  const [tab, setTab] = useState<'failed' | 'seats' | 'dunning' | 'invoices'>('failed');
   const [failed, setFailed] = useState<any[]>([]);
   const [seats, setSeats] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dunningModal, setDunningModal] = useState<any>(null);
   const [actionMsg, setActionMsg] = useState('');
+  const [invQuery, setInvQuery] = useState('');
+  const [invResults, setInvResults] = useState<any[]>([]);
+  const [invSearching, setInvSearching] = useState(false);
+  const [invTenant, setInvTenant] = useState<any>(null);
+  const [invoices, setInvoices] = useState<any[]>([]);
+  const [invLoading, setInvLoading] = useState(false);
+  const [invPage, setInvPage] = useState(1);
 
   useEffect(() => { loadAll(); }, []);
 
@@ -45,6 +52,31 @@ export default function BillingOpsPage() {
       setActionMsg('Marked resolved');
       setTimeout(() => setActionMsg(''), 3000);
     } catch { /**/ }
+  }
+
+  async function searchTenants() {
+    if (!invQuery.trim() || invQuery.length < 2) return;
+    setInvSearching(true);
+    setInvResults([]);
+    try {
+      const res = await api.get('/admin/support/lookup', { params: { q: invQuery } });
+      setInvResults(res.data.tenants || []);
+    } catch { /**/ }
+    setInvSearching(false);
+  }
+
+  async function loadInvoices(tenant: any) {
+    setInvTenant(tenant);
+    setInvResults([]);
+    setInvQuery('');
+    setInvLoading(true);
+    setInvoices([]);
+    setInvPage(1);
+    try {
+      const res = await api.get(`/admin/billing-ops/invoices/${tenant._id}`);
+      setInvoices(res.data.invoices || []);
+    } catch { /**/ }
+    setInvLoading(false);
   }
 
   async function sendDunning(tenantId: string, day: number, channel: string) {
@@ -111,9 +143,10 @@ export default function BillingOpsPage() {
       {/* Tabs */}
       <div style={{ display: 'flex', borderBottom: '1px solid var(--line)', marginBottom: 20 }}>
         {([
-          { key: 'failed', label: `Failed Payments (${failed.length})` },
-          { key: 'dunning', label: 'Dunning' },
-          { key: 'seats', label: `Seat Usage (${seats.length})` },
+          { key: 'failed',   label: `Failed Payments (${failed.length})` },
+          { key: 'dunning',  label: 'Dunning' },
+          { key: 'seats',    label: `Seat Usage (${seats.length})` },
+          { key: 'invoices', label: 'Invoices' },
         ] as const).map(t => (
           <button key={t.key} onClick={() => setTab(t.key)} style={{ padding: '9px 18px', fontSize: 13, fontWeight: tab === t.key ? 600 : 400, color: tab === t.key ? 'var(--accent)' : 'var(--ink-3)', background: 'none', border: 'none', borderBottom: `2px solid ${tab === t.key ? 'var(--accent)' : 'transparent'}`, cursor: 'pointer', fontFamily: 'inherit', marginBottom: -1 }}>
             {t.label}
@@ -223,6 +256,105 @@ export default function BillingOpsPage() {
           </table>
         </div>
       )}
+      {tab === 'invoices' && (() => {
+        const PAGE_SIZE = 20;
+        const totalInvPages = Math.ceil(invoices.length / PAGE_SIZE);
+        const invSlice = invoices.slice((invPage - 1) * PAGE_SIZE, invPage * PAGE_SIZE);
+        return (
+          <div>
+            {/* Tenant search */}
+            {!invTenant ? (
+              <>
+                <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+                  <input
+                    className="admin-input"
+                    style={{ maxWidth: 360 }}
+                    placeholder="Search tenant by name or email…"
+                    value={invQuery}
+                    onChange={e => setInvQuery(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && searchTenants()}
+                  />
+                  <button className="btn btn-primary btn-sm" onClick={searchTenants} disabled={invSearching}>
+                    {invSearching ? <><span className="spinner" />…</> : 'Search'}
+                  </button>
+                </div>
+                {invResults.length > 0 && (
+                  <div className="admin-card">
+                    <table className="admin-table">
+                      <thead><tr><th>Business</th><th>Email</th><th>Plan</th><th></th></tr></thead>
+                      <tbody>
+                        {invResults.map((t: any) => (
+                          <tr key={t._id}>
+                            <td style={{ fontWeight: 500 }}>{t.businessName}</td>
+                            <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{t.email}</td>
+                            <td style={{ textTransform: 'capitalize' }}>{t.planId}</td>
+                            <td><button className="btn btn-ghost btn-sm" onClick={() => loadInvoices(t)}>View Invoices →</button></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+                {invResults.length === 0 && !invSearching && invQuery && (
+                  <div style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>No tenants found for "{invQuery}"</div>
+                )}
+                {!invQuery && (
+                  <div style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>Search for a tenant to view their invoice history</div>
+                )}
+              </>
+            ) : (
+              <>
+                {/* Tenant selected header */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>{invTenant.businessName}</span>
+                  <span style={{ fontSize: 12, color: 'var(--ink-4)', fontFamily: 'var(--font-mono)' }}>{invTenant.email}</span>
+                  <button className="btn btn-ghost btn-sm" style={{ marginLeft: 'auto' }} onClick={() => { setInvTenant(null); setInvoices([]); }}>← Change tenant</button>
+                </div>
+                {invLoading ? (
+                  <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+                ) : (
+                  <div className="admin-card">
+                    <table className="admin-table">
+                      <thead>
+                        <tr><th>#</th><th>Date</th><th>Plan</th><th>Cycle</th><th>Amount</th><th>Status</th><th>Payment ID</th></tr>
+                      </thead>
+                      <tbody>
+                        {invSlice.map((inv: any) => (
+                          <tr key={inv.invoiceNo}>
+                            <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{inv.invoiceNo}</td>
+                            <td style={{ fontSize: 12 }}>{fmtDate(inv.paidAt)}</td>
+                            <td style={{ textTransform: 'capitalize' }}>{inv.planName || inv.planId}</td>
+                            <td style={{ textTransform: 'capitalize', fontSize: 12 }}>{inv.billingCycle}</td>
+                            <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--green)' }}>{fmt(inv.amount)}</td>
+                            <td>
+                              <span className={`badge ${inv.status === 'active' ? 'badge-green' : inv.status === 'cancelled' ? 'badge-red' : inv.status === 'past_due' ? 'badge-gold' : 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>
+                                {inv.status}
+                              </span>
+                            </td>
+                            <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-4)' }}>{inv.razorpayPaymentId ? inv.razorpayPaymentId.slice(0, 16) + '…' : '—'}</td>
+                          </tr>
+                        ))}
+                        {invoices.length === 0 && (
+                          <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>No invoice records found</td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                    {totalInvPages > 1 && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderTop: '1px solid var(--line)', fontSize: 13, color: 'var(--ink-4)' }}>
+                        <span>{(invPage - 1) * PAGE_SIZE + 1}–{Math.min(invPage * PAGE_SIZE, invoices.length)} of {invoices.length}</span>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button className="btn btn-ghost btn-sm" disabled={invPage === 1} onClick={() => setInvPage(p => p - 1)}>← Prev</button>
+                          <button className="btn btn-ghost btn-sm" disabled={invPage >= totalInvPages} onClick={() => setInvPage(p => p + 1)}>Next →</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 }
