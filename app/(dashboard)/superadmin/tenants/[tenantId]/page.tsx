@@ -23,6 +23,7 @@ export default function TenantDetailPage() {
   const [saving, setSaving] = useState(false);
   const [tab, setTab] = useState<'overview' | 'subscription' | 'notes'>('overview');
   const [toastMsg, setToastMsg] = useState('');
+  const [trialDays, setTrialDays] = useState(14);
 
   useEffect(() => { load(); }, [tenantId]);
 
@@ -47,9 +48,11 @@ export default function TenantDetailPage() {
   }
 
   async function extendTrial() {
+    const days = Math.max(1, Math.min(90, trialDays));
+    if (!confirm(`Extend trial by ${days} day${days === 1 ? '' : 's'}?`)) return;
     try {
-      await api.patch(`/admin/subscriptions/extend-trial/${tenantId}`, { days: 14 });
-      toast('Trial extended by 14 days');
+      await api.patch(`/admin/subscriptions/extend-trial/${tenantId}`, { days });
+      toast(`Trial extended by ${days} day${days === 1 ? '' : 's'}`);
       load();
     } catch { toast('Failed to extend trial'); }
   }
@@ -126,7 +129,16 @@ export default function TenantDetailPage() {
             <button className={`btn btn-sm ${tenant.isActive ? 'btn-danger' : 'btn-ghost'}`} onClick={toggleActive}>
               {tenant.isActive ? 'Deactivate' : 'Activate'}
             </button>
-            {tenant.planId === 'trial' && <button className="btn btn-ghost btn-sm" onClick={extendTrial}>+14d Trial</button>}
+            {tenant.planId === 'trial' && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <input
+                  type="number" min={1} max={90} value={trialDays}
+                  onChange={e => setTrialDays(Math.max(1, Math.min(90, parseInt(e.target.value) || 14)))}
+                  style={{ width: 52, padding: '4px 6px', border: '1px solid var(--line)', borderRadius: 6, fontSize: 12, color: 'var(--ink)', background: 'var(--surface)', textAlign: 'center', fontFamily: 'var(--font-mono)' }}
+                />
+                <button className="btn btn-ghost btn-sm" onClick={extendTrial}>+{trialDays}d Trial</button>
+              </div>
+            )}
             <button className="btn btn-ghost btn-sm" onClick={impersonate}>Impersonate</button>
           </div>
         )}
