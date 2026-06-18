@@ -5,7 +5,7 @@ import { getAdmin, clearAuth, hasRole, ROLE_LABEL, type AdminRole } from '../../
 import {
   LayoutDashboard, Building2, CreditCard, Users, FileText,
   TrendingUp, Headphones, LogOut, ChevronRight,
-  Activity, AlertTriangle, Megaphone, Mail, ShieldCheck, Tag,
+  Activity, AlertTriangle, Megaphone, Mail, ShieldCheck, Tag, UserPlus,
 } from 'lucide-react';
 
 const NAV = [
@@ -26,10 +26,11 @@ const NAV = [
     section: 'GROWTH',
     roles: ['superadmin', 'ops_admin', 'sales'],
     items: [
-      { href: '/sales',           label: 'Sales',         icon: TrendingUp },
-      { href: '/lifecycle',       label: 'Lifecycle',     icon: Activity },
-      { href: '/billing',         label: 'Billing Ops',   icon: AlertTriangle },
-      { href: '/communications',  label: 'Comms',         icon: Megaphone },
+      { href: '/sales',           label: 'Sales',          icon: TrendingUp },
+      { href: '/sales/leads',     label: 'Lead Captures',  icon: UserPlus },
+      { href: '/lifecycle',       label: 'Lifecycle',      icon: Activity },
+      { href: '/billing',         label: 'Billing Ops',    icon: AlertTriangle },
+      { href: '/communications',  label: 'Comms',          icon: Megaphone },
     ],
   },
   {
