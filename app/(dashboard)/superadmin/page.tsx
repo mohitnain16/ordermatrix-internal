@@ -15,11 +15,11 @@ interface PulseData {
   recentTenants: { _id: string; businessName: string; email: string; planId: string; createdAt: string; ordersThisMonth: number }[];
 }
 
-function StatCard({ label, value, sub, color = '#e8593a' }: { label: string; value: string | number; sub?: string; color?: string }) {
+function StatCard({ label, value, sub, color = 'var(--ink)' }: { label: string; value: string | number; sub?: string; color?: string }) {
   return (
     <div className="stat-card">
-      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-4)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>{label}</div>
-      <div style={{ fontSize: 28, fontWeight: 800, color, fontFamily: 'var(--font-mono)', letterSpacing: '-0.02em' }}>{value}</div>
+      <div className="stat-label">{label}</div>
+      <div className="stat-value" style={{ color }}>{value}</div>
       {sub && <div style={{ fontSize: 12, color: 'var(--ink-4)', marginTop: 4 }}>{sub}</div>}
     </div>
   );
@@ -59,7 +59,7 @@ export default function PulsePage() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
         <div className="admin-card">
           <SkCardHeader />
-          <div style={{ padding: '12px 18px' }}>
+          <div className="card-body">
             {[0,1,2,3,4].map(i => (
               <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
                 <Sk w="48%" h={12} /><Sk w={24} h={12} />
@@ -79,6 +79,7 @@ export default function PulsePage() {
       </div>
     </div>
   );
+
   if (!data) return (
     <div className="empty-state" style={{ padding: 80 }}>
       <div className="empty-state-icon">⚠</div>
@@ -98,26 +99,27 @@ export default function PulsePage() {
         <button onClick={load} className="btn btn-ghost btn-sm">Refresh</button>
       </div>
 
-      {/* KPI Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 20 }}>
-        <StatCard label="Total Tenants" value={data.totalTenants} sub={`${data.activeTenants} active`} color="var(--ink)" />
-        <StatCard label="MRR" value={fmt(data.mrr)} sub={`ARR ${fmt(data.arr)}`} color="var(--green)" />
-        <StatCard label="Paid Tenants" value={data.paidTenants} sub={`${data.trialTenants} on trial`} color="var(--blue)" />
-        <StatCard label="Orders Today" value={data.ordersToday} sub={`${data.totalOrders.toLocaleString('en-IN')} total`} color="var(--accent)" />
+        <StatCard label="Total Tenants"  value={data.totalTenants}  sub={`${data.activeTenants} active`}                 color="var(--ink)" />
+        <StatCard label="MRR"            value={fmt(data.mrr)}      sub={`ARR ${fmt(data.arr)}`}                         color="var(--green)" />
+        <StatCard label="Paid Tenants"   value={data.paidTenants}   sub={`${data.trialTenants} on trial`}                color="var(--blue)" />
+        <StatCard label="Orders Today"   value={data.ordersToday}   sub={`${data.totalOrders.toLocaleString('en-IN')} total`} color="var(--accent)" />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 24 }}>
-        <StatCard label="New This Month" value={data.newTenantsThisMonth} color="var(--purple)" />
-        <StatCard label="Total Users" value={data.totalUsers} color="var(--ink-2)" />
-        <StatCard label="Trial Tenants" value={data.trialTenants} color="var(--gold)" />
-        <StatCard label="Total Orders" value={data.totalOrders.toLocaleString('en-IN')} color="var(--ink-3)" />
+        <StatCard label="New This Month" value={data.newTenantsThisMonth}               color="var(--purple)" />
+        <StatCard label="Total Users"    value={data.totalUsers}                        color="var(--ink-2)" />
+        <StatCard label="Trial Tenants"  value={data.trialTenants}                      color="var(--amber)" />
+        <StatCard label="Total Orders"   value={data.totalOrders.toLocaleString('en-IN')} color="var(--ink-3)" />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
         {/* Plan Breakdown */}
         <div className="admin-card">
-          <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--line)', fontSize: 13, fontWeight: 700, color: 'var(--ink-2)' }}>Plan Breakdown</div>
-          <div style={{ padding: '12px 18px' }}>
+          <div className="card-header">
+            <span className="card-title">Plan Breakdown</span>
+          </div>
+          <div className="card-body">
             {data.planBreakdown.map(p => (
               <div key={p._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -132,8 +134,8 @@ export default function PulsePage() {
 
         {/* Recent Tenants */}
         <div className="admin-card">
-          <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-2)' }}>Recent Signups</span>
+          <div className="card-header">
+            <span className="card-title">Recent Signups</span>
             <Link href="/superadmin/tenants" style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none' }}>View all →</Link>
           </div>
           <div>

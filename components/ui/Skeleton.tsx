@@ -8,16 +8,20 @@ export function Sk({
   h = 14,
   r = 4,
   mb = 0,
+  className,
+  style: extraStyle,
 }: {
   w?: string | number;
   h?: number;
   r?: number;
   mb?: number;
+  className?: string;
+  style?: React.CSSProperties;
 }) {
   return (
     <span
-      className="sk"
-      style={{ width: w, height: h, borderRadius: r, marginBottom: mb, display: 'block' }}
+      className={`sk${className ? ` ${className}` : ''}`}
+      style={{ width: w, height: h, borderRadius: r, marginBottom: mb, display: 'block', ...extraStyle }}
     />
   );
 }
@@ -32,10 +36,11 @@ export function SkStatCard() {
   );
 }
 
-export function SkRows({ rows = 7, cols = 5 }: { rows?: number; cols?: number }) {
+export function SkRows({ rows = 7, cols = 5, n }: { rows?: number; cols?: number; n?: number }) {
+  const rowCount = n ?? rows;
   return (
     <>
-      {Array.from({ length: rows }, (_, row) => (
+      {Array.from({ length: rowCount }, (_, row) => (
         <tr key={row}>
           {Array.from({ length: cols }, (_, col) => (
             <td key={col} style={{ padding: '13px 14px' }}>
@@ -59,29 +64,31 @@ export function SkRows({ rows = 7, cols = 5 }: { rows?: number; cols?: number })
 
 export function SkDetailCard({ rows = 6 }: { rows?: number }) {
   return (
-    <div className="admin-card" style={{ padding: 20 }}>
-      {Array.from({ length: rows }, (_, i) => (
-        <div
-          key={i}
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            marginBottom: i < rows - 1 ? 12 : 0,
-            paddingBottom: i < rows - 1 ? 12 : 0,
-            borderBottom: i < rows - 1 ? '1px solid var(--line)' : 'none',
-          }}
-        >
-          <Sk w="32%" h={13} />
-          <Sk w="28%" h={13} />
-        </div>
-      ))}
+    <div className="admin-card">
+      <div className="card-body">
+        {Array.from({ length: rows }, (_, i) => (
+          <div
+            key={i}
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              marginBottom: i < rows - 1 ? 12 : 0,
+              paddingBottom: i < rows - 1 ? 12 : 0,
+              borderBottom: i < rows - 1 ? '1px solid var(--line)' : 'none',
+            }}
+          >
+            <Sk w="32%" h={13} />
+            <Sk w="28%" h={13} />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
 
 export function SkCardHeader() {
   return (
-    <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--line)' }}>
+    <div className="card-header">
       <Sk w={120} h={14} />
     </div>
   );
