@@ -37,7 +37,7 @@ export default function TenantsPage() {
 
   return (
     <div className="animate-fade-in">
-      <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div className="page-header flex-between">
         <div>
           <h1 className="page-title">Tenants</h1>
           <p className="page-sub">{total} total tenants</p>
@@ -45,7 +45,7 @@ export default function TenantsPage() {
       </div>
 
       {/* Filters */}
-      <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+      <div className="table-filter-bar">
         <input
           className="admin-input"
           style={{ maxWidth: 280 }}
@@ -61,6 +61,7 @@ export default function TenantsPage() {
       </div>
 
       <div className="admin-card">
+        <div className="table-shell">
         <table className="admin-table">
           <thead>
             <tr>
@@ -73,13 +74,13 @@ export default function TenantsPage() {
               <>
                 {tenants.map(t => (
                   <tr key={t._id}>
-                    <td><span style={{ fontWeight: 500, color: 'var(--ink)' }}>{t.businessName}</span></td>
+                    <td><span className="cell-main">{t.businessName}</span></td>
                     <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{t.email}</td>
                     <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{t.phone}</td>
                     <td><span className={`badge ${PLAN_BADGE[t.planId] || 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>{t.planId}</span></td>
                     <td style={{ fontFamily: 'var(--font-mono)' }}>{t.ordersThisMonth}</td>
                     <td><span className={`badge ${t.isActive ? 'badge-green' : 'badge-red'}`}>{t.isActive ? 'Active' : 'Inactive'}</span></td>
-                    <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{fmtDate(t.createdAt)}</td>
+                    <td className="cell-sub">{fmtDate(t.createdAt)}</td>
                     <td><Link href={`/superadmin/tenants/${t._id}`} className="btn btn-ghost btn-sm">View →</Link></td>
                   </tr>
                 ))}
@@ -96,13 +97,14 @@ export default function TenantsPage() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Pagination */}
       {pages > 1 && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center', marginTop: 16 }}>
+        <div className="pagination">
           <button className="btn btn-ghost btn-sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>← Prev</button>
-          <span style={{ fontSize: 13, color: 'var(--ink-3)' }}>Page {page} of {pages}</span>
+          <span className="pagination-info">Page {page} of {pages}</span>
           <button className="btn btn-ghost btn-sm" disabled={page >= pages} onClick={() => setPage(p => p + 1)}>Next →</button>
         </div>
       )}

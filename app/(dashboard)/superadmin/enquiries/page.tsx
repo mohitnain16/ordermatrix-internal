@@ -159,7 +159,7 @@ export default function EnquiriesPage() {
         </div>
 
         {/* Status filter tabs */}
-        <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexShrink: 0, flexWrap: 'wrap' }}>
+        <div className="table-filter-bar" style={{ flexShrink: 0, flexWrap: 'wrap' }}>
           <button
             className={`btn btn-sm ${statusFilter === '' ? 'btn-primary' : 'btn-ghost'}`}
             onClick={() => { setStatusFilter(''); setPage(1); }}
@@ -184,7 +184,7 @@ export default function EnquiriesPage() {
         </div>
 
         {/* Search */}
-        <div style={{ marginBottom: 12, flexShrink: 0 }}>
+        <div className="table-filter-bar" style={{ flexShrink: 0 }}>
           <input
             className="admin-input"
             style={{ maxWidth: 360 }}
@@ -196,69 +196,71 @@ export default function EnquiriesPage() {
 
         {/* Table */}
         <div className="admin-card" style={{ flex: 1, overflow: 'auto' }}>
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Subject</th>
-                <th>Date</th>
-                <th>Status</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? <SkRows rows={10} cols={6} /> : (
-                <>
-                  {enquiries.map(e => (
-                    <tr
-                      key={e._id}
-                      style={{
-                        cursor: 'pointer',
-                        background: selected?._id === e._id ? 'var(--surface-2)' : undefined,
-                        fontWeight: e.status === 'new' ? 600 : undefined,
-                      }}
-                      onClick={() => openEnquiry(e._id)}
-                    >
-                      <td>
-                        <span style={{ color: 'var(--ink)' }}>{e.name}</span>
-                        {e.company && <span style={{ display: 'block', fontSize: 11, color: 'var(--ink-4)', fontWeight: 400 }}>{e.company}</span>}
-                      </td>
-                      <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{e.email}</td>
-                      <td style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.subject}</td>
-                      <td style={{ fontSize: 12, color: 'var(--ink-4)', whiteSpace: 'nowrap' }}>{fmtDate(e.createdAt)}</td>
-                      <td>
-                        <span className={`badge ${STATUS_BADGE[e.status] || 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>
-                          {e.status}
-                        </span>
-                      </td>
-                      <td>
-                        <button
-                          className="btn btn-ghost btn-sm"
-                          onClick={ev => { ev.stopPropagation(); openEnquiry(e._id); }}
-                        >
-                          Open →
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                  {enquiries.length === 0 && (
-                    <tr><td colSpan={6}>
-                      <div className="empty-state">
-                        <div className="empty-state-icon">✉️</div>
-                        <div className="empty-state-title">No enquiries found</div>
-                        <div className="empty-state-sub">{statusFilter ? `No enquiries with status "${statusFilter}"` : 'All caught up!'}</div>
-                      </div>
-                    </td></tr>
-                  )}
-                </>
-              )}
-            </tbody>
-          </table>
+          <div className="table-shell">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Subject</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? <SkRows rows={10} cols={6} /> : (
+                  <>
+                    {enquiries.map(e => (
+                      <tr
+                        key={e._id}
+                        style={{
+                          cursor: 'pointer',
+                          background: selected?._id === e._id ? 'var(--surface-2)' : undefined,
+                          fontWeight: e.status === 'new' ? 600 : undefined,
+                        }}
+                        onClick={() => openEnquiry(e._id)}
+                      >
+                        <td>
+                          <span style={{ color: 'var(--ink)' }}>{e.name}</span>
+                          {e.company && <span className="cell-sub">{e.company}</span>}
+                        </td>
+                        <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{e.email}</td>
+                        <td className="text-truncate" style={{ maxWidth: 200 }}>{e.subject}</td>
+                        <td style={{ fontSize: 12, color: 'var(--ink-4)', whiteSpace: 'nowrap' }}>{fmtDate(e.createdAt)}</td>
+                        <td>
+                          <span className={`badge ${STATUS_BADGE[e.status] || 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>
+                            {e.status}
+                          </span>
+                        </td>
+                        <td>
+                          <button
+                            className="btn btn-ghost btn-sm"
+                            onClick={ev => { ev.stopPropagation(); openEnquiry(e._id); }}
+                          >
+                            Open →
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {enquiries.length === 0 && (
+                      <tr><td colSpan={6}>
+                        <div className="empty-state">
+                          <div className="empty-state-icon">✉️</div>
+                          <div className="empty-state-title">No enquiries found</div>
+                          <div className="empty-state-sub">{statusFilter ? `No enquiries with status "${statusFilter}"` : 'All caught up!'}</div>
+                        </div>
+                      </td></tr>
+                    )}
+                  </>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {pages > 1 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center', marginTop: 12, flexShrink: 0 }}>
+          <div className="flex-center gap-2" style={{ marginTop: 12, flexShrink: 0 }}>
             <button className="btn btn-ghost btn-sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>← Prev</button>
             <span style={{ fontSize: 13, color: 'var(--ink-3)' }}>Page {page} of {pages}</span>
             <button className="btn btn-ghost btn-sm" disabled={page >= pages} onClick={() => setPage(p => p + 1)}>Next →</button>
@@ -398,9 +400,9 @@ export default function EnquiriesPage() {
               )}
 
               {selected.internalNotes.map(n => (
-                <div key={n._id} style={{ background: 'var(--surface-2)', borderRadius: 8, padding: '10px 12px', marginBottom: 8, borderLeft: '3px solid var(--line)' }}>
-                  <p style={{ margin: '0 0 4px', fontSize: 13, lineHeight: 1.6, color: 'var(--ink-3)', whiteSpace: 'pre-wrap' }}>{n.note}</p>
-                  <span style={{ fontSize: 11, color: 'var(--ink-4)' }}>{n.addedBy} · {fmtTime(n.createdAt)}</span>
+                <div key={n._id} className="note-card">
+                  <p className="note-card-body" style={{ whiteSpace: 'pre-wrap' }}>{n.note}</p>
+                  <span className="note-card-meta">{n.addedBy} · {fmtTime(n.createdAt)}</span>
                 </div>
               ))}
 

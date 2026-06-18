@@ -70,22 +70,26 @@ export default function SalesPipelinePage() {
     <div className="animate-fade-in">
       {noteModal && (
         <div className="modal-backdrop">
-          <div className="modal-box" style={{ padding: 28, width: 400 }}>
-            <h3 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 700 }}>Follow-up Note</h3>
-            <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--ink-3)' }}>{noteModal.name}</p>
-            {noteModal.current && (
-              <div style={{ marginBottom: 12, padding: '8px 12px', background: 'var(--surface-3)', borderRadius: 7, fontSize: 12, color: 'var(--ink-3)' }}>
-                Current: {noteModal.current}
-              </div>
-            )}
-            <textarea
-              rows={4}
-              value={noteText}
-              onChange={e => setNoteText(e.target.value)}
-              placeholder="Note…"
-              style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--line)', borderRadius: 8, fontSize: 13, resize: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
-            />
-            <div style={{ display: 'flex', gap: 8, marginTop: 12, justifyContent: 'flex-end' }}>
+          <div className="modal-box" style={{ width: 400 }}>
+            <div className="modal-header">
+              <h3 className="modal-title">Follow-up Note</h3>
+              <p className="modal-sub">{noteModal.name}</p>
+            </div>
+            <div className="modal-body">
+              {noteModal.current && (
+                <div style={{ marginBottom: 12, padding: '8px 12px', background: 'var(--surface-3)', borderRadius: 7, fontSize: 12, color: 'var(--ink-3)' }}>
+                  Current: {noteModal.current}
+                </div>
+              )}
+              <textarea
+                rows={4}
+                value={noteText}
+                onChange={e => setNoteText(e.target.value)}
+                placeholder="Note…"
+                style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--line)', borderRadius: 8, fontSize: 13, resize: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
+              />
+            </div>
+            <div className="modal-footer">
               <button className="btn btn-ghost btn-sm" onClick={() => { setNoteModal(null); setNoteText(''); }}>Cancel</button>
               <button className="btn btn-primary btn-sm" onClick={saveNote} disabled={saving || !noteText.trim()}>
                 {saving ? <><span className="spinner" />Saving…</> : 'Save Note'}
@@ -104,13 +108,13 @@ export default function SalesPipelinePage() {
       </div>
 
       {/* Status filters */}
-      <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+      <div className="table-filter-bar">
         <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-4)', marginRight: 4 }}>Status:</span>
         {STATUS_OPTIONS.map(s => (
           <button
             key={s}
             className={`btn btn-sm ${statusFilter === s ? 'btn-primary' : 'btn-ghost'}`}
-            style={{ fontSize: 12, textTransform: 'capitalize' }}
+            style={{ textTransform: 'capitalize' }}
             onClick={() => setStatusFilter(s)}
           >
             {s === 'all'
@@ -121,74 +125,80 @@ export default function SalesPipelinePage() {
       </div>
 
       <div className="admin-card">
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>Business</th>
-              <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => toggleSort('orderCount')}>
-                Orders {sortArrow('orderCount')}
-              </th>
-              <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => toggleSort('daysLeft')}>
-                Days Left {sortArrow('daysLeft')}
-              </th>
-              <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => toggleSort('activityScore')}>
-                Score {sortArrow('activityScore')}
-              </th>
-              <th>Status</th>
-              <th>Follow-up Note</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? <SkRows rows={8} cols={7} /> : (
-              <>
-                {displayed.map(t => (
-                  <tr key={t._id}>
-                    <td>
-                      <div style={{ fontWeight: 500 }}>{t.businessName}</div>
-                      <div style={{ fontSize: 11, color: 'var(--ink-4)' }}>{t.email}</div>
-                      <div style={{ fontSize: 10, color: 'var(--ink-4)' }}>Joined {fmtDate(t.createdAt)}</div>
-                    </td>
-                    <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: t.orderCount > 10 ? 'var(--green)' : 'var(--ink)' }}>
-                      {t.orderCount}
-                    </td>
-                    <td>
-                      <span className={`badge ${t.daysLeft <= 3 ? 'badge-red' : t.daysLeft <= 7 ? 'badge-gold' : 'badge-green'}`}>
-                        {t.daysLeft}d
-                      </span>
-                    </td>
-                    <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: (t.lead?.activityScore || 0) >= 70 ? 'var(--green)' : (t.lead?.activityScore || 0) >= 40 ? 'var(--gold)' : 'var(--ink-4)' }}>
-                      {t.lead?.activityScore ?? '—'}
-                    </td>
-                    <td>
-                      <span className={`badge ${t.lead?.status === 'contacted' ? 'badge-blue' : t.lead?.status === 'converted' ? 'badge-green' : t.lead?.status === 'churned' ? 'badge-red' : 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>
-                        {t.lead?.status || 'watching'}
-                      </span>
-                    </td>
-                    <td style={{ maxWidth: 200 }}>
-                      {t.lead?.followUpNote
-                        ? <span style={{ fontSize: 12, color: 'var(--ink-3)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{t.lead.followUpNote}</span>
-                        : <span style={{ color: 'var(--ink-4)', fontSize: 12 }}>—</span>}
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', gap: 6 }}>
-                        <button className="btn btn-ghost btn-sm" onClick={() => { setNoteModal({ tenantId: t._id, name: t.businessName, current: t.lead?.followUpNote || '' }); setNoteText(''); }}>
-                          + Note
-                        </button>
-                        <Link href={`/superadmin/tenants/${t._id}`} className="btn btn-ghost btn-sm">View →</Link>
+        <div className="table-shell">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Business</th>
+                <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => toggleSort('orderCount')}>
+                  Orders {sortArrow('orderCount')}
+                </th>
+                <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => toggleSort('daysLeft')}>
+                  Days Left {sortArrow('daysLeft')}
+                </th>
+                <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => toggleSort('activityScore')}>
+                  Score {sortArrow('activityScore')}
+                </th>
+                <th>Status</th>
+                <th>Follow-up Note</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? <SkRows rows={8} cols={7} /> : (
+                <>
+                  {displayed.map(t => (
+                    <tr key={t._id}>
+                      <td>
+                        <div style={{ fontWeight: 500 }}>{t.businessName}</div>
+                        <div style={{ fontSize: 11, color: 'var(--ink-4)' }}>{t.email}</div>
+                        <div style={{ fontSize: 10, color: 'var(--ink-4)' }}>Joined {fmtDate(t.createdAt)}</div>
+                      </td>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: t.orderCount > 10 ? 'var(--green)' : 'var(--ink)' }}>
+                        {t.orderCount}
+                      </td>
+                      <td>
+                        <span className={`badge ${t.daysLeft <= 3 ? 'badge-red' : t.daysLeft <= 7 ? 'badge-gold' : 'badge-green'}`}>
+                          {t.daysLeft}d
+                        </span>
+                      </td>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: (t.lead?.activityScore || 0) >= 70 ? 'var(--green)' : (t.lead?.activityScore || 0) >= 40 ? 'var(--gold)' : 'var(--ink-4)' }}>
+                        {t.lead?.activityScore ?? '—'}
+                      </td>
+                      <td>
+                        <span className={`badge ${t.lead?.status === 'contacted' ? 'badge-blue' : t.lead?.status === 'converted' ? 'badge-green' : t.lead?.status === 'churned' ? 'badge-red' : 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>
+                          {t.lead?.status || 'watching'}
+                        </span>
+                      </td>
+                      <td style={{ maxWidth: 200 }}>
+                        {t.lead?.followUpNote
+                          ? <span style={{ fontSize: 12, color: 'var(--ink-3)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{t.lead.followUpNote}</span>
+                          : <span style={{ color: 'var(--ink-4)', fontSize: 12 }}>—</span>}
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button className="btn btn-ghost btn-sm" onClick={() => { setNoteModal({ tenantId: t._id, name: t.businessName, current: t.lead?.followUpNote || '' }); setNoteText(''); }}>
+                            + Note
+                          </button>
+                          <Link href={`/superadmin/tenants/${t._id}`} className="btn btn-ghost btn-sm">View →</Link>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {displayed.length === 0 && (
+                    <tr><td colSpan={7}>
+                      <div className="empty-state">
+                        <div className="empty-title">
+                          {pipeline.length === 0 ? 'No trial tenants in pipeline' : `No tenants with status "${statusFilter}"`}
+                        </div>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-                {displayed.length === 0 && (
-                  <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>
-                    {pipeline.length === 0 ? 'No trial tenants in pipeline' : `No tenants with status "${statusFilter}"`}
-                  </td></tr>
-                )}
-              </>
-            )}
-          </tbody>
-        </table>
+                    </td></tr>
+                  )}
+                </>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

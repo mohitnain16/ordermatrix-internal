@@ -29,6 +29,7 @@ const EMPTY_FORM = {
   expiresAt: '',
 };
 
+
 export default function CouponsPage() {
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,76 +96,80 @@ export default function CouponsPage() {
 
       {showCreate && (
         <div className="modal-backdrop">
-          <div className="modal-box" style={{ padding: 28, width: 440 }}>
-            <h3 style={{ margin: '0 0 20px', fontSize: 16, fontWeight: 700 }}>Create Coupon</h3>
+          <div className="modal-box" style={{ width: 440 }}>
+            <div className="modal-header">
+              <div className="modal-title">Create Coupon</div>
+              <button onClick={() => { setShowCreate(false); setForm(EMPTY_FORM); }} className="btn btn-ghost btn-sm btn-icon">✕</button>
+            </div>
+            <div className="modal-body stack-4">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label className="form-label">CODE *</label>
+                  <input
+                    className="admin-input"
+                    value={form.code}
+                    onChange={e => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
+                    placeholder="SAVE20"
+                    style={{ fontFamily: 'var(--font-mono)' }}
+                  />
+                </div>
+                <div>
+                  <label className="form-label">TYPE *</label>
+                  <select
+                    className="admin-input"
+                    value={form.discountType}
+                    onChange={e => setForm(f => ({ ...f, discountType: e.target.value as 'percent' | 'flat' }))}
+                  >
+                    <option value="percent">Percent (%)</option>
+                    <option value="flat">Flat (₹)</option>
+                  </select>
+                </div>
+              </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label className="form-label">VALUE *</label>
+                  <input
+                    className="admin-input"
+                    type="number" min={0}
+                    value={form.discountValue}
+                    onChange={e => setForm(f => ({ ...f, discountValue: e.target.value }))}
+                    placeholder={form.discountType === 'percent' ? '20' : '500'}
+                  />
+                </div>
+                <div>
+                  <label className="form-label">MAX USES</label>
+                  <input
+                    className="admin-input"
+                    type="number" min={1}
+                    value={form.maxUses}
+                    onChange={e => setForm(f => ({ ...f, maxUses: e.target.value }))}
+                    placeholder="Unlimited"
+                  />
+                </div>
+              </div>
+
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-4)', display: 'block', marginBottom: 4 }}>CODE *</label>
+                <label className="form-label">APPLICABLE PLANS (comma-separated, empty = all)</label>
                 <input
-                  value={form.code}
-                  onChange={e => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
-                  placeholder="SAVE20"
-                  style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--line)', borderRadius: 7, fontSize: 13, color: 'var(--ink)', background: 'var(--surface)', fontFamily: 'var(--font-mono)', boxSizing: 'border-box' }}
+                  className="admin-input"
+                  value={form.applicablePlans}
+                  onChange={e => setForm(f => ({ ...f, applicablePlans: e.target.value }))}
+                  placeholder="starter, growth, scale"
                 />
               </div>
-              <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-4)', display: 'block', marginBottom: 4 }}>TYPE *</label>
-                <select
-                  value={form.discountType}
-                  onChange={e => setForm(f => ({ ...f, discountType: e.target.value as 'percent' | 'flat' }))}
-                  style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--line)', borderRadius: 7, fontSize: 13, color: 'var(--ink)', background: 'var(--surface)', boxSizing: 'border-box' }}
-                >
-                  <option value="percent">Percent (%)</option>
-                  <option value="flat">Flat (₹)</option>
-                </select>
-              </div>
-            </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-4)', display: 'block', marginBottom: 4 }}>VALUE *</label>
+                <label className="form-label">EXPIRES AT</label>
                 <input
-                  type="number" min={0}
-                  value={form.discountValue}
-                  onChange={e => setForm(f => ({ ...f, discountValue: e.target.value }))}
-                  placeholder={form.discountType === 'percent' ? '20' : '500'}
-                  style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--line)', borderRadius: 7, fontSize: 13, color: 'var(--ink)', background: 'var(--surface)', boxSizing: 'border-box' }}
-                />
-              </div>
-              <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-4)', display: 'block', marginBottom: 4 }}>MAX USES</label>
-                <input
-                  type="number" min={1}
-                  value={form.maxUses}
-                  onChange={e => setForm(f => ({ ...f, maxUses: e.target.value }))}
-                  placeholder="Unlimited"
-                  style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--line)', borderRadius: 7, fontSize: 13, color: 'var(--ink)', background: 'var(--surface)', boxSizing: 'border-box' }}
+                  className="admin-input"
+                  type="date"
+                  value={form.expiresAt}
+                  onChange={e => setForm(f => ({ ...f, expiresAt: e.target.value }))}
                 />
               </div>
             </div>
-
-            <div style={{ marginBottom: 14 }}>
-              <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-4)', display: 'block', marginBottom: 4 }}>APPLICABLE PLANS (comma-separated, empty = all)</label>
-              <input
-                value={form.applicablePlans}
-                onChange={e => setForm(f => ({ ...f, applicablePlans: e.target.value }))}
-                placeholder="starter, growth, scale"
-                style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--line)', borderRadius: 7, fontSize: 13, color: 'var(--ink)', background: 'var(--surface)', boxSizing: 'border-box' }}
-              />
-            </div>
-
-            <div style={{ marginBottom: 20 }}>
-              <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-4)', display: 'block', marginBottom: 4 }}>EXPIRES AT</label>
-              <input
-                type="date"
-                value={form.expiresAt}
-                onChange={e => setForm(f => ({ ...f, expiresAt: e.target.value }))}
-                style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--line)', borderRadius: 7, fontSize: 13, color: 'var(--ink)', background: 'var(--surface)', boxSizing: 'border-box' }}
-              />
-            </div>
-
-            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+            <div className="modal-footer">
               <button className="btn btn-ghost btn-sm" onClick={() => { setShowCreate(false); setForm(EMPTY_FORM); }}>Cancel</button>
               <button className="btn btn-primary btn-sm" onClick={create} disabled={saving}>
                 {saving ? <><span className="spinner" />Creating…</> : 'Create Coupon'}
@@ -183,48 +188,54 @@ export default function CouponsPage() {
       </div>
 
       <div className="admin-card">
-        {loading ? (
-          <table className="admin-table">
-            <thead><tr><th>Code</th><th>Discount</th><th>Used</th><th>Expires</th><th>Status</th><th>Action</th></tr></thead>
-            <tbody><SkRows rows={5} cols={6} /></tbody>
-          </table>
-        ) : (
-          <table className="admin-table">
-            <thead>
-              <tr><th>Code</th><th>Discount</th><th>Plans</th><th>Used</th><th>Expires</th><th>Status</th><th>Action</th></tr>
-            </thead>
-            <tbody>
-              {coupons.map(c => (
-                <tr key={c._id}>
-                  <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 13, color: 'var(--ink)' }}>{c.code}</td>
-                  <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--green)' }}>{discountLabel(c)}</td>
-                  <td style={{ fontSize: 12, color: 'var(--ink-3)' }}>{c.applicablePlans.length ? c.applicablePlans.join(', ') : 'All plans'}</td>
-                  <td style={{ fontFamily: 'var(--font-mono)' }}>
-                    {c.usedCount}{c.maxUses !== null ? `/${c.maxUses}` : ''}
-                  </td>
-                  <td style={{ fontSize: 12 }}>{fmtDate(c.expiresAt)}</td>
-                  <td>
-                    <span className={`badge ${c.isActive ? 'badge-green' : 'badge-gray'}`}>
-                      {c.isActive ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                  <td>
-                    <button
-                      className={`btn btn-sm ${c.isActive ? 'btn-ghost' : 'btn-ghost'}`}
-                      style={{ color: c.isActive ? 'var(--red)' : 'var(--green)', fontSize: 12 }}
-                      onClick={() => toggleActive(c._id, c.isActive)}
-                    >
-                      {c.isActive ? 'Deactivate' : 'Activate'}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {coupons.length === 0 && (
-                <tr><td colSpan={7} style={{ textAlign: 'center', padding: 48, color: 'var(--ink-4)' }}>No coupons yet — create your first one</td></tr>
-              )}
-            </tbody>
-          </table>
-        )}
+        <div className="table-shell">
+          {loading ? (
+            <table className="admin-table">
+              <thead><tr><th>Code</th><th>Discount</th><th>Used</th><th>Expires</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody><SkRows rows={5} cols={6} /></tbody>
+            </table>
+          ) : (
+            <table className="admin-table">
+              <thead>
+                <tr><th>Code</th><th>Discount</th><th>Plans</th><th>Used</th><th>Expires</th><th>Status</th><th>Action</th></tr>
+              </thead>
+              <tbody>
+                {coupons.map(c => (
+                  <tr key={c._id}>
+                    <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 13, color: 'var(--ink)' }}>{c.code}</td>
+                    <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--green)' }}>{discountLabel(c)}</td>
+                    <td className="cell-sub">{c.applicablePlans.length ? c.applicablePlans.join(', ') : 'All plans'}</td>
+                    <td style={{ fontFamily: 'var(--font-mono)' }}>
+                      {c.usedCount}{c.maxUses !== null ? `/${c.maxUses}` : ''}
+                    </td>
+                    <td style={{ fontSize: 12 }}>{fmtDate(c.expiresAt)}</td>
+                    <td>
+                      <span className={`badge ${c.isActive ? 'badge-green' : 'badge-gray'}`}>
+                        {c.isActive ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                    <td>
+                      <button
+                        className="btn btn-ghost btn-sm"
+                        style={{ color: c.isActive ? 'var(--red)' : 'var(--green)' }}
+                        onClick={() => toggleActive(c._id, c.isActive)}
+                      >
+                        {c.isActive ? 'Deactivate' : 'Activate'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {coupons.length === 0 && (
+                  <tr><td colSpan={7}>
+                    <div className="empty-state">
+                      <div className="empty-state-title">No coupons yet — create your first one</div>
+                    </div>
+                  </td></tr>
+                )}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
     </div>
   );

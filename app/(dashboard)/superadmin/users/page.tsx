@@ -36,7 +36,7 @@ export default function UsersPage() {
 
   return (
     <div className="animate-fade-in">
-      <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div className="page-header flex-between">
         <div>
           <h1 className="page-title">All Users</h1>
           <p className="page-sub">{total} users across all tenants</p>
@@ -44,12 +44,13 @@ export default function UsersPage() {
         <button className="btn btn-ghost btn-sm" onClick={load}>Refresh</button>
       </div>
 
-      <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+      <div className="table-filter-bar">
         <input className="admin-input" style={{ maxWidth: 280 }} placeholder="Search by name or email…"
           value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} />
       </div>
 
       <div className="admin-card">
+        <div className="table-shell">
         <table className="admin-table">
           <thead><tr><th>Name</th><th>Email</th><th>Tenant</th><th>Role</th><th>Status</th><th>Joined</th><th></th></tr></thead>
           <tbody>
@@ -57,12 +58,12 @@ export default function UsersPage() {
               <>
                 {users.map(u => (
                   <tr key={u._id}>
-                    <td style={{ fontWeight: 500, color: 'var(--ink)' }}>{u.name}</td>
+                    <td className="cell-main">{u.name}</td>
                     <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{u.email}</td>
-                    <td style={{ fontSize: 12, color: 'var(--ink-3)' }}>{u.tenantId?.businessName || '—'}</td>
+                    <td className="cell-sub">{u.tenantId?.businessName || '—'}</td>
                     <td><span className={`badge ${u.role === 'superadmin' ? 'badge-purple' : u.role === 'admin' ? 'badge-blue' : 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>{u.role}</span></td>
                     <td><span className={`badge ${u.isActive ? 'badge-green' : 'badge-red'}`}>{u.isActive ? 'Active' : 'Inactive'}</span></td>
-                    <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{fmtDate(u.createdAt)}</td>
+                    <td className="cell-sub">{fmtDate(u.createdAt)}</td>
                     <td>
                       <button className={`btn btn-sm ${u.isActive ? 'btn-danger' : 'btn-ghost'}`} onClick={() => toggleUser(u._id, u.isActive)}>
                         {u.isActive ? 'Ban' : 'Restore'}
@@ -82,12 +83,13 @@ export default function UsersPage() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {pages > 1 && (
-        <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 16 }}>
+        <div className="pagination">
           <button className="btn btn-ghost btn-sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>← Prev</button>
-          <span style={{ fontSize: 13, color: 'var(--ink-3)', display: 'flex', alignItems: 'center' }}>Page {page} of {pages}</span>
+          <span className="pagination-info">Page {page} of {pages}</span>
           <button className="btn btn-ghost btn-sm" disabled={page >= pages} onClick={() => setPage(p => p + 1)}>Next →</button>
         </div>
       )}

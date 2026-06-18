@@ -133,11 +133,15 @@ export default function SalesPage() {
     <div className="animate-fade-in">
       {noteModal && (
         <div className="modal-backdrop">
-          <div className="modal-box" style={{ padding: 28, width: 400 }}>
-            <h3 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 700 }}>Add Follow-up Note</h3>
-            <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--ink-3)' }}>{noteModal.name}</p>
-            <textarea rows={4} value={noteText} onChange={e => setNoteText(e.target.value)} placeholder="Note…" style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--line)', borderRadius: 8, fontSize: 13, resize: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }} />
-            <div style={{ display: 'flex', gap: 8, marginTop: 12, justifyContent: 'flex-end' }}>
+          <div className="modal-box" style={{ width: 400 }}>
+            <div className="modal-header">
+              <h3 className="modal-title">Add Follow-up Note</h3>
+              <p className="modal-sub">{noteModal.name}</p>
+            </div>
+            <div className="modal-body">
+              <textarea rows={4} value={noteText} onChange={e => setNoteText(e.target.value)} placeholder="Note…" style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--line)', borderRadius: 8, fontSize: 13, resize: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }} />
+            </div>
+            <div className="modal-footer">
               <button className="btn btn-ghost btn-sm" onClick={() => { setNoteModal(null); setNoteText(''); }}>Cancel</button>
               <button className="btn btn-primary btn-sm" onClick={() => saveNote(noteModal.tenantId)}>Save Note</button>
             </div>
@@ -164,66 +168,66 @@ export default function SalesPage() {
             { label: 'Churn This Month', value: revenue.cancelledThisMonth, color: 'var(--red)' },
           ].map(s => (
             <div key={s.label} className="stat-card">
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--ink-4)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>{s.label}</div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: s.color, fontFamily: 'var(--font-mono)' }}>{s.value}</div>
+              <div className="stat-label">{s.label}</div>
+              <div className="stat-value" style={{ color: s.color }}>{s.value}</div>
             </div>
           ))}
         </div>
       )}
 
       {/* Revenue Trend */}
-      <div className="admin-card" style={{ padding: 24, marginBottom: 24 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>Revenue Trend</h3>
+      <div className="admin-card" style={{ marginBottom: 24 }}>
+        <div className="card-header">
+          <h3 className="card-title">Revenue Trend</h3>
           <div style={{ display: 'flex', gap: 4 }}>
             {([30, 90, 180] as const).map(p => (
               <button key={p} onClick={() => setTrendPeriod(p)}
-                className={`btn btn-sm ${trendPeriod === p ? 'btn-primary' : 'btn-ghost'}`}
-                style={{ fontSize: 12, padding: '4px 12px' }}>
+                className={`btn btn-sm ${trendPeriod === p ? 'btn-primary' : 'btn-ghost'}`}>
                 {p}d
               </button>
             ))}
           </div>
         </div>
+        <div className="card-body">
+          {trendLoading ? (
+            <div style={{ height: 260, background: 'var(--surface-3)', borderRadius: 8 }} />
+          ) : trend.length < 2 ? (
+            <div className="empty-state" style={{ height: 260 }}>
+              <div className="empty-icon">📈</div>
+              <div className="empty-title">Trend data builds up over time — check back tomorrow</div>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={260}>
+              <LineChart data={trend} margin={{ top: 4, right: 16, bottom: 0, left: 10 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" />
+                <XAxis dataKey="date" tickFormatter={fmtDate} tick={{ fontSize: 11, fill: 'var(--ink-4)' }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+                <YAxis tickFormatter={fmtL} tick={{ fontSize: 11, fill: 'var(--ink-4)' }} tickLine={false} axisLine={false} width={56} />
+                <Tooltip content={<TrendTooltip />} />
+                <Line type="monotone" dataKey="mrr" name="MRR" stroke="var(--accent)" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="arr" name="ARR" stroke="var(--blue)" strokeWidth={2} dot={false} strokeDasharray="4 2" />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
 
-        {trendLoading ? (
-          <div style={{ height: 260, background: 'var(--surface-3)', borderRadius: 8 }} />
-        ) : trend.length < 2 ? (
-          <div style={{ height: 260, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ fontSize: 28, marginBottom: 8 }}>📈</div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-3)' }}>Trend data builds up over time — check back tomorrow</div>
+          <div style={{ display: 'flex', gap: 16, marginTop: 12, justifyContent: 'flex-end' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--ink-4)' }}>
+              <span style={{ width: 16, height: 2, background: 'var(--accent)', display: 'inline-block', borderRadius: 1 }} /> MRR
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--ink-4)' }}>
+              <span style={{ width: 16, height: 0, borderBottom: '2px dashed var(--blue)', display: 'inline-block' }} /> ARR
+            </span>
           </div>
-        ) : (
-          <ResponsiveContainer width="100%" height={260}>
-            <LineChart data={trend} margin={{ top: 4, right: 16, bottom: 0, left: 10 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" />
-              <XAxis dataKey="date" tickFormatter={fmtDate} tick={{ fontSize: 11, fill: 'var(--ink-4)' }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-              <YAxis tickFormatter={fmtL} tick={{ fontSize: 11, fill: 'var(--ink-4)' }} tickLine={false} axisLine={false} width={56} />
-              <Tooltip content={<TrendTooltip />} />
-              <Line type="monotone" dataKey="mrr" name="MRR" stroke="var(--accent)" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="arr" name="ARR" stroke="var(--blue)" strokeWidth={2} dot={false} strokeDasharray="4 2" />
-            </LineChart>
-          </ResponsiveContainer>
-        )}
-
-        <div style={{ display: 'flex', gap: 16, marginTop: 12, justifyContent: 'flex-end' }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--ink-4)' }}>
-            <span style={{ width: 16, height: 2, background: 'var(--accent)', display: 'inline-block', borderRadius: 1 }} /> MRR
-          </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--ink-4)' }}>
-            <span style={{ width: 16, height: 0, borderBottom: '2px dashed var(--blue)', display: 'inline-block' }} /> ARR
-          </span>
         </div>
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', borderBottom: '1px solid var(--line)', marginBottom: 20 }}>
+      <div className="tab-bar">
         {([
           { key: 'pipeline', label: 'Trial Pipeline' },
           { key: 'revenue',  label: 'Plan Breakdown' },
           { key: 'leads',    label: 'Hot Leads' },
         ] as const).map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)} style={{ padding: '9px 18px', fontSize: 13, fontWeight: tab === t.key ? 600 : 400, color: tab === t.key ? 'var(--accent)' : 'var(--ink-3)', background: 'none', border: 'none', borderBottom: `2px solid ${tab === t.key ? 'var(--accent)' : 'transparent'}`, cursor: 'pointer', fontFamily: 'inherit', marginBottom: -1 }}>
+          <button key={t.key} onClick={() => setTab(t.key)} className={`tab-btn${tab === t.key ? ' active' : ''}`}>
             {t.label}
           </button>
         ))}
@@ -231,103 +235,120 @@ export default function SalesPage() {
 
       {tab === 'pipeline' && (
         <div className="admin-card">
-          <table className="admin-table">
-            <thead><tr><th>Business</th><th>Email</th><th>Orders</th><th>Days Left</th><th>Lead Status</th><th>Action</th></tr></thead>
-            <tbody>
-              {pipeline.map(t => (
-                <tr key={t._id}>
-                  <td>
-                    <Link href={`/superadmin/tenants/${t._id}`} style={{ fontWeight: 500, color: 'var(--accent)', textDecoration: 'none' }}>{t.businessName}</Link>
-                    <div style={{ fontSize: 11, color: 'var(--ink-4)' }}>{fmtDate(t.createdAt)}</div>
-                  </td>
-                  <td style={{ fontSize: 12, color: 'var(--ink-3)' }}>{t.email}</td>
-                  <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: t.orderCount > 10 ? 'var(--green)' : 'var(--ink)' }}>{t.orderCount}</td>
-                  <td>
-                    <span className={`badge ${t.daysLeft <= 3 ? 'badge-red' : t.daysLeft <= 7 ? 'badge-gold' : 'badge-green'}`}>
-                      {t.daysLeft}d
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`badge ${t.lead?.status === 'contacted' ? 'badge-blue' : t.lead?.status === 'converted' ? 'badge-green' : 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>
-                      {t.lead?.status || 'watching'}
-                    </span>
-                  </td>
-                  <td>
-                    <button className="btn btn-ghost btn-sm" onClick={() => setNoteModal({ tenantId: t._id, name: t.businessName })}>+ Note</button>
-                  </td>
-                </tr>
-              ))}
-              {pipeline.length === 0 && <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>No trial tenants</td></tr>}
-            </tbody>
-          </table>
+          <div className="table-shell">
+            <table className="admin-table">
+              <thead><tr><th>Business</th><th>Email</th><th>Orders</th><th>Days Left</th><th>Lead Status</th><th>Action</th></tr></thead>
+              <tbody>
+                {pipeline.map(t => (
+                  <tr key={t._id}>
+                    <td>
+                      <Link href={`/superadmin/tenants/${t._id}`} style={{ fontWeight: 500, color: 'var(--accent)', textDecoration: 'none' }}>{t.businessName}</Link>
+                      <div className="cell-sub">{fmtDate(t.createdAt)}</div>
+                    </td>
+                    <td className="cell-sub">{t.email}</td>
+                    <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: t.orderCount > 10 ? 'var(--green)' : 'var(--ink)' }}>{t.orderCount}</td>
+                    <td>
+                      <span className={`badge ${t.daysLeft <= 3 ? 'badge-red' : t.daysLeft <= 7 ? 'badge-gold' : 'badge-green'}`}>
+                        {t.daysLeft}d
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`badge ${t.lead?.status === 'contacted' ? 'badge-blue' : t.lead?.status === 'converted' ? 'badge-green' : 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>
+                        {t.lead?.status || 'watching'}
+                      </span>
+                    </td>
+                    <td>
+                      <button className="btn btn-ghost btn-sm" onClick={() => setNoteModal({ tenantId: t._id, name: t.businessName })}>+ Note</button>
+                    </td>
+                  </tr>
+                ))}
+                {pipeline.length === 0 && (
+                  <tr><td colSpan={6}>
+                    <div className="empty-state">
+                      <div className="empty-title">No trial tenants</div>
+                    </div>
+                  </td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
       {tab === 'leads' && (
         <div className="admin-card">
-          <table className="admin-table">
-            <thead>
-              <tr><th>Score</th><th>Business</th><th>Current Plan</th><th>Status</th><th>Last Updated</th><th></th></tr>
-            </thead>
-            <tbody>
-              {leadsLoading ? <SkRows rows={6} cols={6} /> : (
-                <>
-                  {leads.map(l => (
-                    <tr key={l._id}>
-                      <td>
-                        <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: 15, color: scoreColor(l.activityScore) }}>
-                          {l.activityScore}
-                        </span>
-                      </td>
-                      <td>
-                        <div style={{ fontWeight: 500 }}>{l.tenantId?.businessName}</div>
-                        <div style={{ fontSize: 11, color: 'var(--ink-4)' }}>{l.tenantId?.email}</div>
-                      </td>
-                      <td style={{ textTransform: 'capitalize', fontSize: 13 }}>{l.tenantId?.planId || '—'}</td>
-                      <td>
-                        <span className={`badge ${l.status === 'contacted' ? 'badge-blue' : l.status === 'converted' ? 'badge-green' : l.status === 'churned' ? 'badge-red' : 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>
-                          {l.status}
-                        </span>
-                      </td>
-                      <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{fmtDate(l.updatedAt)}</td>
-                      <td>
-                        <div style={{ display: 'flex', gap: 6 }}>
-                          <button
-                            className="btn btn-ghost btn-sm"
-                            disabled={scoringId === l.tenantId?._id}
-                            onClick={() => recalculateScore(l.tenantId?._id)}
-                          >
-                            {scoringId === l.tenantId?._id ? '…' : 'Recalculate'}
-                          </button>
-                          <Link href={`/superadmin/tenants/${l.tenantId?._id}`} className="btn btn-ghost btn-sm">View Tenant →</Link>
+          <div className="table-shell">
+            <table className="admin-table">
+              <thead>
+                <tr><th>Score</th><th>Business</th><th>Current Plan</th><th>Status</th><th>Last Updated</th><th></th></tr>
+              </thead>
+              <tbody>
+                {leadsLoading ? <SkRows rows={6} cols={6} /> : (
+                  <>
+                    {leads.map(l => (
+                      <tr key={l._id}>
+                        <td>
+                          <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: 15, color: scoreColor(l.activityScore) }}>
+                            {l.activityScore}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="cell-main">{l.tenantId?.businessName}</div>
+                          <div className="cell-sub">{l.tenantId?.email}</div>
+                        </td>
+                        <td style={{ textTransform: 'capitalize' }} className="cell-main">{l.tenantId?.planId || '—'}</td>
+                        <td>
+                          <span className={`badge ${l.status === 'contacted' ? 'badge-blue' : l.status === 'converted' ? 'badge-green' : l.status === 'churned' ? 'badge-red' : 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>
+                            {l.status}
+                          </span>
+                        </td>
+                        <td className="cell-sub">{fmtDate(l.updatedAt)}</td>
+                        <td>
+                          <div style={{ display: 'flex', gap: 6 }}>
+                            <button
+                              className="btn btn-ghost btn-sm"
+                              disabled={scoringId === l.tenantId?._id}
+                              onClick={() => recalculateScore(l.tenantId?._id)}
+                            >
+                              {scoringId === l.tenantId?._id ? '…' : 'Recalculate'}
+                            </button>
+                            <Link href={`/superadmin/tenants/${l.tenantId?._id}`} className="btn btn-ghost btn-sm">View Tenant →</Link>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {leads.length === 0 && (
+                      <tr><td colSpan={6}>
+                        <div className="empty-state">
+                          <div className="empty-title">No leads yet</div>
+                          <div className="empty-sub">Scores are calculated from order activity</div>
                         </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {leads.length === 0 && (
-                    <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>No leads yet — scores are calculated from order activity</td></tr>
-                  )}
-                </>
-              )}
-            </tbody>
-          </table>
+                      </td></tr>
+                    )}
+                  </>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
       {tab === 'revenue' && revenue && (
         <div className="admin-card">
-          <table className="admin-table">
-            <thead><tr><th>Plan</th><th>Tenants</th><th>Total Revenue</th></tr></thead>
-            <tbody>
-              {(revenue.planBreakdown || []).map((p: any) => (
-                <tr key={p._id}>
-                  <td style={{ textTransform: 'capitalize', fontWeight: 500 }}>{p._id}</td>
-                  <td style={{ fontFamily: 'var(--font-mono)' }}>{p.count}</td>
-                  <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--green)' }}>{fmt(p.revenue || 0)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="table-shell">
+            <table className="admin-table">
+              <thead><tr><th>Plan</th><th>Tenants</th><th>Total Revenue</th></tr></thead>
+              <tbody>
+                {(revenue.planBreakdown || []).map((p: any) => (
+                  <tr key={p._id}>
+                    <td style={{ textTransform: 'capitalize' }} className="cell-main">{p._id}</td>
+                    <td style={{ fontFamily: 'var(--font-mono)' }}>{p.count}</td>
+                    <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--green)' }}>{fmt(p.revenue || 0)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>

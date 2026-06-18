@@ -117,12 +117,12 @@ export default function CommunicationsPage() {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', borderBottom: '1px solid var(--line)', marginBottom: 24 }}>
+      <div className="tab-bar">
         {([
           { key: 'broadcast', label: 'Broadcast' },
           { key: 'announcements', label: `Announcements (${announcements.filter(a => a.isActive).length} active)` },
         ] as const).map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)} style={{ padding: '9px 18px', fontSize: 13, fontWeight: tab === t.key ? 600 : 400, color: tab === t.key ? 'var(--accent)' : 'var(--ink-3)', background: 'none', border: 'none', borderBottom: `2px solid ${tab === t.key ? 'var(--accent)' : 'transparent'}`, cursor: 'pointer', fontFamily: 'inherit', marginBottom: -1 }}>
+          <button key={t.key} onClick={() => setTab(t.key)} className={`tab-btn${tab === t.key ? ' active' : ''}`}>
             {t.label}
           </button>
         ))}
@@ -130,12 +130,15 @@ export default function CommunicationsPage() {
 
       {tab === 'broadcast' && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 24 }}>
-          <div className="admin-card" style={{ padding: 24 }}>
-            <h3 style={{ margin: '0 0 20px', fontSize: 15, fontWeight: 700 }}>Compose Broadcast</h3>
+          <div className="admin-card">
+            <div className="card-header">
+              <h3 className="card-title">Compose Broadcast</h3>
+            </div>
+            <div className="card-body">
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 6 }}>Channel</label>
+                <label className="form-label">Channel</label>
                 <select className="admin-input" value={broadcast.channel} onChange={e => setBroadcast(b => ({ ...b, channel: e.target.value }))}>
                   <option value="email">Email</option>
                   <option value="whatsapp">WhatsApp</option>
@@ -143,7 +146,7 @@ export default function CommunicationsPage() {
                 </select>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 6 }}>Filter by Plan</label>
+                <label className="form-label">Filter by Plan</label>
                 <select className="admin-input" value={broadcast.filterPlan} onChange={e => setBroadcast(b => ({ ...b, filterPlan: e.target.value }))}>
                   {PLANS.map(p => <option key={p} value={p} style={{ textTransform: 'capitalize' }}>{p === 'all' ? 'All Tenants' : p}</option>)}
                 </select>
@@ -151,7 +154,7 @@ export default function CommunicationsPage() {
             </div>
 
             <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 6 }}>Filter by Trial</label>
+              <label className="form-label">Filter by Trial</label>
               <select className="admin-input" style={{ maxWidth: 260 }} value={broadcast.filterTrial} onChange={e => setBroadcast(b => ({ ...b, filterTrial: e.target.value }))}>
                 <option value="">No filter</option>
                 <option value="expiring">Trials expiring this week</option>
@@ -160,13 +163,13 @@ export default function CommunicationsPage() {
 
             {broadcast.channel !== 'whatsapp' && (
               <div style={{ marginBottom: 16 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 6 }}>Subject</label>
+                <label className="form-label">Subject</label>
                 <input className="admin-input" placeholder="Email subject line" value={broadcast.subject} onChange={e => setBroadcast(b => ({ ...b, subject: e.target.value }))} />
               </div>
             )}
 
             <div style={{ marginBottom: 20 }}>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 6 }}>Message</label>
+              <label className="form-label">Message</label>
               <textarea
                 rows={6}
                 className="admin-input"
@@ -204,32 +207,41 @@ export default function CommunicationsPage() {
                 )}
               </div>
             )}
+            </div>
           </div>
 
           <div>
-            <div className="admin-card" style={{ padding: 20 }}>
-              <h4 style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 700 }}>Audience</h4>
-              {preview ? (
-                <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--accent)', fontFamily: 'var(--font-mono)', marginBottom: 4 }}>{preview.count}</div>
-              ) : (
-                <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--ink-4)', fontFamily: 'var(--font-mono)', marginBottom: 4 }}>—</div>
-              )}
-              <div style={{ fontSize: 12, color: 'var(--ink-4)' }}>tenants match current filter</div>
-              <button className="btn btn-ghost btn-sm" style={{ marginTop: 12 }} onClick={previewBroadcast}>Recalculate</button>
+            <div className="admin-card">
+              <div className="card-header">
+                <h4 className="card-title">Audience</h4>
+              </div>
+              <div className="card-body">
+                {preview ? (
+                  <div className="stat-value mono" style={{ color: 'var(--accent)', marginBottom: 4 }}>{preview.count}</div>
+                ) : (
+                  <div className="stat-value mono" style={{ color: 'var(--ink-4)', marginBottom: 4 }}>—</div>
+                )}
+                <div style={{ fontSize: 12, color: 'var(--ink-4)' }}>tenants match current filter</div>
+                <button className="btn btn-ghost btn-sm" style={{ marginTop: 12 }} onClick={previewBroadcast}>Recalculate</button>
+              </div>
             </div>
-            <div className="admin-card" style={{ padding: 20, marginTop: 12 }}>
-              <h4 style={{ margin: '0 0 10px', fontSize: 13, fontWeight: 700 }}>Quick Segments</h4>
-              {[
-                { label: 'All Trials Expiring This Week', plan: 'all', trial: 'expiring' },
-                { label: 'All Paid Tenants', plan: 'all', trial: '' },
-                { label: 'Starter Plan', plan: 'starter', trial: '' },
-                { label: 'Growth Plan', plan: 'growth', trial: '' },
-              ].map(seg => (
-                <button key={seg.label} className="btn btn-ghost btn-sm" style={{ display: 'block', width: '100%', textAlign: 'left', marginBottom: 6 }}
-                  onClick={() => { setBroadcast(b => ({ ...b, filterPlan: seg.plan, filterTrial: seg.trial })); }}>
-                  {seg.label}
-                </button>
-              ))}
+            <div className="admin-card" style={{ marginTop: 12 }}>
+              <div className="card-header">
+                <h4 className="card-title">Quick Segments</h4>
+              </div>
+              <div className="card-body">
+                {[
+                  { label: 'All Trials Expiring This Week', plan: 'all', trial: 'expiring' },
+                  { label: 'All Paid Tenants', plan: 'all', trial: '' },
+                  { label: 'Starter Plan', plan: 'starter', trial: '' },
+                  { label: 'Growth Plan', plan: 'growth', trial: '' },
+                ].map(seg => (
+                  <button key={seg.label} className="btn btn-ghost btn-sm" style={{ display: 'block', width: '100%', textAlign: 'left', marginBottom: 6 }}
+                    onClick={() => { setBroadcast(b => ({ ...b, filterPlan: seg.plan, filterTrial: seg.trial })); }}>
+                    {seg.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -244,15 +256,18 @@ export default function CommunicationsPage() {
           </div>
 
           {showAnnForm && (
-            <div className="admin-card" style={{ padding: 24, marginBottom: 20 }}>
-              <h3 style={{ margin: '0 0 20px', fontSize: 15, fontWeight: 700 }}>{editingId ? 'Edit' : 'New'} Announcement</h3>
+            <div className="admin-card" style={{ marginBottom: 20 }}>
+              <div className="card-header">
+                <h3 className="card-title">{editingId ? 'Edit' : 'New'} Announcement</h3>
+              </div>
+              <div className="card-body">
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 6 }}>Title</label>
+                  <label className="form-label">Title</label>
                   <input className="admin-input" placeholder="Announcement title" value={annForm.title} onChange={e => setAnnForm(f => ({ ...f, title: e.target.value }))} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 6 }}>Type</label>
+                  <label className="form-label">Type</label>
                   <select className="admin-input" value={annForm.type} onChange={e => setAnnForm(f => ({ ...f, type: e.target.value }))}>
                     <option value="banner">Banner</option>
                     <option value="modal">Modal</option>
@@ -261,12 +276,12 @@ export default function CommunicationsPage() {
                 </div>
               </div>
               <div style={{ marginBottom: 14 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 6 }}>Message</label>
+                <label className="form-label">Message</label>
                 <textarea rows={3} className="admin-input" placeholder="Announcement body…" value={annForm.message} onChange={e => setAnnForm(f => ({ ...f, message: e.target.value }))} style={{ resize: 'vertical', fontFamily: 'inherit' }} />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 20 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 6 }}>Severity</label>
+                  <label className="form-label">Severity</label>
                   <select className="admin-input" value={annForm.severity} onChange={e => setAnnForm(f => ({ ...f, severity: e.target.value }))}>
                     <option value="info">Info</option>
                     <option value="warning">Warning</option>
@@ -275,18 +290,19 @@ export default function CommunicationsPage() {
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 6 }}>Target Plans</label>
+                  <label className="form-label">Target Plans</label>
                   <select className="admin-input" value={annForm.targetPlans[0] || ''} onChange={e => setAnnForm(f => ({ ...f, targetPlans: e.target.value ? [e.target.value] : [] }))}>
                     <option value="">All Plans</option>
                     {PLANS.slice(1).map(p => <option key={p} value={p} style={{ textTransform: 'capitalize' }}>{p}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 6 }}>Expires At</label>
+                  <label className="form-label">Expires At</label>
                   <input type="date" className="admin-input" value={annForm.expiresAt} onChange={e => setAnnForm(f => ({ ...f, expiresAt: e.target.value }))} />
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              </div>
+              <div className="card-footer">
                 <button className="btn btn-ghost btn-sm" onClick={() => { setShowAnnForm(false); setEditingId(null); }}>Cancel</button>
                 <button className="btn btn-primary btn-sm" onClick={saveAnnouncement} disabled={annLoading || !annForm.title || !annForm.message}>
                   {annLoading ? <><span className="spinner" />{editingId ? 'Saving…' : 'Publishing…'}</> : editingId ? 'Update' : 'Publish'}
@@ -304,8 +320,8 @@ export default function CommunicationsPage() {
                 {annListLoading ? <SkRows rows={5} cols={7} /> : announcements.map(a => (
                   <tr key={a._id}>
                     <td>
-                      <div style={{ fontWeight: 500 }}>{a.title}</div>
-                      <div style={{ fontSize: 12, color: 'var(--ink-4)', maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.message}</div>
+                      <div className="cell-main">{a.title}</div>
+                      <div className="cell-sub text-truncate" style={{ maxWidth: 240 }}>{a.message}</div>
                     </td>
                     <td style={{ textTransform: 'capitalize', fontSize: 12 }}>{a.type}</td>
                     <td><span className={`badge ${SEVERITY_BADGE[a.severity] || 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>{a.severity}</span></td>

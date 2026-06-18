@@ -84,10 +84,10 @@ export default function LifecyclePage() {
       </div>
 
       {/* Churn Risk Queue */}
-      <div style={{ marginBottom: 24, border: '1px solid rgba(239,68,68,0.3)', borderLeft: '4px solid var(--red)', borderRadius: 10, overflow: 'hidden', background: 'rgba(239,68,68,0.03)' }}>
-        <div style={{ padding: '12px 18px', borderBottom: churnQueue.length > 0 ? '1px solid rgba(239,68,68,0.15)' : 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div className="admin-card" style={{ marginBottom: 24, borderLeft: '4px solid var(--red)', background: 'rgba(239,68,68,0.03)' }}>
+        <div className="card-header" style={{ borderBottom: churnQueue.length > 0 ? '1px solid rgba(239,68,68,0.15)' : 'none' }}>
           <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--red)' }}>Churn Risk Queue</span>
-          <span style={{ fontSize: 12, fontWeight: 700, background: 'rgba(239,68,68,0.12)', color: 'var(--red)', padding: '2px 8px', borderRadius: 20 }}>{churnQueue.length}</span>
+          <span className="badge badge-red" style={{ marginLeft: 4 }}>{churnQueue.length}</span>
           <span style={{ fontSize: 11, color: 'var(--ink-4)', marginLeft: 4 }}>health &lt; 40 or inactive 14d+ with no orders</span>
         </div>
         {loading ? (
@@ -109,9 +109,9 @@ export default function LifecyclePage() {
             <tbody>
               {churnQueue.map(t => (
                 <tr key={t._id}>
-                  <td style={{ fontWeight: 500, color: 'var(--ink)' }}>
-                    {t.businessName}
-                    <div style={{ fontSize: 11, color: 'var(--ink-4)' }}>{t.email}</div>
+                  <td>
+                    <div className="cell-main">{t.businessName}</div>
+                    <div className="cell-sub">{t.email}</div>
                   </td>
                   <td><span className={`badge ${PLAN_BADGE[t.planId] || 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>{t.planId}</span></td>
                   <td style={{ minWidth: 140 }}><HealthBar score={t.health} /></td>
@@ -139,20 +139,20 @@ export default function LifecyclePage() {
           { label: 'Healthy (70+)', value: tenants.filter(t => t.health >= 70).length, color: 'var(--green)' },
         ].map(s => (
           <div key={s.label} className="stat-card">
-            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--ink-4)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>{s.label}</div>
-            <div style={{ fontSize: 28, fontWeight: 800, color: s.color }}>{s.value}</div>
+            <div className="stat-label">{s.label}</div>
+            <div className="stat-value" style={{ color: s.color }}>{s.value}</div>
           </div>
         ))}
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', borderBottom: '1px solid var(--line)', marginBottom: 20 }}>
+      <div className="tab-bar">
         {([
           { key: 'onboarding', label: `Onboarding (${incompleteOnboarding.length} incomplete)` },
           { key: 'health', label: 'Health Scores' },
           { key: 'churn', label: `Churn Risk (${churnList.length})` },
         ] as const).map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)} style={{ padding: '9px 18px', fontSize: 13, fontWeight: tab === t.key ? 600 : 400, color: tab === t.key ? 'var(--accent)' : 'var(--ink-3)', background: 'none', border: 'none', borderBottom: `2px solid ${tab === t.key ? 'var(--accent)' : 'transparent'}`, cursor: 'pointer', fontFamily: 'inherit', marginBottom: -1 }}>
+          <button key={t.key} onClick={() => setTab(t.key)} className={`tab-btn${tab === t.key ? ' active' : ''}`}>
             {t.label}
           </button>
         ))}
@@ -167,7 +167,7 @@ export default function LifecyclePage() {
                 <>
                   {incompleteOnboarding.map(t => (
                     <tr key={t._id}>
-                      <td style={{ fontWeight: 500 }}>{t.businessName}<div style={{ fontSize: 11, color: 'var(--ink-4)' }}>{t.email}</div></td>
+                      <td><div className="cell-main">{t.businessName}</div><div className="cell-sub">{t.email}</div></td>
                       <td><span className={`badge ${PLAN_BADGE[t.planId] || 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>{t.planId}</span></td>
                       <td>
                         <Step done={t.onboarding.profileComplete} label="Profile" />
@@ -202,7 +202,7 @@ export default function LifecyclePage() {
               {loading ? <SkRows rows={8} cols={7} /> : (
                 [...tenants].sort((a, b) => a.health - b.health).map(t => (
                   <tr key={t._id}>
-                    <td style={{ fontWeight: 500 }}>{t.businessName}</td>
+                    <td className="cell-main">{t.businessName}</td>
                     <td><span className={`badge ${PLAN_BADGE[t.planId] || 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>{t.planId}</span></td>
                     <td style={{ minWidth: 160 }}><HealthBar score={t.health} /></td>
                     <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{t.ordersWeek}</td>
@@ -226,7 +226,7 @@ export default function LifecyclePage() {
                 <>
                   {churnList.sort((a, b) => b.daysSinceActive - a.daysSinceActive).map(t => (
                     <tr key={t._id}>
-                      <td style={{ fontWeight: 500 }}>{t.businessName}<div style={{ fontSize: 11, color: 'var(--ink-4)' }}>{t.email}</div></td>
+                      <td><div className="cell-main">{t.businessName}</div><div className="cell-sub">{t.email}</div></td>
                       <td><span className={`badge ${PLAN_BADGE[t.planId] || 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>{t.planId}</span></td>
                       <td><span className={`badge ${t.daysSinceActive >= 14 ? 'badge-red' : 'badge-gold'}`}>{t.daysSinceActive}d</span></td>
                       <td style={{ fontFamily: 'var(--font-mono)' }}>{t.ordersWeek}</td>

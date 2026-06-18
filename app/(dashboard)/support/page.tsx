@@ -75,9 +75,9 @@ export default function SupportPage() {
         <p className="page-sub">Tenant lookup, active issues, and notes</p>
       </div>
 
-      <div style={{ display: 'flex', borderBottom: '1px solid var(--line)', marginBottom: 24 }}>
+      <div className="tab-bar">
         {(['lookup', 'issues'] as const).map(t => (
-          <button key={t} onClick={() => setTab(t)} style={{ padding: '9px 18px', fontSize: 13, fontWeight: tab === t ? 600 : 400, color: tab === t ? 'var(--accent)' : 'var(--ink-3)', background: 'none', border: 'none', borderBottom: `2px solid ${tab === t ? 'var(--accent)' : 'transparent'}`, cursor: 'pointer', fontFamily: 'inherit', marginBottom: -1 }}>
+          <button key={t} onClick={() => setTab(t)} className={`tab-btn${tab === t ? ' active' : ''}`}>
             {t === 'lookup' ? 'Tenant Lookup' : `Issues ${issues ? `(${(issues.expiredTrials?.length || 0) + (issues.pastDue?.length || 0)})` : ''}`}
           </button>
         ))}
@@ -106,7 +106,7 @@ export default function SupportPage() {
                 <tbody>
                   {results.map(t => (
                     <tr key={t._id}>
-                      <td style={{ fontWeight: 500, color: 'var(--ink)' }}>{t.businessName}</td>
+                      <td className="cell-main">{t.businessName}</td>
                       <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{t.email}</td>
                       <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{t.phone}</td>
                       <td><span className={`badge ${PLAN_BADGE[t.planId] || 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>{t.planId}</span></td>
@@ -132,8 +132,8 @@ export default function SupportPage() {
           {/* Notes panel */}
           {notesTenantId && (
             <div className="admin-card" style={{ marginTop: 16 }}>
-              <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 13, fontWeight: 600 }}>Notes — {notesTenantName}</span>
+              <div className="card-header flex-between">
+                <span className="card-title">Notes — {notesTenantName}</span>
                 <button className="btn btn-ghost btn-sm" onClick={() => setNotesTenantId(null)}>✕</button>
               </div>
               {notesLoading ? (
@@ -178,7 +178,7 @@ export default function SupportPage() {
         <div>
           {/* Expired Trials */}
           <div style={{ marginBottom: 24 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--red)', marginBottom: 12 }}>
+            <div className="card-title" style={{ color: 'var(--red)', marginBottom: 12 }}>
               Expired Trials ({issues.expiredTrials?.length || 0})
             </div>
             {issues.expiredTrials?.length > 0 ? (
@@ -188,7 +188,7 @@ export default function SupportPage() {
                   <tbody>
                     {issues.expiredTrials.map((t: any) => (
                       <tr key={t._id}>
-                        <td style={{ fontWeight: 500 }}>{t.businessName}</td>
+                        <td className="cell-main">{t.businessName}</td>
                         <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{t.email}</td>
                         <td style={{ fontSize: 12, color: 'var(--red)' }}>{fmtDate(t.trialEndsAt)}</td>
                         <td style={{ fontFamily: 'var(--font-mono)' }}>{t.ordersThisMonth}</td>
@@ -203,7 +203,7 @@ export default function SupportPage() {
 
           {/* Past Due */}
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--gold)', marginBottom: 12 }}>
+            <div className="card-title" style={{ color: 'var(--gold)', marginBottom: 12 }}>
               Past Due Subscriptions ({issues.pastDue?.length || 0})
             </div>
             {issues.pastDue?.length > 0 ? (
@@ -213,7 +213,7 @@ export default function SupportPage() {
                   <tbody>
                     {issues.pastDue.map((s: any) => (
                       <tr key={s._id}>
-                        <td style={{ fontWeight: 500 }}>{s.tenantId?.businessName}</td>
+                        <td className="cell-main">{s.tenantId?.businessName}</td>
                         <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{s.tenantId?.email}</td>
                         <td style={{ textTransform: 'capitalize' }}>{s.planId}</td>
                         <td>
