@@ -5,7 +5,7 @@ import { getAdmin, clearAuth, hasRole, ROLE_LABEL } from '../../lib/auth';
 import {
   LayoutDashboard, Building2, CreditCard, Users, FileText,
   TrendingUp, Headphones, LogOut, ChevronRight,
-  Activity, AlertTriangle, Megaphone, Mail,
+  Activity, AlertTriangle, Megaphone, Mail, ShieldCheck,
 } from 'lucide-react';
 
 const NAV = [
@@ -18,6 +18,7 @@ const NAV = [
       { href: '/superadmin/subscriptions',  label: 'Subscriptions',  icon: CreditCard },
       { href: '/superadmin/users',          label: 'All Users',      icon: Users },
       { href: '/superadmin/audit-log',      label: 'Audit Log',      icon: FileText },
+      { href: '/superadmin/team',            label: 'Team',           icon: ShieldCheck, roles: ['superadmin'] as const },
     ],
   },
   {
@@ -86,7 +87,7 @@ export default function Sidebar() {
               <div style={{ fontSize: 10, fontWeight: 700, color: '#3d4460', letterSpacing: '0.1em', padding: '0 8px', marginBottom: 6 }}>
                 {group.section}
               </div>
-              {group.items.map((item) => {
+              {group.items.filter(item => !item.roles || hasRole(admin, ...(item.roles as any[]))).map((item) => {
                 const Icon = item.icon;
                 const active = isActive(item.href);
                 return (
