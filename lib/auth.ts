@@ -30,8 +30,21 @@ export function clearAuth() {
   localStorage.removeItem('om_admin');
 }
 
+function getCookieToken(): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.split(';').find(c => c.trim().startsWith('om_admin_token='));
+  return match ? match.trim().slice('om_admin_token='.length) : null;
+}
+
 export function isLoggedIn(): boolean {
-  return !!getToken();
+  const lsToken = getToken();
+  if (!lsToken) return false;
+  const cookieToken = getCookieToken();
+  if (!cookieToken) {
+    clearAuth(); // cookie expired — purge stale localStorage to break the redirect loop
+    return false;
+  }
+  return true;
 }
 
 export function hasRole(admin: AdminUser | null, ...roles: AdminRole[]): boolean {
