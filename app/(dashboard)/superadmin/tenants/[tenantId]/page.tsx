@@ -146,8 +146,8 @@ export default function TenantDetailPage() {
           <Sk w={90} h={32} r={7} /><Sk w={90} h={32} r={7} /><Sk w={100} h={32} r={7} />
         </div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
-        {[0,1,2,3].map(i => <SkStatCard key={i} />)}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginBottom: 20 }}>
+        {[0,1,2,3,4].map(i => <SkStatCard key={i} />)}
       </div>
       <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--line)', marginBottom: 20 }}>
         {[0,1,2].map(i => <div key={i} style={{ padding: '9px 16px' }}><Sk w={70} h={13} /></div>)}
@@ -166,7 +166,7 @@ export default function TenantDetailPage() {
     </div>
   );
 
-  const { tenant, subscription: sub, userCount, orderCount, notes } = data;
+  const { tenant, subscription: sub, userCount, orderCount, notes, lastActiveAt, ordersByStatus } = data;
   const canEdit = hasRole(admin, 'superadmin', 'ops_admin');
 
   return (
@@ -201,12 +201,13 @@ export default function TenantDetailPage() {
       </div>
 
       {/* Stats row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginBottom: 20 }}>
         {[
           { label: 'Plan', value: tenant.planId, badge: PLAN_BADGE[tenant.planId] || 'badge-gray' },
           { label: 'Users', value: userCount },
           { label: 'Total Orders', value: orderCount },
           { label: 'Orders This Month', value: tenant.ordersThisMonth },
+          { label: 'Last Active', value: lastActiveAt ? timeAgo(lastActiveAt) : '—' },
         ].map((s, i) => (
           <div key={i} className="stat-card">
             <div className="stat-label">{s.label}</div>
@@ -229,40 +230,56 @@ export default function TenantDetailPage() {
 
       {/* Tab content */}
       {tab === 'overview' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-          <div className="admin-card">
-            <div className="card-header">
-              <div className="card-title">Business Info</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div className="admin-card">
+              <div className="card-header">
+                <div className="card-title">Business Info</div>
+              </div>
+              <div className="card-body">
+                {[
+                  ['Owner', tenant.ownerName],
+                  ['Category', tenant.category],
+                  ['Slug', tenant.slug],
+                  ['Joined', fmtDate(tenant.createdAt)],
+                  ['Trial Ends', fmtDate(tenant.trialEndsAt)],
+                  ['Status', tenant.isActive ? 'Active' : 'Inactive'],
+                ].map(([k, v]) => (
+                  <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 10 }}>
+                    <span style={{ color: 'var(--ink-4)' }}>{k}</span>
+                    <span className="cell-main">{v || '—'}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="card-body">
-              {[
-                ['Owner', tenant.ownerName],
-                ['Category', tenant.category],
-                ['Slug', tenant.slug],
-                ['Joined', fmtDate(tenant.createdAt)],
-                ['Trial Ends', fmtDate(tenant.trialEndsAt)],
-                ['Status', tenant.isActive ? 'Active' : 'Inactive'],
-              ].map(([k, v]) => (
-                <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 10 }}>
-                  <span style={{ color: 'var(--ink-4)' }}>{k}</span>
-                  <span className="cell-main">{v || '—'}</span>
-                </div>
-              ))}
+            <div className="admin-card">
+              <div className="card-header">
+                <div className="card-title">Plan Limits</div>
+              </div>
+              <div className="card-body">
+                {[
+                  ['Orders/mo', tenant.planLimits?.orders === 0 ? 'Unlimited' : tenant.planLimits?.orders],
+                  ['Seats', tenant.planLimits?.seats],
+                  ['Features', (tenant.planLimits?.features || []).length + ' enabled'],
+                ].map(([k, v]) => (
+                  <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 10 }}>
+                    <span style={{ color: 'var(--ink-4)' }}>{k}</span>
+                    <span className="cell-main">{v || '—'}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
+
           <div className="admin-card">
             <div className="card-header">
-              <div className="card-title">Plan Limits</div>
+              <div className="card-title">Order Activity</div>
             </div>
-            <div className="card-body">
-              {[
-                ['Orders/mo', tenant.planLimits?.orders === 0 ? 'Unlimited' : tenant.planLimits?.orders],
-                ['Seats', tenant.planLimits?.seats],
-                ['Features', (tenant.planLimits?.features || []).length + ' enabled'],
-              ].map(([k, v]) => (
-                <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 10 }}>
-                  <span style={{ color: 'var(--ink-4)' }}>{k}</span>
-                  <span className="cell-main">{v || '—'}</span>
+            <div className="card-body" style={{ display: 'flex', gap: 32, flexWrap: 'wrap' }}>
+              {(['pending', 'confirmed', 'dispatched', 'delivered', 'cancelled'] as const).map(status => (
+                <div key={status} style={{ textAlign: 'center', minWidth: 64 }}>
+                  <div className="stat-value" style={{ fontSize: 22 }}>{ordersByStatus?.[status] ?? 0}</div>
+                  <div className="stat-label" style={{ textTransform: 'capitalize', marginTop: 4 }}>{status}</div>
                 </div>
               ))}
             </div>
