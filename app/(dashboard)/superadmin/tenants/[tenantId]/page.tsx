@@ -3,13 +3,26 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import api from '../../../../../lib/api';
 import { getAdmin, hasRole } from '../../../../../lib/auth';
+import { usePageTitle } from '../../../../../lib/page-title-context';
 import { Sk, SkStatCard, SkDetailCard } from '../../../../../components/ui/Skeleton';
 
 const fmt = (n: number) => `₹${new Intl.NumberFormat('en-IN').format(n || 0)}`;
 const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
 const PLAN_BADGE: Record<string, string> = {
-  trial: 'badge-gray', starter: 'badge-gray', growth: 'badge-green', scale: 'badge-purple', pro: 'badge-gold',
+  trial: 'badge-gold', starter: 'badge-blue', growth: 'badge-green', scale: 'badge-purple', pro: 'badge-purple',
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  new: 'New', confirmed: 'Confirmed', processing: 'Processing',
+  ready_to_dispatch: 'Ready', dispatched: 'Dispatched',
+  delivered: 'Delivered', returned: 'Returned', rto: 'RTO', cancelled: 'Cancelled',
+};
+
+const STATUS_COLOR: Record<string, string> = {
+  new: 'badge-blue', confirmed: 'badge-accent', processing: 'badge-amber',
+  ready_to_dispatch: 'badge-purple', dispatched: 'badge-accent',
+  delivered: 'badge-green', returned: 'badge-amber', rto: 'badge-red', cancelled: 'badge-red',
 };
 
 export default function TenantDetailPage() {
@@ -30,8 +43,14 @@ export default function TenantDetailPage() {
   const [dlLoading, setDlLoading] = useState(false);
   const [flags, setFlags] = useState<Record<string, boolean>>({});
   const [flagsLoading, setFlagsLoading] = useState(false);
+  const { setTitle } = usePageTitle();
 
   useEffect(() => { load(); }, [tenantId]);
+  useEffect(() => {
+    const name = data?.tenant?.businessName;
+    if (name) setTitle(name);
+    return () => setTitle(null);
+  }, [data?.tenant?.businessName]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (tab === 'deliveries') loadDeliveries(1); }, [tab]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -186,12 +205,14 @@ export default function TenantDetailPage() {
               {tenant.isActive ? 'Deactivate' : 'Activate'}
             </button>
             {tenant.planId === 'trial' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <input
                   type="number" min={1} max={90} value={trialDays}
+                  title="Days to extend"
                   onChange={e => setTrialDays(Math.max(1, Math.min(90, parseInt(e.target.value) || 14)))}
                   style={{ width: 52, padding: '4px 6px', border: '1px solid var(--line)', borderRadius: 6, fontSize: 12, color: 'var(--ink)', background: 'var(--surface)', textAlign: 'center', fontFamily: 'var(--font-mono)' }}
                 />
+                <span className="meta-label">days</span>
                 <button className="btn btn-ghost btn-sm" onClick={extendTrial}>+{trialDays}d Trial</button>
               </div>
             )}
@@ -202,8 +223,13 @@ export default function TenantDetailPage() {
 
       {/* Stats row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginBottom: 20 }}>
+        {/* Plan — stat-value + badge below */}
+        <div className="stat-card">
+          <div className="stat-label">Plan</div>
+          <div className="stat-value" style={{ textTransform: 'capitalize', fontSize: 18 }}>{tenant.planId}</div>
+          <span className={`badge ${PLAN_BADGE[tenant.planId] || 'badge-gray'} stat-badge-offset`}>{tenant.planId}</span>
+        </div>
         {[
-          { label: 'Plan', value: tenant.planId, badge: PLAN_BADGE[tenant.planId] || 'badge-gray' },
           { label: 'Users', value: userCount },
           { label: 'Total Orders', value: orderCount },
           { label: 'Orders This Month', value: tenant.ordersThisMonth },
@@ -211,10 +237,7 @@ export default function TenantDetailPage() {
         ].map((s, i) => (
           <div key={i} className="stat-card">
             <div className="stat-label">{s.label}</div>
-            {s.badge
-              ? <span className={`badge ${s.badge}`}>{s.value}</span>
-              : <div className="stat-value">{s.value}</div>
-            }
+            <div className="stat-value">{s.value}</div>
           </div>
         ))}
       </div>
@@ -276,12 +299,17 @@ export default function TenantDetailPage() {
               <div className="card-title">Order Activity</div>
             </div>
             <div className="card-body" style={{ display: 'flex', gap: 32, flexWrap: 'wrap' }}>
-              {(['pending', 'confirmed', 'dispatched', 'delivered', 'cancelled'] as const).map(status => (
-                <div key={status} style={{ textAlign: 'center', minWidth: 64 }}>
-                  <div className="stat-value" style={{ fontSize: 22 }}>{ordersByStatus?.[status] ?? 0}</div>
-                  <div className="stat-label" style={{ textTransform: 'capitalize', marginTop: 4 }}>{status}</div>
-                </div>
-              ))}
+              {(['new', 'confirmed', 'processing', 'ready_to_dispatch', 'dispatched', 'delivered', 'returned', 'rto', 'cancelled'] as const).map(status => {
+                const count = ordersByStatus?.[status] ?? 0;
+                return (
+                  <div key={status} style={{ textAlign: 'center', minWidth: 56 }}>
+                    <div className="stat-value order-count">
+                      {count}
+                    </div>
+                    <span className={`badge ${STATUS_COLOR[status]}`} style={{ marginTop: 4 }}>{STATUS_LABEL[status]}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>

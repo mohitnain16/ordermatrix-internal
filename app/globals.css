@@ -245,6 +245,17 @@ body.sidebar-expanded .topbar {
   line-height: 1.1;
 }
 
+.stat-badge-offset {
+  margin-top: 4px;
+  display: inline-block;
+}
+
+.order-count {
+  font-size: 22px;
+  font-variant-numeric: normal;
+  font-family: var(--font-geist-sans);
+}
+
 .stat-delta {
   display: inline-flex;
   align-items: center;
@@ -700,6 +711,7 @@ select.admin-input { cursor: pointer; }
 }
 
 .note-card-meta { font-size: 11px; color: var(--ink-4); }
+.meta-label     { font-size: 11px; color: var(--ink-4); }
 .note-card-body { font-size: 13px; color: var(--ink-2); line-height: 1.5; white-space: pre-wrap; }
 
 /* ─── Monospace table cell ───────────────────── */

@@ -3,14 +3,16 @@ import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { Bell } from 'lucide-react';
 import { getAdmin } from '../../lib/auth';
+import { usePageTitle } from '../../lib/page-title-context';
 
 const SECTION_MAP: Record<string, string> = {
-  '/superadmin':     'Admin',
-  '/sales':          'Growth',
-  '/lifecycle':      'Growth',
-  '/billing':        'Growth',
-  '/communications': 'Growth',
-  '/support':        'Support',
+  '/superadmin/tenants': 'Tenants',
+  '/superadmin':         'Admin',
+  '/sales':              'Growth',
+  '/lifecycle':          'Growth',
+  '/billing':            'Growth',
+  '/communications':     'Growth',
+  '/support':            'Support',
 };
 
 const PAGE_TITLES: Record<string, string> = {
@@ -63,6 +65,7 @@ function resolveTitle(pathname: string): string {
 export default function Topbar() {
   const pathname = usePathname();
   const [admin, setAdmin] = useState<{ name: string; role: string } | null>(null);
+  const { title: contextTitle } = usePageTitle();
 
   useEffect(() => {
     const a = getAdmin();
@@ -70,8 +73,8 @@ export default function Topbar() {
   }, []);
 
   const section = resolveSection(pathname);
-  const pageTitle = resolveTitle(pathname);
-  const showBreadcrumb = pageTitle && section !== pageTitle;
+  const pageTitle = contextTitle || resolveTitle(pathname);
+  const showBreadcrumb = !!pageTitle && section !== pageTitle;
   const initials = admin?.name?.charAt(0).toUpperCase() || '?';
   const roleColor = ROLE_COLOR[admin?.role || ''] || '#6b7280';
 

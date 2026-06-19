@@ -112,32 +112,36 @@ export default function Sidebar() {
           OM
         </div>
 
-        {/* Nav icons */}
-        <div style={{
-          flex: 1, display: 'flex', flexDirection: 'column',
-          gap: 1, width: '100%', padding: '0 10px', overflowY: 'auto',
-        }}>
-          {allItems.map(item => {
-            const Icon = item.icon;
-            const active = isActive(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                title={item.label}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  height: 34, borderRadius: 8, flexShrink: 0,
-                  background: active ? 'rgba(236,98,64,0.15)' : 'transparent',
-                  color: active ? 'var(--sidebar-accent)' : 'var(--sidebar-text)',
-                  transition: 'all 0.15s', textDecoration: 'none',
-                }}
-              >
-                <Icon size={16} strokeWidth={active ? 2.2 : 1.7} />
-              </Link>
-            );
-          })}
-        </div>
+        {/* Nav icons — only when collapsed; panel owns nav when expanded */}
+        {!expanded ? (
+          <div style={{
+            flex: 1, display: 'flex', flexDirection: 'column',
+            gap: 1, width: '100%', padding: '0 10px', overflowY: 'auto',
+          }}>
+            {allItems.map(item => {
+              const Icon = item.icon;
+              const active = isActive(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  title={item.label}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    height: 34, borderRadius: 8, flexShrink: 0,
+                    background: active ? 'rgba(236,98,64,0.15)' : 'transparent',
+                    color: active ? 'var(--sidebar-accent)' : 'var(--sidebar-text)',
+                    transition: 'all 0.15s', textDecoration: 'none',
+                  }}
+                >
+                  <Icon size={16} strokeWidth={active ? 2.2 : 1.7} />
+                </Link>
+              );
+            })}
+          </div>
+        ) : (
+          <div style={{ flex: 1 }} />
+        )}
 
         {/* Collapse toggle */}
         <button
