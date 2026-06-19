@@ -401,7 +401,7 @@ export default function EnquiriesPage() {
 
               {selected.internalNotes.map(n => (
                 <div key={n._id} className="note-card">
-                  <p className="note-card-body" style={{ whiteSpace: 'pre-wrap' }}>{n.note}</p>
+                  <p className="note-card-body">{n.note}</p>
                   <span className="note-card-meta">{n.addedBy} · {fmtTime(n.createdAt)}</span>
                 </div>
               ))}

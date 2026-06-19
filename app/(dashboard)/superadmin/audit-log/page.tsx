@@ -49,7 +49,7 @@ export default function AuditLogPage() {
                       <div className="cell-main" style={{ fontSize: 12 }}>{l.actor?.name || '—'}</div>
                       <div className="cell-sub">{l.actorEmail}</div>
                     </td>
-                    <td className="text-truncate" style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-2)', maxWidth: 320 }}>
+                    <td className="text-truncate cell-mono" style={{ fontSize: 11, maxWidth: 320 }}>
                       {l.action}
                     </td>
                     <td>
@@ -57,7 +57,7 @@ export default function AuditLogPage() {
                         {l.statusCode}
                       </span>
                     </td>
-                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-4)' }}>{l.ip}</td>
+                    <td className="cell-mono" style={{ fontSize: 11, color: 'var(--ink-4)' }}>{l.ip}</td>
                     <td style={{ fontSize: 11, color: 'var(--ink-4)' }}>{fmtTs(l.timestamp)}</td>
                   </tr>
                 ))}

@@ -221,7 +221,7 @@ export default function TenantDetailPage() {
       {/* Tabs */}
       <div className="tab-bar">
         {(['overview', 'subscription', 'notes', 'deliveries', ...(hasRole(admin, 'superadmin') ? ['flags'] : [])] as const).map((t: any) => (
-          <button key={t} onClick={() => setTab(t)} className={`tab-btn${tab === t ? ' active' : ''}`} style={{ fontWeight: tab === t ? 600 : 400, color: tab === t ? 'var(--accent)' : 'var(--ink-3)', borderBottom: `2px solid ${tab === t ? 'var(--accent)' : 'transparent'}`, textTransform: 'capitalize' }}>
+          <button key={t} onClick={() => setTab(t)} className={`tab-btn${tab === t ? ' active' : ''}`} style={{ textTransform: 'capitalize' }}>
             {t}
           </button>
         ))}

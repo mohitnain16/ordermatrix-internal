@@ -202,10 +202,10 @@ export default function CouponsPage() {
               <tbody>
                 {coupons.map(c => (
                   <tr key={c._id}>
-                    <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 13, color: 'var(--ink)' }}>{c.code}</td>
-                    <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--green)' }}>{discountLabel(c)}</td>
+                    <td className="cell-mono" style={{ fontWeight: 700, fontSize: 13, color: 'var(--ink)' }}>{c.code}</td>
+                    <td className="cell-mono" style={{ fontWeight: 600, color: 'var(--green)' }}>{discountLabel(c)}</td>
                     <td className="cell-sub">{c.applicablePlans.length ? c.applicablePlans.join(', ') : 'All plans'}</td>
-                    <td style={{ fontFamily: 'var(--font-mono)' }}>
+                    <td className="cell-mono">
                       {c.usedCount}{c.maxUses !== null ? `/${c.maxUses}` : ''}
                     </td>
                     <td style={{ fontSize: 12 }}>{fmtDate(c.expiresAt)}</td>
