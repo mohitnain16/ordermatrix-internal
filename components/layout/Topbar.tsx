@@ -34,13 +34,6 @@ const PAGE_TITLES: Record<string, string> = {
   '/support/issues':            'Active Issues',
 };
 
-const ROLE_COLOR: Record<string, string> = {
-  superadmin: '#a78bfa',
-  ops_admin:  '#60a5fa',
-  sales:      '#34d399',
-  support:    '#fbbf24',
-};
-
 const ROLE_LABEL: Record<string, string> = {
   superadmin: 'Super Admin',
   ops_admin:  'Ops Admin',
@@ -76,25 +69,24 @@ export default function Topbar() {
   const pageTitle = contextTitle || resolveTitle(pathname);
   const showBreadcrumb = !!pageTitle && section !== pageTitle;
   const initials = admin?.name?.charAt(0).toUpperCase() || '?';
-  const roleColor = ROLE_COLOR[admin?.role || ''] || '#6b7280';
 
   return (
     <header className="topbar">
-      {/* Breadcrumb / title */}
+      {/* Breadcrumb / title — left side only */}
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
         {showBreadcrumb && (
           <>
-            <span style={{ fontSize: 13, color: 'var(--ink-3)', fontWeight: 500 }}>{section}</span>
+            <span style={{ fontSize: 13, color: 'var(--ink-3)', fontWeight: 400 }}>{section}</span>
             <span style={{ color: 'var(--ink-4)', fontSize: 13 }}>/</span>
           </>
         )}
-        <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)', letterSpacing: '-0.01em' }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', letterSpacing: '-0.01em' }}>
           {pageTitle || section}
         </span>
       </div>
 
-      {/* Right controls */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+      {/* Right: Bell → Avatar → Name → Role badge */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
         <button style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           width: 32, height: 32, borderRadius: 8, border: 'none',
@@ -105,21 +97,17 @@ export default function Topbar() {
 
         {admin && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-2)', lineHeight: 1.3 }}>
-                {admin.name}
-              </div>
-              <div style={{ fontSize: 10, fontWeight: 600, color: roleColor, lineHeight: 1.3 }}>
-                {ROLE_LABEL[admin.role] || admin.role}
-              </div>
-            </div>
             <div style={{
-              width: 30, height: 30, borderRadius: '50%', background: roleColor,
+              width: 32, height: 32, borderRadius: '50%', background: 'var(--accent)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 12, fontWeight: 800, color: '#000', flexShrink: 0,
+              fontSize: 12, fontWeight: 700, color: '#fff', flexShrink: 0,
             }}>
               {initials}
             </div>
+            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-2)' }}>{admin.name}</span>
+            <span className="badge badge-neutral" style={{ marginLeft: 6 }}>
+              {ROLE_LABEL[admin.role] || admin.role}
+            </span>
           </div>
         )}
       </div>

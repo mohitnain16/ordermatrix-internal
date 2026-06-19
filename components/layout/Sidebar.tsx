@@ -100,23 +100,35 @@ export default function Sidebar() {
       <div style={{
         width: 64, flexShrink: 0, display: 'flex', flexDirection: 'column',
         alignItems: 'center', paddingTop: 14, paddingBottom: 14,
-        borderRight: '1px solid var(--sidebar-border)', gap: 2,
+        borderRight: '1px solid var(--sidebar-border)',
       }}>
-        {/* Logo mark */}
+        {/* 1. Logo mark */}
         <div style={{
           width: 36, height: 36, borderRadius: 10, background: 'var(--accent)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontWeight: 900, fontSize: 14, color: '#fff', letterSpacing: '-0.03em',
-          marginBottom: 12, flexShrink: 0, fontFamily: 'var(--font-mono)',
+          flexShrink: 0, fontFamily: 'var(--font-mono)',
         }}>
           OM
         </div>
 
-        {/* Nav icons — only when collapsed; panel owns nav when expanded */}
+        {/* 2. Collapse toggle — below logo, 8px gap */}
+        <button
+          onClick={toggle}
+          title={expanded ? 'Collapse sidebar' : 'Expand sidebar'}
+          className="btn btn-icon"
+          style={{ marginTop: 8, color: 'var(--sidebar-text)', transition: 'color 0.15s' }}
+        >
+          {expanded
+            ? <PanelLeftClose size={16} />
+            : <PanelLeftOpen  size={16} />}
+        </button>
+
+        {/* 3. Nav icons (flex:1, overflow-y:auto) — only when collapsed */}
         {!expanded ? (
           <div style={{
             flex: 1, display: 'flex', flexDirection: 'column',
-            gap: 1, width: '100%', padding: '0 10px', overflowY: 'auto',
+            gap: 1, width: '100%', padding: '8px 10px 0', overflowY: 'auto',
           }}>
             {allItems.map(item => {
               const Icon = item.icon;
@@ -143,23 +155,7 @@ export default function Sidebar() {
           <div style={{ flex: 1 }} />
         )}
 
-        {/* Collapse toggle */}
-        <button
-          onClick={toggle}
-          title={expanded ? 'Collapse sidebar' : 'Expand sidebar'}
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            width: 32, height: 32, borderRadius: 8, border: 'none',
-            background: 'transparent', cursor: 'pointer', color: 'var(--sidebar-text)',
-            transition: 'color 0.15s', marginBottom: 4,
-          }}
-        >
-          {expanded
-            ? <PanelLeftClose size={15} strokeWidth={1.8} />
-            : <PanelLeftOpen  size={15} strokeWidth={1.8} />}
-        </button>
-
-        {/* Avatar */}
+        {/* 4. Avatar — pinned to bottom of rail */}
         <div
           title={admin?.name || ''}
           style={{
@@ -181,20 +177,17 @@ export default function Sidebar() {
         display: 'flex', flexDirection: 'column', background: 'var(--sidebar-bg)',
       }}>
         <div style={{ width: 200, display: 'flex', flexDirection: 'column', height: '100%' }}>
-          {/* Header */}
-          <div style={{
-            padding: '16px 14px 10px',
-            borderBottom: '1px solid var(--sidebar-border)', flexShrink: 0,
-          }}>
+          {/* 1. "ADMIN CONSOLE" label */}
+          <div style={{ padding: '16px 14px 8px', flexShrink: 0 }}>
             <div style={{
-              fontSize: 10, fontWeight: 700, color: 'var(--accent)',
-              letterSpacing: '0.12em', textTransform: 'uppercase',
+              fontSize: 11, fontWeight: 700, color: 'var(--accent)',
+              letterSpacing: '0.1em', textTransform: 'uppercase',
             }}>
               Admin Console
             </div>
           </div>
 
-          {/* Nav labels */}
+          {/* 2. Nav labels (flex:1, overflow-y:auto) */}
           <nav style={{ flex: 1, overflowY: 'auto', padding: '8px 8px' }}>
             {NAV.map(group => {
               if (!admin || !hasRole(admin, ...(group.roles as readonly AdminRole[]))) return null;
@@ -240,20 +233,19 @@ export default function Sidebar() {
             })}
           </nav>
 
-          {/* Footer */}
+          {/* 3. User block: name + role badge + sign out */}
           <div style={{
             borderTop: '1px solid var(--sidebar-border)',
-            padding: '10px 12px', flexShrink: 0,
+            padding: 14, flexShrink: 0,
           }}>
             {admin && (
               <div style={{ marginBottom: 8 }}>
                 <div style={{
                   fontSize: 12, fontWeight: 600, color: '#e2e8f0',
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  marginBottom: 4,
                 }}>{admin.name}</div>
-                <div style={{ fontSize: 10, color: roleColor, fontWeight: 600 }}>
-                  {ROLE_LABEL[admin.role]}
-                </div>
+                <span className="badge badge-neutral">{ROLE_LABEL[admin.role]}</span>
               </div>
             )}
             <button

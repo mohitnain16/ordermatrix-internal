@@ -736,3 +736,117 @@ select.admin-input { cursor: pointer; }
 .alert-warning { background: var(--amber-soft); color: var(--amber-text); border-left-color: var(--amber); }
 .alert-danger  { background: var(--red-soft);   color: var(--red-text);   border-left-color: var(--red); }
 .alert-info    { background: var(--blue-soft);   color: var(--blue-text);  border-left-color: var(--blue); }
+
+/* ─── Danger confirmation modal ─────────────── */
+.modal-danger .modal-header {
+  border-bottom-color: var(--red-soft);
+  background: var(--red-soft);
+}
+
+.modal-danger .modal-title {
+  color: var(--red-text);
+}
+
+/* ─── Warning confirmation modal ────────────── */
+.modal-warning .modal-header {
+  border-bottom-color: var(--amber-soft);
+  background: var(--amber-soft);
+}
+
+.modal-warning .modal-title {
+  color: var(--amber-text);
+}
+
+/* ─── Confirmation body text ─────────────────── */
+.confirm-message {
+  font-size: 14px;
+  color: var(--ink-2);
+  line-height: 1.6;
+}
+
+.confirm-detail {
+  font-size: 12px;
+  color: var(--ink-3);
+  margin-top: 6px;
+}
+
+/* ─── Verify input for critical actions ──────── */
+.verify-input-label {
+  font-size: 12px;
+  color: var(--ink-3);
+  margin-bottom: 6px;
+  line-height: 1.5;
+}
+
+.verify-input-label strong {
+  color: var(--ink);
+  font-family: var(--font-mono);
+  background: var(--surface-3);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+/* ─── Action button group ────────────────────── */
+.action-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 24px;
+}
+
+/* ─── Tenant header block ────────────────────── */
+.tenant-header {
+  margin-bottom: 4px;
+}
+
+.tenant-name {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.tenant-meta {
+  font-size: 13px;
+  color: var(--ink-3);
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ─── Order activity grid ────────────────────── */
+.order-activity-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.order-activity-cell {
+  background: var(--surface);
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.order-activity-count {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--ink);
+  font-variant-numeric: normal;
+  font-family: var(--font-geist-sans);
+  line-height: 1;
+}
+
+.order-activity-count.zero {
+  color: var(--ink-4);
+}

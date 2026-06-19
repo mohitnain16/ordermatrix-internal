@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { Calendar, Settings, UserCheck, ShieldOff } from 'lucide-react';
 import api from '../../../../../lib/api';
 import { getAdmin, hasRole } from '../../../../../lib/auth';
 import { usePageTitle } from '../../../../../lib/page-title-context';
@@ -25,6 +26,64 @@ const STATUS_COLOR: Record<string, string> = {
   delivered: 'badge-green', returned: 'badge-amber', rto: 'badge-red', cancelled: 'badge-red',
 };
 
+const ALL_STATUSES = [
+  'new', 'confirmed', 'processing', 'ready_to_dispatch', 'dispatched',
+  'delivered', 'returned', 'rto', 'cancelled',
+] as const;
+
+function ConfirmModal({ action, onConfirm, onCancel, loading, trialDays, setTrialDays }: any) {
+  const [verifyValue, setVerifyValue] = useState('');
+  return (
+    <div className="modal-backdrop" onClick={onCancel}>
+      <div className={`modal-box modal-${action.level}`} onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+        <div className="modal-header">
+          <div>
+            <div className="modal-title">{action.title}</div>
+            {action.detail && <div className="modal-sub">{action.detail}</div>}
+          </div>
+        </div>
+        <div className="modal-body">
+          <p className="confirm-message">{action.message}</p>
+          {action.type === 'extendTrial' && (
+            <div className="input-group" style={{ marginTop: 12 }}>
+              <label className="input-label">Days to extend</label>
+              <input
+                type="number" className="admin-input" min={1} max={90}
+                value={trialDays}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTrialDays(Number(e.target.value))}
+              />
+            </div>
+          )}
+          {action.verifyText && (
+            <div style={{ marginTop: 16 }}>
+              <div className="verify-input-label">
+                Type <strong>{action.verifyText}</strong> to confirm
+              </div>
+              <input
+                className="admin-input"
+                value={verifyValue}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setVerifyValue(e.target.value)}
+                placeholder={action.verifyText}
+                autoFocus
+              />
+            </div>
+          )}
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn-ghost btn-sm" onClick={onCancel}>Cancel</button>
+          <button
+            className={`btn btn-sm ${action.confirmClass}`}
+            onClick={onConfirm}
+            disabled={loading || (action.verifyText ? verifyValue !== action.verifyText : false)}
+          >
+            {loading ? <span className="spinner" /> : action.confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function TenantDetailPage() {
   const { tenantId } = useParams<{ tenantId: string }>();
   const router = useRouter();
@@ -43,6 +102,8 @@ export default function TenantDetailPage() {
   const [dlLoading, setDlLoading] = useState(false);
   const [flags, setFlags] = useState<Record<string, boolean>>({});
   const [flagsLoading, setFlagsLoading] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<any>(null);
+  const [actionLoading, setActionLoading] = useState(false);
   const { setTitle } = usePageTitle();
 
   useEffect(() => { load(); }, [tenantId]);
@@ -78,7 +139,6 @@ export default function TenantDetailPage() {
 
   async function extendTrial() {
     const days = Math.max(1, Math.min(90, trialDays));
-    if (!confirm(`Extend trial by ${days} day${days === 1 ? '' : 's'}?`)) return;
     try {
       await api.patch(`/admin/subscriptions/extend-trial/${tenantId}`, { days });
       toast(`Trial extended by ${days} day${days === 1 ? '' : 's'}`);
@@ -93,6 +153,22 @@ export default function TenantDetailPage() {
       toast(`Impersonating ${user.email} — token copied`);
       navigator.clipboard?.writeText(token);
     } catch (e: any) { toast(e?.response?.data?.error || 'Failed to impersonate'); }
+  }
+
+  async function handleConfirm() {
+    if (!confirmAction) return;
+    setActionLoading(true);
+    try {
+      switch (confirmAction.type) {
+        case 'extendTrial':            await extendTrial(); break;
+        case 'impersonate':            await impersonate(); break;
+        case 'deactivate':
+        case 'reactivate':             await toggleActive(); break;
+      }
+    } finally {
+      setActionLoading(false);
+      setConfirmAction(null);
+    }
   }
 
   async function addNote() {
@@ -188,46 +264,118 @@ export default function TenantDetailPage() {
   const { tenant, subscription: sub, userCount, orderCount, notes, lastActiveAt, ordersByStatus } = data;
   const canEdit = hasRole(admin, 'superadmin', 'ops_admin');
 
+  const ACTIONS = {
+    extendTrial: {
+      type: 'extendTrial',
+      title: 'Extend Trial',
+      message: `Extend trial for ${tenant.businessName}?`,
+      detail: 'Trial will be extended from today.',
+      level: 'warning',
+      verifyText: null,
+      confirmLabel: 'Extend Trial',
+      confirmClass: 'btn-primary',
+    },
+    impersonate: {
+      type: 'impersonate',
+      title: 'Impersonate Tenant',
+      message: `You are about to log in as ${tenant.businessName}. All actions will be performed as this tenant.`,
+      detail: 'Session expires in 15 minutes. This action is logged.',
+      level: 'warning',
+      verifyText: null,
+      confirmLabel: 'Start Session',
+      confirmClass: 'btn-primary',
+    },
+    deactivate: {
+      type: 'deactivate',
+      title: 'Deactivate Tenant',
+      message: `This will immediately lock out all users of ${tenant.businessName}.`,
+      detail: 'The tenant will lose access to their account until reactivated.',
+      level: 'danger',
+      verifyText: tenant.businessName,
+      confirmLabel: 'Deactivate',
+      confirmClass: 'btn-danger',
+    },
+    reactivate: {
+      type: 'reactivate',
+      title: 'Reactivate Tenant',
+      message: `Reactivate ${tenant.businessName} and restore full access?`,
+      detail: null,
+      level: 'warning',
+      verifyText: null,
+      confirmLabel: 'Reactivate',
+      confirmClass: 'btn-primary',
+    },
+  };
+
   return (
     <div className="animate-fade-in">
       {toastMsg && <div className="toast toast-default">{toastMsg}</div>}
 
-      {/* Header */}
-      <div className="page-header">
-        <div>
-          <button onClick={() => router.back()} style={{ background: 'none', border: 'none', color: 'var(--ink-4)', fontSize: 13, cursor: 'pointer', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 4, padding: 0, fontFamily: 'inherit' }}>← Back to Tenants</button>
-          <h1 className="page-title">{tenant.businessName}</h1>
-          <p className="page-sub">{tenant.email} · {tenant.phone}</p>
+      {confirmAction && (
+        <ConfirmModal
+          action={confirmAction}
+          onConfirm={handleConfirm}
+          onCancel={() => setConfirmAction(null)}
+          loading={actionLoading}
+          trialDays={trialDays}
+          setTrialDays={setTrialDays}
+        />
+      )}
+
+      {/* Back link */}
+      <button
+        onClick={() => router.back()}
+        style={{ background: 'none', border: 'none', color: 'var(--ink-4)', fontSize: 13, cursor: 'pointer', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 4, padding: 0, fontFamily: 'inherit' }}
+      >
+        ← Back to Tenants
+      </button>
+
+      {/* A — Page header block */}
+      <div className="tenant-header">
+        <div className="tenant-name">{tenant.businessName}</div>
+        <div className="tenant-meta">
+          <span>{tenant.email}</span>
+          <span>·</span>
+          <span>{tenant.phone}</span>
+          <span>·</span>
+          <span>Joined {fmtDate(tenant.createdAt)}</span>
+          <span className={`badge ${tenant.isActive ? 'badge-green' : 'badge-red'}`}>
+            {tenant.isActive ? 'Active' : 'Inactive'}
+          </span>
         </div>
-        {canEdit && (
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <button className={`btn btn-sm ${tenant.isActive ? 'btn-danger' : 'btn-ghost'}`} onClick={toggleActive}>
-              {tenant.isActive ? 'Deactivate' : 'Activate'}
-            </button>
-            {tenant.planId === 'trial' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <input
-                  type="number" min={1} max={90} value={trialDays}
-                  title="Days to extend"
-                  onChange={e => setTrialDays(Math.max(1, Math.min(90, parseInt(e.target.value) || 14)))}
-                  style={{ width: 52, padding: '4px 6px', border: '1px solid var(--line)', borderRadius: 6, fontSize: 12, color: 'var(--ink)', background: 'var(--surface)', textAlign: 'center', fontFamily: 'var(--font-mono)' }}
-                />
-                <span className="meta-label">days</span>
-                <button className="btn btn-ghost btn-sm" onClick={extendTrial}>+{trialDays}d Trial</button>
-              </div>
-            )}
-            <button className="btn btn-ghost btn-sm" onClick={impersonate}>Impersonate</button>
-          </div>
-        )}
       </div>
 
-      {/* Stats row */}
+      {/* B — Action bar */}
+      {canEdit && (
+        <div className="action-bar">
+          <button className="btn btn-ghost btn-sm" onClick={() => setConfirmAction(ACTIONS.extendTrial)}>
+            <Calendar size={14} style={{ marginRight: 5 }} />
+            Extend Trial
+          </button>
+          <button className="btn btn-ghost btn-sm" onClick={() => toast('Override Plan — coming soon')}>
+            <Settings size={14} style={{ marginRight: 5 }} />
+            Override Plan
+          </button>
+          <button className="btn btn-outline btn-sm" onClick={() => setConfirmAction(ACTIONS.impersonate)}>
+            <UserCheck size={14} style={{ marginRight: 5 }} />
+            Impersonate
+          </button>
+          <button
+            className="btn btn-danger btn-sm"
+            onClick={() => setConfirmAction(tenant.isActive ? ACTIONS.deactivate : ACTIONS.reactivate)}
+          >
+            <ShieldOff size={14} style={{ marginRight: 5 }} />
+            {tenant.isActive ? 'Deactivate' : 'Reactivate'}
+          </button>
+        </div>
+      )}
+
+      {/* C — Stat cards row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginBottom: 20 }}>
-        {/* Plan — stat-value + badge below */}
         <div className="stat-card">
           <div className="stat-label">Plan</div>
           <div className="stat-value" style={{ textTransform: 'capitalize', fontSize: 18 }}>{tenant.planId}</div>
-          <span className={`badge ${PLAN_BADGE[tenant.planId] || 'badge-gray'} stat-badge-offset`}>{tenant.planId}</span>
+          <span className={`badge ${PLAN_BADGE[tenant.planId] || 'badge-gray'}`}>{tenant.planId}</span>
         </div>
         {[
           { label: 'Users', value: userCount },
@@ -294,22 +442,22 @@ export default function TenantDetailPage() {
             </div>
           </div>
 
+          {/* D — Order Activity grid */}
           <div className="admin-card">
             <div className="card-header">
               <div className="card-title">Order Activity</div>
             </div>
-            <div className="card-body" style={{ display: 'flex', gap: 32, flexWrap: 'wrap' }}>
-              {(['new', 'confirmed', 'processing', 'ready_to_dispatch', 'dispatched', 'delivered', 'returned', 'rto', 'cancelled'] as const).map(status => {
-                const count = ordersByStatus?.[status] ?? 0;
-                return (
-                  <div key={status} style={{ textAlign: 'center', minWidth: 56 }}>
-                    <div className="stat-value order-count">
-                      {count}
-                    </div>
-                    <span className={`badge ${STATUS_COLOR[status]}`} style={{ marginTop: 4 }}>{STATUS_LABEL[status]}</span>
+            <div className="card-body" style={{ padding: 0 }}>
+              <div className="order-activity-grid">
+                {ALL_STATUSES.map(status => (
+                  <div className="order-activity-cell" key={status}>
+                    <span className={`order-activity-count${(ordersByStatus?.[status] ?? 0) === 0 ? ' zero' : ''}`}>
+                      {ordersByStatus?.[status] ?? 0}
+                    </span>
+                    <span className={`badge ${STATUS_COLOR[status]}`}>{STATUS_LABEL[status]}</span>
                   </div>
-                );
-              })}
+                ))}
+              </div>
             </div>
           </div>
         </div>
