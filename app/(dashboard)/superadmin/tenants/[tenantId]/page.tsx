@@ -19,6 +19,12 @@ const STATUS_LABEL: Record<string, string> = {
   delivered: 'Delivered', returned: 'Returned', rto: 'RTO', cancelled: 'Cancelled',
 };
 
+const STATUS_COLOR: Record<string, string> = {
+  new: 'badge-blue', confirmed: 'badge-accent', processing: 'badge-amber',
+  ready_to_dispatch: 'badge-purple', dispatched: 'badge-accent',
+  delivered: 'badge-green', returned: 'badge-amber', rto: 'badge-red', cancelled: 'badge-red',
+};
+
 export default function TenantDetailPage() {
   const { tenantId } = useParams<{ tenantId: string }>();
   const router = useRouter();
@@ -293,14 +299,14 @@ export default function TenantDetailPage() {
               <div className="card-title">Order Activity</div>
             </div>
             <div className="card-body" style={{ display: 'flex', gap: 32, flexWrap: 'wrap' }}>
-              {(['new', 'confirmed', 'processing', 'dispatched', 'delivered', 'cancelled'] as const).map(status => {
+              {(['new', 'confirmed', 'processing', 'ready_to_dispatch', 'dispatched', 'delivered', 'returned', 'rto', 'cancelled'] as const).map(status => {
                 const count = ordersByStatus?.[status] ?? 0;
                 return (
                   <div key={status} style={{ textAlign: 'center', minWidth: 56 }}>
                     <div className="stat-value order-count">
                       {count}
                     </div>
-                    <div className="stat-label" style={{ marginTop: 4 }}>{STATUS_LABEL[status]}</div>
+                    <span className={`badge ${STATUS_COLOR[status]}`} style={{ marginTop: 4 }}>{STATUS_LABEL[status]}</span>
                   </div>
                 );
               })}
