@@ -124,7 +124,7 @@ export default function TeamPage() {
                           {m.name}
                         </div>
                       </td>
-                      <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{m.email}</td>
+                      <td className="cell-mono">{m.email}</td>
                       <td><span className={`badge ${ROLE_BADGE[m.role] || 'badge-gray'}`}>{ROLE_LABEL[m.role] || m.role}</span></td>
                       <td><span className={`badge ${m.isActive ? 'badge-green' : 'badge-red'}`}>{m.isActive ? 'Active' : 'Inactive'}</span></td>
                       <td className="cell-sub">{fmtDate(m.createdAt)}</td>

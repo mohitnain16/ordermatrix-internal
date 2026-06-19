@@ -176,8 +176,8 @@ export default function BillingOpsPage() {
                         <div className="cell-sub">{f.tenant?.email}</div>
                       </td>
                       <td style={{ textTransform: 'capitalize' }}>{f.planId}</td>
-                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--red)' }}>{fmt(f.amount)}</td>
-                      <td style={{ fontFamily: 'var(--font-mono)' }}>{f.retryCount}</td>
+                      <td className="cell-mono" style={{ fontWeight: 600, color: 'var(--red)' }}>{fmt(f.amount)}</td>
+                      <td className="cell-mono">{f.retryCount}</td>
                       <td className="cell-sub">{fmtDate(f.failedAt)}</td>
                       {tab === 'dunning' && (
                         <td>
@@ -231,8 +231,8 @@ export default function BillingOpsPage() {
                     <tr key={t._id}>
                       <td><div className="cell-main">{t.businessName}</div><div className="cell-sub">{t.email}</div></td>
                       <td style={{ textTransform: 'capitalize' }}>{t.planId}</td>
-                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{t.seatsUsed}</td>
-                      <td style={{ fontFamily: 'var(--font-mono)' }}>{t.seatsLimit}</td>
+                      <td className="cell-mono" style={{ fontWeight: 600 }}>{t.seatsUsed}</td>
+                      <td className="cell-mono">{t.seatsLimit}</td>
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <div style={{ width: 80, height: 6, background: 'var(--line)', borderRadius: 3, overflow: 'hidden' }}>
@@ -288,7 +288,7 @@ export default function BillingOpsPage() {
                         {invResults.map((t: any) => (
                           <tr key={t._id}>
                             <td className="cell-main">{t.businessName}</td>
-                            <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{t.email}</td>
+                            <td className="cell-mono">{t.email}</td>
                             <td style={{ textTransform: 'capitalize' }}>{t.planId}</td>
                             <td><button className="btn btn-ghost btn-sm" onClick={() => loadInvoices(t)}>View Invoices →</button></td>
                           </tr>
@@ -323,17 +323,17 @@ export default function BillingOpsPage() {
                       <tbody>
                         {invSlice.map((inv: any) => (
                           <tr key={inv.invoiceNo}>
-                            <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{inv.invoiceNo}</td>
+                            <td className="cell-mono">{inv.invoiceNo}</td>
                             <td style={{ fontSize: 12 }}>{fmtDate(inv.paidAt)}</td>
                             <td style={{ textTransform: 'capitalize' }}>{inv.planName || inv.planId}</td>
                             <td style={{ textTransform: 'capitalize', fontSize: 12 }}>{inv.billingCycle}</td>
-                            <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--green)' }}>{fmt(inv.amount)}</td>
+                            <td className="cell-mono" style={{ fontWeight: 600, color: 'var(--green)' }}>{fmt(inv.amount)}</td>
                             <td>
                               <span className={`badge ${inv.status === 'active' ? 'badge-green' : inv.status === 'cancelled' ? 'badge-red' : inv.status === 'past_due' ? 'badge-gold' : 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>
                                 {inv.status}
                               </span>
                             </td>
-                            <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-4)' }}>{inv.razorpayPaymentId ? inv.razorpayPaymentId.slice(0, 16) + '…' : '—'}</td>
+                            <td className="cell-mono" style={{ fontSize: 11, color: 'var(--ink-4)' }}>{inv.razorpayPaymentId ? inv.razorpayPaymentId.slice(0, 16) + '…' : '—'}</td>
                           </tr>
                         ))}
                         {invoices.length === 0 && (

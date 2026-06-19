@@ -138,7 +138,7 @@ export default function SubscriptionsPage() {
                       <td><span style={{ textTransform: 'capitalize', fontWeight: 500 }}>{s.planId}</span></td>
                       <td><span className={`badge ${STATUS_BADGE[s.status] || 'badge-gray'}`}>{s.status}</span></td>
                       <td style={{ textTransform: 'capitalize', fontSize: 12 }}>{s.billingCycle || '—'}</td>
-                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{s.amount ? fmt(s.amount) : '—'}</td>
+                      <td className="cell-mono" style={{ fontWeight: 600 }}>{s.amount ? fmt(s.amount) : '—'}</td>
                       <td className="cell-sub">{fmtDate(s.currentPeriodEnd)}</td>
                       <td>
                         <div className="gap-2" style={{ display: 'flex' }}>
@@ -217,7 +217,7 @@ export default function SubscriptionsPage() {
                 <label className="form-label">Internal Reason <span style={{ color: 'var(--accent)' }}>*</span></label>
                 <input className="admin-input" placeholder="e.g. Sales deal — 3 months free Growth" value={overrideForm.reason} onChange={e => setOverrideForm(f => ({ ...f, reason: e.target.value }))} />
               </div>
-              <div style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)', borderRadius: 8, padding: '10px 14px', fontSize: 12, color: 'var(--ink-3)' }}>
+              <div className="alert alert-warning">
                 This is a permanent change. It will update both the Subscription and Tenant records immediately.
               </div>
             </div>
