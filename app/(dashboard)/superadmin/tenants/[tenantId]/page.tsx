@@ -206,7 +206,7 @@ export default function TenantDetailPage() {
                   onChange={e => setTrialDays(Math.max(1, Math.min(90, parseInt(e.target.value) || 14)))}
                   style={{ width: 52, padding: '4px 6px', border: '1px solid var(--line)', borderRadius: 6, fontSize: 12, color: 'var(--ink)', background: 'var(--surface)', textAlign: 'center', fontFamily: 'var(--font-mono)' }}
                 />
-                <span style={{ fontSize: 11, color: 'var(--ink-4)' }}>days</span>
+                <span className="meta-label">days</span>
                 <button className="btn btn-ghost btn-sm" onClick={extendTrial}>+{trialDays}d Trial</button>
               </div>
             )}
@@ -221,7 +221,7 @@ export default function TenantDetailPage() {
         <div className="stat-card">
           <div className="stat-label">Plan</div>
           <div className="stat-value" style={{ textTransform: 'capitalize', fontSize: 18 }}>{tenant.planId}</div>
-          <span className={`badge ${PLAN_BADGE[tenant.planId] || 'badge-gray'}`} style={{ marginTop: 4, display: 'inline-block' }}>{tenant.planId}</span>
+          <span className={`badge ${PLAN_BADGE[tenant.planId] || 'badge-gray'} stat-badge-offset`}>{tenant.planId}</span>
         </div>
         {[
           { label: 'Users', value: userCount },
@@ -297,10 +297,7 @@ export default function TenantDetailPage() {
                 const count = ordersByStatus?.[status] ?? 0;
                 return (
                   <div key={status} style={{ textAlign: 'center', minWidth: 56 }}>
-                    <div
-                      className="stat-value"
-                      style={{ fontSize: 22, fontVariantNumeric: 'normal', fontFamily: 'var(--font-geist-sans)' }}
-                    >
+                    <div className="stat-value order-count">
                       {count}
                     </div>
                     <div className="stat-label" style={{ marginTop: 4 }}>{STATUS_LABEL[status]}</div>
