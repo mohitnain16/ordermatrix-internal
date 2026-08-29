@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add *)",
+      "Bash(git commit -m '[P0-1] fix: add support role to enquiries nav entry *)",
+      "Bash(git commit -m '[P0-2] feat: custom days input for trial extension *)",
+      "Bash(git commit -m '[P0-3] feat: admin team management page *)",
+      "Bash(git commit -m '[P0-4] feat: subscription override modal *)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Grep",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/mohitnain/.local/bin/graphify hook-guard search"
+          }
+        ]
+      },
+      {
+        "matcher": "Read|Glob",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/mohitnain/.local/bin/graphify hook-guard read"
+          }
+        ]
+      }
+    ]
+  }
+}
