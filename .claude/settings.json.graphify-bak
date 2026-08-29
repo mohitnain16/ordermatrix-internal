@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add *)",
+      "Bash(git commit -m '[P0-1] fix: add support role to enquiries nav entry *)",
+      "Bash(git commit -m '[P0-2] feat: custom days input for trial extension *)",
+      "Bash(git commit -m '[P0-3] feat: admin team management page *)",
+      "Bash(git commit -m '[P0-4] feat: subscription override modal *)"
+    ]
+  }
+}
