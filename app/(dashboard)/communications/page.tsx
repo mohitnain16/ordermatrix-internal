@@ -37,8 +37,6 @@ export default function CommunicationsPage() {
   const [preview, setPreview] = useState<{ count: number; tenants: any[] } | null>(null);
   const [bcLoading, setBcLoading] = useState(false);
   const [bcResult, setBcResult] = useState<any>(null);
-  const [confirmBcLabel, setConfirmBcLabel] = useState<string | null>(null);
-  const [confirmDelId, setConfirmDelId] = useState<string | null>(null);
   const [confirmBC, setConfirmBC] = useState(false);
   const [confirmDelId, setConfirmDelId] = useState<string | null>(null);
 
