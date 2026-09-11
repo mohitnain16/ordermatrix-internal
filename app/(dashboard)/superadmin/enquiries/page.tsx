@@ -144,10 +144,10 @@ export default function EnquiriesPage() {
   const pages = Math.ceil(total / LIMIT);
 
   return (
-    <div className="animate-fade-in" style={{ display: 'flex', gap: 20, height: 'calc(100vh - 80px)', overflow: 'hidden' }}>
+    <div className="animate-fade-in enquiries-shell">
 
       {/* ── Left: List ─────────────────────────────────────────────── */}
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div className="enquiries-list">
 
         {/* Header */}
         <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
@@ -260,11 +260,7 @@ export default function EnquiriesPage() {
       </div>
 
       {/* ── Right: Detail Panel ────────────────────────────────────── */}
-      <div style={{
-        width: 440, flexShrink: 0,
-        borderLeft: '1px solid var(--line)', paddingLeft: 20,
-        overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16,
-      }}>
+      <div className={`enquiries-detail${!selected && !detailLoading ? ' enquiries-detail-empty' : ''}`}>
 
         {/* Skeleton while detail loads */}
         {detailLoading && (
