@@ -1,40 +1,46 @@
 @import "tailwindcss";
 
 :root {
-  /* Page */
-  --page-bg: #f4f1eb;
+  /* Typography */
+  --font-sans:    var(--font-inter), 'Helvetica Neue', system-ui, sans-serif;
+  --font-heading: var(--font-serif), Georgia, serif;
+  --font-mono:    var(--font-geist-mono), 'JetBrains Mono', monospace;
 
-  /* Sidebar */
+  /* Page */
+  --page-bg: #F4F3EE;   /* Pampas */
+
+  /* Sidebar — always dark, never flips */
   --sidebar-bg: #0b0d10;
   --sidebar-border: #1a1d24;
   --sidebar-rail-width: 64px;
   --sidebar-panel-width: 200px;
   --sidebar-text: #5a6072;
   --sidebar-text-active: #ffffff;
-  --sidebar-accent: #ec6240;
+  --sidebar-accent: #D97A56;    /* dark-adapted Crail — legible on dark bg */
+  --sidebar-active-bg: rgba(193,95,60,0.18);
   --sidebar-section-label: #2e3240;
 
   /* Surfaces */
   --surface: #ffffff;
   --surface-2: #f9f8f5;
   --surface-3: #f0ede6;
-  --surface-hover: #f4f1eb;
+  --surface-hover: #F4F3EE;
 
   /* Ink scale */
-  --ink: #0b0d10;
+  --ink: #2A2724;
   --ink-2: #2d3142;
-  --ink-3: #6b7280;
-  --ink-4: #9ca3af;
+  --ink-3: #6B655D;
+  --ink-4: #B1ADA1;
 
   /* Border */
-  --line: #e8e4dc;
-  --line-2: #d4cfc6;
+  --line: rgba(42,39,36,0.10);
+  --line-2: rgba(42,39,36,0.18);
 
-  /* Brand */
-  --accent: #ec6240;
-  --accent-hover: #d4522f;
-  --accent-soft: #fdf1ee;
-  --accent-text: #c4401e;
+  /* Brand — Crail terracotta */
+  --accent: #C15F3C;
+  --accent-hover: #A84E2F;
+  --accent-soft: #F3E3DA;
+  --accent-text: #C15F3C;
 
   /* Semantic */
   --green: #16a34a;
@@ -76,8 +82,7 @@
   --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
   --shadow-lg: 0 8px 32px rgba(0,0,0,0.14);
 
-  /* Typography */
-  --font-mono: 'Geist Mono', 'JetBrains Mono', monospace;
+  /* Legacy mono alias — kept for pages using var(--font-mono) directly */
 
   /* Topbar */
   --topbar-height: 56px;
@@ -91,7 +96,7 @@
 body {
   background: var(--page-bg);
   color: var(--ink);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-sans);
   font-size: 13px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -849,4 +854,280 @@ select.admin-input { cursor: pointer; }
 
 .order-activity-count.zero {
   color: var(--ink-4);
+}
+
+/* ═══════════════════════════════════════════════
+   DARK MODE
+   [data-mode="dark"] wins over OS preference.
+   Set before paint by the inline themeScript.
+═══════════════════════════════════════════════ */
+[data-mode="dark"] {
+  --page-bg: #1F1D1B;
+  --surface: #292623;
+  --surface-2: #322F2B;
+  --surface-3: #3A3530;
+  --surface-hover: #322F2B;
+
+  --ink: #F4F3EE;
+  --ink-2: #D4CFC6;
+  --ink-3: #B1ADA1;
+  --ink-4: #7A756C;
+
+  --line: rgba(244,243,238,0.10);
+  --line-2: rgba(244,243,238,0.18);
+
+  --accent: #D97A56;
+  --accent-hover: #E68B67;
+  --accent-soft: #3D2A20;
+  --accent-text: #E68B67;
+
+  --topbar-bg: #292623;
+  --topbar-border: rgba(244,243,238,0.08);
+
+  /* Semantic soft colors — dark */
+  --green-soft: rgba(22,163,74,0.18);
+  --green-text: #4ade80;
+  --red-soft: rgba(220,38,38,0.18);
+  --red-text: #f87171;
+  --amber-soft: rgba(217,119,6,0.18);
+  --amber-text: #fbbf24;
+  --blue-soft: rgba(37,99,235,0.18);
+  --blue-text: #60a5fa;
+  --purple-soft: rgba(124,58,237,0.18);
+  --purple-text: #a78bfa;
+  --neutral-soft: rgba(107,114,128,0.22);
+  --neutral-text: #d1d5db;
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.30);
+  --shadow: 0 1px 4px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.28);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.40);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.55);
+}
+
+/* OS-level dark preference — only when no explicit data-mode is set */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mode="light"]):not([data-mode="dark"]) {
+    --page-bg: #1F1D1B;
+    --surface: #292623;
+    --surface-2: #322F2B;
+    --surface-3: #3A3530;
+    --surface-hover: #322F2B;
+
+    --ink: #F4F3EE;
+    --ink-2: #D4CFC6;
+    --ink-3: #B1ADA1;
+    --ink-4: #7A756C;
+
+    --line: rgba(244,243,238,0.10);
+    --line-2: rgba(244,243,238,0.18);
+
+    --accent: #D97A56;
+    --accent-hover: #E68B67;
+    --accent-soft: #3D2A20;
+    --accent-text: #E68B67;
+
+    --topbar-bg: #292623;
+    --topbar-border: rgba(244,243,238,0.08);
+
+    --green-soft: rgba(22,163,74,0.18);
+    --green-text: #4ade80;
+    --red-soft: rgba(220,38,38,0.18);
+    --red-text: #f87171;
+    --amber-soft: rgba(217,119,6,0.18);
+    --amber-text: #fbbf24;
+    --blue-soft: rgba(37,99,235,0.18);
+    --blue-text: #60a5fa;
+    --purple-soft: rgba(124,58,237,0.18);
+    --purple-text: #a78bfa;
+    --neutral-soft: rgba(107,114,128,0.22);
+    --neutral-text: #d1d5db;
+
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.30);
+    --shadow: 0 1px 4px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.28);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.40);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.55);
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   MOBILE RESPONSIVE  ≤ 767px
+   Sidebar becomes a drawer; page goes full-width.
+═══════════════════════════════════════════════ */
+@media (max-width: 767px) {
+  /* Full-width content — sidebar is an overlay, not a rail */
+  .page-content {
+    margin-left: 0 !important;
+  }
+
+  body.sidebar-expanded .page-content {
+    margin-left: 0 !important;
+  }
+
+  .topbar {
+    left: 0 !important;
+  }
+
+  body.sidebar-expanded .topbar {
+    left: 0 !important;
+  }
+
+  /* Sidebar drawer */
+  .sidebar {
+    transform: translateX(-264px);
+    transition: transform 0.25s cubic-bezier(0.4,0,0.2,1), box-shadow 0.25s ease;
+    box-shadow: none;
+  }
+
+  body.mobile-sidebar-open .sidebar {
+    transform: translateX(0);
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* Mobile sidebar backdrop */
+  .mobile-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 49;
+    background: rgba(11,13,16,0.55);
+    backdrop-filter: blur(2px);
+    animation: backdropIn 0.2s ease;
+  }
+
+  /* Hamburger button — visible only on mobile */
+  .mobile-nav-trigger {
+    display: flex !important;
+  }
+
+  /* Tighter page inner on mobile */
+  .page-inner {
+    padding: 16px;
+  }
+
+  /* Filter bar wraps and stacks nicely */
+  .table-filter-bar {
+    padding: 12px 14px;
+  }
+
+  .table-filter-bar .admin-input {
+    max-width: 100% !important;
+    flex: 1 1 140px;
+  }
+
+  /* Action bar stacks */
+  .action-bar {
+    gap: 6px;
+  }
+
+  /* Stat cards: 2 columns on mobile */
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+}
+
+/* ─── Topbar name/role — hidden on mobile ────── */
+@media (max-width: 767px) {
+  .topbar-name,
+  .topbar-role { display: none !important; }
+}
+
+/* ─── Hamburger — hidden on desktop ─────────── */
+.mobile-nav-trigger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--ink-3);
+  flex-shrink: 0;
+}
+
+.mobile-nav-trigger:hover {
+  background: var(--surface-3);
+  color: var(--ink);
+}
+
+/* ─── Mobile-first backdrop (hidden by default) */
+.mobile-sidebar-backdrop {
+  display: none;
+}
+
+/* ═══════════════════════════════════════════════
+   MOBILE RESPONSIVE  ≤ 639px
+   Modals as bottom sheets; table card stacking.
+═══════════════════════════════════════════════ */
+@media (max-width: 639px) {
+  /* Modal → bottom sheet */
+  .modal-backdrop {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .modal-box {
+    max-width: 100%;
+    border-radius: var(--radius) var(--radius) 0 0;
+    max-height: 92vh;
+  }
+
+  /* Table → card stacking (opt-in with .mobile-cards) */
+  .admin-table.mobile-cards thead {
+    display: none;
+  }
+
+  .admin-table.mobile-cards,
+  .admin-table.mobile-cards tbody,
+  .admin-table.mobile-cards tr {
+    display: block;
+    width: 100%;
+  }
+
+  .admin-table.mobile-cards tbody tr {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    background: var(--surface);
+    overflow: hidden;
+  }
+
+  .admin-table.mobile-cards tbody td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 1px solid var(--line);
+    min-height: 44px;
+  }
+
+  .admin-table.mobile-cards tbody td:last-child {
+    border-bottom: none;
+  }
+
+  .admin-table.mobile-cards tbody td::before {
+    content: attr(data-label);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ink-4);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    flex-shrink: 0;
+    min-width: 80px;
+  }
+
+  /* Inputs: 44px min tap target */
+  .admin-input {
+    height: 44px;
+  }
+
+  .modal-body {
+    padding: 16px;
+  }
+
+  .modal-footer {
+    padding: 12px 16px;
+  }
 }
