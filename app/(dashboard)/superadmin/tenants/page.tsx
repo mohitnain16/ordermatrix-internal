@@ -62,7 +62,7 @@ export default function TenantsPage() {
 
       <div className="admin-card">
         <div className="table-shell">
-        <table className="admin-table">
+        <table className="admin-table mobile-cards">
           <thead>
             <tr>
               <th>Business</th><th>Email</th><th>Phone</th><th>Plan</th>
@@ -74,13 +74,13 @@ export default function TenantsPage() {
               <>
                 {tenants.map(t => (
                   <tr key={t._id}>
-                    <td><span className="cell-main">{t.businessName}</span></td>
-                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{t.email}</td>
-                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{t.phone}</td>
-                    <td><span className={`badge ${PLAN_BADGE[t.planId] || 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>{t.planId}</span></td>
-                    <td style={{ fontFamily: 'var(--font-mono)' }}>{t.ordersThisMonth}</td>
-                    <td><span className={`badge ${t.isActive ? 'badge-green' : 'badge-red'}`}>{t.isActive ? 'Active' : 'Inactive'}</span></td>
-                    <td className="cell-sub">{fmtDate(t.createdAt)}</td>
+                    <td data-label="Business"><span className="cell-main">{t.businessName}</span></td>
+                    <td data-label="Email" style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{t.email}</td>
+                    <td data-label="Phone" style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{t.phone}</td>
+                    <td data-label="Plan"><span className={`badge ${PLAN_BADGE[t.planId] || 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>{t.planId}</span></td>
+                    <td data-label="Orders/mo" style={{ fontFamily: 'var(--font-mono)' }}>{t.ordersThisMonth}</td>
+                    <td data-label="Status"><span className={`badge ${t.isActive ? 'badge-green' : 'badge-red'}`}>{t.isActive ? 'Active' : 'Inactive'}</span></td>
+                    <td data-label="Joined" className="cell-sub">{fmtDate(t.createdAt)}</td>
                     <td><Link href={`/superadmin/tenants/${t._id}`} className="btn btn-ghost btn-sm">View →</Link></td>
                   </tr>
                 ))}
