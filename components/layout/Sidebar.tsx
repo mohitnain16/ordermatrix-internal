@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { getAdmin, clearAuth, hasRole, ROLE_LABEL, type AdminRole } from '../../lib/auth';
@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Building2, CreditCard, Users, FileText,
   TrendingUp, Headphones, LogOut, ChevronRight,
   Activity, AlertTriangle, Megaphone, Mail, ShieldCheck, Tag, UserPlus,
-  PanelLeftOpen, PanelLeftClose,
+  PanelLeftOpen, PanelLeftClose, MessageCircle,
 } from 'lucide-react';
 
 const NAV = [
@@ -22,6 +22,7 @@ const NAV = [
       { href: '/superadmin/audit-log',      label: 'Audit Log',      icon: FileText },
       { href: '/superadmin/coupons',        label: 'Coupons',        icon: Tag,         roles: ['superadmin', 'ops_admin'] as const },
       { href: '/superadmin/team',           label: 'Team',           icon: ShieldCheck, roles: ['superadmin'] as const },
+      { href: '/superadmin/wa-agent',       label: 'WA Agent',       icon: MessageCircle, roles: ['superadmin'] as const },
     ],
   },
   {
@@ -45,15 +46,17 @@ const NAV = [
   },
 ];
 
+// Role avatar colors — violet/blue/emerald/amber readable on dark bg
 const ROLE_COLOR: Record<string, string> = {
-  superadmin: '#a78bfa',
-  ops_admin:  '#60a5fa',
-  sales:      '#34d399',
-  support:    '#fbbf24',
+  superadmin: 'var(--purple-text)',
+  ops_admin:  'var(--blue-text)',
+  sales:      'var(--green-text)',
+  support:    'var(--amber-text)',
 };
 
 export default function Sidebar() {
   const [expanded, setExpanded] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const admin = getAdmin();
@@ -64,6 +67,12 @@ export default function Sidebar() {
     document.body.classList.toggle('sidebar-expanded', wide);
   }, []);
 
+  // Close mobile drawer on route change
+  useEffect(() => {
+    setMobileOpen(false);
+    document.body.classList.remove('mobile-sidebar-open');
+  }, [pathname]);
+
   function toggle() {
     setExpanded(prev => {
       const next = !prev;
@@ -71,6 +80,12 @@ export default function Sidebar() {
       return next;
     });
   }
+
+  // Exposed via body class so Topbar hamburger can call it too
+  const closeMobile = useCallback(() => {
+    setMobileOpen(false);
+    document.body.classList.remove('mobile-sidebar-open');
+  }, []);
 
   function logout() {
     clearAuth();
@@ -84,7 +99,7 @@ export default function Sidebar() {
       : pathname.startsWith(href);
 
   const initials = admin?.name?.charAt(0).toUpperCase() || '?';
-  const roleColor = ROLE_COLOR[admin?.role || ''] || '#6b7280';
+  const roleColor = ROLE_COLOR[admin?.role || ''] || 'var(--ink-3)';
 
   const allItems = NAV.flatMap(g =>
     (!admin || !hasRole(admin, ...(g.roles as readonly AdminRole[]))) ? [] :
@@ -92,177 +107,182 @@ export default function Sidebar() {
   );
 
   return (
-    <aside style={{
-      position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 50,
-      display: 'flex', background: 'var(--sidebar-bg)',
-    }}>
-      {/* Rail — always 64px */}
-      <div style={{
-        width: 64, flexShrink: 0, display: 'flex', flexDirection: 'column',
-        alignItems: 'center', paddingTop: 14, paddingBottom: 14,
-        borderRight: '1px solid var(--sidebar-border)',
+    <>
+      {/* Mobile backdrop — hidden on desktop via CSS */}
+      {mobileOpen && (
+        <div className="mobile-sidebar-backdrop" onClick={closeMobile} />
+      )}
+
+      <aside className="sidebar" style={{
+        position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 50,
+        display: 'flex', background: 'var(--sidebar-bg)',
       }}>
-        {/* 1. Logo mark */}
+        {/* Rail — always 64px */}
         <div style={{
-          width: 36, height: 36, borderRadius: 10, background: 'var(--accent)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontWeight: 900, fontSize: 14, color: '#fff', letterSpacing: '-0.03em',
-          flexShrink: 0, fontFamily: 'var(--font-mono)',
+          width: 64, flexShrink: 0, display: 'flex', flexDirection: 'column',
+          alignItems: 'center', paddingTop: 14, paddingBottom: 14,
+          borderRight: '1px solid var(--sidebar-border)',
         }}>
-          OM
-        </div>
-
-        {/* 2. Collapse toggle — below logo, 8px gap */}
-        <button
-          onClick={toggle}
-          title={expanded ? 'Collapse sidebar' : 'Expand sidebar'}
-          className="btn btn-icon"
-          style={{ marginTop: 8, color: 'var(--sidebar-text)', transition: 'color 0.15s' }}
-        >
-          {expanded
-            ? <PanelLeftClose size={16} />
-            : <PanelLeftOpen  size={16} />}
-        </button>
-
-        {/* 3. Nav icons (flex:1, overflow-y:auto) — only when collapsed */}
-        {!expanded ? (
+          {/* Logo mark */}
           <div style={{
-            flex: 1, display: 'flex', flexDirection: 'column',
-            gap: 1, width: '100%', padding: '8px 10px 0', overflowY: 'auto',
-          }}>
-            {allItems.map(item => {
-              const Icon = item.icon;
-              const active = isActive(item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  title={item.label}
-                  style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    height: 34, borderRadius: 8, flexShrink: 0,
-                    background: active ? 'rgba(236,98,64,0.15)' : 'transparent',
-                    color: active ? 'var(--sidebar-accent)' : 'var(--sidebar-text)',
-                    transition: 'all 0.15s', textDecoration: 'none',
-                  }}
-                >
-                  <Icon size={16} strokeWidth={active ? 2.2 : 1.7} />
-                </Link>
-              );
-            })}
-          </div>
-        ) : (
-          <div style={{ flex: 1 }} />
-        )}
-
-        {/* 4. Avatar — pinned to bottom of rail */}
-        <div
-          title={admin?.name || ''}
-          style={{
-            width: 28, height: 28, borderRadius: '50%', background: roleColor,
+            width: 36, height: 36, borderRadius: 10, background: 'var(--accent)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 11, fontWeight: 800, color: '#000', flexShrink: 0, cursor: 'default',
-          }}
-        >
-          {initials}
-        </div>
-      </div>
+            fontWeight: 900, fontSize: 14, color: '#fff', letterSpacing: '-0.03em',
+            flexShrink: 0, fontFamily: 'var(--font-mono)',
+          }}>
+            OM
+          </div>
 
-      {/* Panel — slides in/out */}
-      <div style={{
-        width: expanded ? 200 : 0,
-        overflow: 'hidden',
-        transition: 'width 0.2s ease',
-        borderRight: '1px solid var(--sidebar-border)',
-        display: 'flex', flexDirection: 'column', background: 'var(--sidebar-bg)',
-      }}>
-        <div style={{ width: 200, display: 'flex', flexDirection: 'column', height: '100%' }}>
-          {/* 1. "ADMIN CONSOLE" label */}
-          <div style={{ padding: '16px 14px 8px', flexShrink: 0 }}>
+          {/* Collapse toggle */}
+          <button
+            onClick={toggle}
+            title={expanded ? 'Collapse sidebar' : 'Expand sidebar'}
+            className="btn btn-icon"
+            style={{ marginTop: 8, color: 'var(--sidebar-text)', transition: 'color 0.15s' }}
+          >
+            {expanded
+              ? <PanelLeftClose size={16} />
+              : <PanelLeftOpen  size={16} />}
+          </button>
+
+          {/* Nav icons — only when collapsed */}
+          {!expanded ? (
             <div style={{
-              fontSize: 11, fontWeight: 700, color: 'var(--accent)',
-              letterSpacing: '0.1em', textTransform: 'uppercase',
+              flex: 1, display: 'flex', flexDirection: 'column',
+              gap: 1, width: '100%', padding: '8px 10px 0', overflowY: 'auto',
             }}>
-              Admin Console
+              {allItems.map(item => {
+                const Icon = item.icon;
+                const active = isActive(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    title={item.label}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      height: 34, borderRadius: 8, flexShrink: 0,
+                      background: active ? 'var(--sidebar-active-bg)' : 'transparent',
+                      color: active ? 'var(--sidebar-accent)' : 'var(--sidebar-text)',
+                      transition: 'all 0.15s', textDecoration: 'none',
+                    }}
+                  >
+                    <Icon size={16} strokeWidth={active ? 2.2 : 1.7} />
+                  </Link>
+                );
+              })}
+            </div>
+          ) : (
+            <div style={{ flex: 1 }} />
+          )}
+
+          {/* Avatar — pinned to bottom of rail */}
+          <div
+            title={admin?.name || ''}
+            style={{
+              width: 28, height: 28, borderRadius: '50%', background: roleColor,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 11, fontWeight: 800, color: '#000', flexShrink: 0, cursor: 'default',
+            }}
+          >
+            {initials}
+          </div>
+        </div>
+
+        {/* Panel — slides in/out */}
+        <div style={{
+          width: expanded ? 200 : 0,
+          overflow: 'hidden',
+          transition: 'width 0.2s ease',
+          borderRight: '1px solid var(--sidebar-border)',
+          display: 'flex', flexDirection: 'column', background: 'var(--sidebar-bg)',
+        }}>
+          <div style={{ width: 200, display: 'flex', flexDirection: 'column', height: '100%' }}>
+            <div style={{ padding: '16px 14px 8px', flexShrink: 0 }}>
+              <div style={{
+                fontSize: 11, fontWeight: 700, color: 'var(--sidebar-accent)',
+                letterSpacing: '0.1em', textTransform: 'uppercase',
+              }}>
+                Admin Console
+              </div>
+            </div>
+
+            <nav style={{ flex: 1, overflowY: 'auto', padding: '8px 8px' }}>
+              {NAV.map(group => {
+                if (!admin || !hasRole(admin, ...(group.roles as readonly AdminRole[]))) return null;
+                const visible = group.items.filter(
+                  item => !item.roles || hasRole(admin, ...(item.roles as readonly AdminRole[]))
+                );
+                return (
+                  <div key={group.section} style={{ marginBottom: 16 }}>
+                    <div style={{
+                      fontSize: 9, fontWeight: 700, color: 'var(--sidebar-section-label)',
+                      letterSpacing: '0.12em', padding: '0 6px', marginBottom: 3,
+                      textTransform: 'uppercase',
+                    }}>
+                      {group.section}
+                    </div>
+                    {visible.map(item => {
+                      const Icon = item.icon;
+                      const active = isActive(item.href);
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 7,
+                            padding: '6px 7px', borderRadius: 7, marginBottom: 1,
+                            textDecoration: 'none', whiteSpace: 'nowrap',
+                            background: active ? 'var(--sidebar-active-bg)' : 'transparent',
+                            color: active ? 'var(--sidebar-accent)' : 'var(--sidebar-text)',
+                            fontSize: 12, fontWeight: active ? 600 : 400,
+                            transition: 'all 0.15s',
+                          }}
+                        >
+                          <Icon size={13} strokeWidth={active ? 2.2 : 1.7} style={{ flexShrink: 0 }} />
+                          {item.label}
+                          {active && (
+                            <ChevronRight size={10} style={{ marginLeft: 'auto', opacity: 0.5 }} />
+                          )}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </nav>
+
+            {/* User block */}
+            <div style={{
+              borderTop: '1px solid var(--sidebar-border)',
+              padding: 14, flexShrink: 0,
+            }}>
+              {admin && (
+                <div style={{ marginBottom: 8 }}>
+                  <div style={{
+                    fontSize: 12, fontWeight: 600, color: 'var(--sidebar-text-active)',
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    marginBottom: 4,
+                  }}>{admin.name}</div>
+                  <span className="badge badge-neutral">{ROLE_LABEL[admin.role]}</span>
+                </div>
+              )}
+              <button
+                onClick={logout}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6, width: '100%',
+                  padding: '6px 6px', background: 'none', border: 'none',
+                  color: 'var(--sidebar-text)', fontSize: 12, cursor: 'pointer',
+                  borderRadius: 6, fontFamily: 'inherit',
+                }}
+              >
+                <LogOut size={12} />
+                Sign out
+              </button>
             </div>
           </div>
-
-          {/* 2. Nav labels (flex:1, overflow-y:auto) */}
-          <nav style={{ flex: 1, overflowY: 'auto', padding: '8px 8px' }}>
-            {NAV.map(group => {
-              if (!admin || !hasRole(admin, ...(group.roles as readonly AdminRole[]))) return null;
-              const visible = group.items.filter(
-                item => !item.roles || hasRole(admin, ...(item.roles as readonly AdminRole[]))
-              );
-              return (
-                <div key={group.section} style={{ marginBottom: 16 }}>
-                  <div style={{
-                    fontSize: 9, fontWeight: 700, color: 'var(--sidebar-section-label)',
-                    letterSpacing: '0.12em', padding: '0 6px', marginBottom: 3,
-                    textTransform: 'uppercase',
-                  }}>
-                    {group.section}
-                  </div>
-                  {visible.map(item => {
-                    const Icon = item.icon;
-                    const active = isActive(item.href);
-                    return (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: 7,
-                          padding: '6px 7px', borderRadius: 7, marginBottom: 1,
-                          textDecoration: 'none', whiteSpace: 'nowrap',
-                          background: active ? 'rgba(236,98,64,0.12)' : 'transparent',
-                          color: active ? 'var(--sidebar-accent)' : 'var(--sidebar-text)',
-                          fontSize: 12, fontWeight: active ? 600 : 400,
-                          transition: 'all 0.15s',
-                        }}
-                      >
-                        <Icon size={13} strokeWidth={active ? 2.2 : 1.7} style={{ flexShrink: 0 }} />
-                        {item.label}
-                        {active && (
-                          <ChevronRight size={10} style={{ marginLeft: 'auto', opacity: 0.5 }} />
-                        )}
-                      </Link>
-                    );
-                  })}
-                </div>
-              );
-            })}
-          </nav>
-
-          {/* 3. User block: name + role badge + sign out */}
-          <div style={{
-            borderTop: '1px solid var(--sidebar-border)',
-            padding: 14, flexShrink: 0,
-          }}>
-            {admin && (
-              <div style={{ marginBottom: 8 }}>
-                <div style={{
-                  fontSize: 12, fontWeight: 600, color: '#e2e8f0',
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  marginBottom: 4,
-                }}>{admin.name}</div>
-                <span className="badge badge-neutral">{ROLE_LABEL[admin.role]}</span>
-              </div>
-            )}
-            <button
-              onClick={logout}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 6, width: '100%',
-                padding: '6px 6px', background: 'none', border: 'none',
-                color: 'var(--sidebar-text)', fontSize: 12, cursor: 'pointer',
-                borderRadius: 6, fontFamily: 'inherit',
-              }}
-            >
-              <LogOut size={12} />
-              Sign out
-            </button>
-          </div>
         </div>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 }

@@ -1,9 +1,26 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Inter, Source_Serif_4, Geist_Mono } from 'next/font/google';
 import './globals.css';
 
-const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] });
-const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] });
+const inter = Inter({
+  variable: '--font-inter',
+  subsets: ['latin'],
+  display: 'swap',
+});
+
+const sourceSerif = Source_Serif_4({
+  variable: '--font-serif',
+  subsets: ['latin'],
+  style: ['normal', 'italic'],
+  weight: ['300', '400', '600'],
+  display: 'swap',
+});
+
+const geistMono = Geist_Mono({
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://admin.ordermatrix.in'),
@@ -23,9 +40,29 @@ export const metadata: Metadata = {
   },
 };
 
+// Blocking inline script — runs before paint to prevent flash of wrong theme.
+const themeScript = `(function(){
+  try{
+    var KEY='om-theme';
+    function apply(m){document.documentElement.setAttribute('data-mode',m);}
+    var stored=localStorage.getItem(KEY);
+    apply(stored||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(e){
+      if(!localStorage.getItem(KEY))apply(e.matches?'dark':'light');
+    });
+  }catch(e){}
+})();`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full`}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${inter.variable} ${sourceSerif.variable} ${geistMono.variable} h-full`}
+    >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="h-full antialiased">{children}</body>
     </html>
   );
