@@ -202,7 +202,7 @@ export default function CommunicationsPage() {
               </div>
               <div>
                 <label className="form-label">Filter by Plan</label>
-                <select className="admin-input" value={broadcast.filterPlan} onChange={e => setBroadcast(b => ({ ...b, filterPlan: e.target.value }))}>
+                <select className="admin-input" value={broadcast.filterPlan} onChange={e => { setBroadcast(b => ({ ...b, filterPlan: e.target.value })); setPreview(null); }}>
                   {PLANS.map(p => <option key={p} value={p} style={{ textTransform: 'capitalize' }}>{p === 'all' ? 'All Tenants' : p}</option>)}
                 </select>
               </div>
@@ -210,7 +210,7 @@ export default function CommunicationsPage() {
 
             <div style={{ marginBottom: 16 }}>
               <label className="form-label">Filter by Trial</label>
-              <select className="admin-input" style={{ maxWidth: 260 }} value={broadcast.filterTrial} onChange={e => setBroadcast(b => ({ ...b, filterTrial: e.target.value }))}>
+              <select className="admin-input" style={{ maxWidth: 260 }} value={broadcast.filterTrial} onChange={e => { setBroadcast(b => ({ ...b, filterTrial: e.target.value })); setPreview(null); }}>
                 <option value="">No filter</option>
                 <option value="expiring">Trials expiring this week</option>
               </select>
@@ -237,10 +237,15 @@ export default function CommunicationsPage() {
 
             <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
               <button className="btn btn-ghost btn-sm" onClick={previewBroadcast}>Preview Recipients</button>
-              <button className="btn btn-primary" onClick={sendBroadcast} disabled={bcLoading || !broadcast.message || (preview !== null && preview.count === 0)}>
+              <button className="btn btn-primary" onClick={sendBroadcast} disabled={bcLoading || !broadcast.message || preview === null || preview.count === 0}>
                 {bcLoading ? <><span className="spinner" />Sending…</> : 'Send Broadcast'}
               </button>
             </div>
+            {preview === null && (
+              <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--ink-4)' }}>
+                Run Preview Recipients to enable Send.
+              </p>
+            )}
             {preview !== null && preview.count === 0 && (
               <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--red)' }}>
                 No recipients match this segment — adjust filters before sending.
@@ -286,7 +291,7 @@ export default function CommunicationsPage() {
                   { label: 'Growth Plan', plan: 'growth', trial: '' },
                 ].map(seg => (
                   <button key={seg.label} className="btn btn-ghost btn-sm" style={{ display: 'block', width: '100%', textAlign: 'left', marginBottom: 6 }}
-                    onClick={() => { setBroadcast(b => ({ ...b, filterPlan: seg.plan, filterTrial: seg.trial })); }}>
+                    onClick={() => { setBroadcast(b => ({ ...b, filterPlan: seg.plan, filterTrial: seg.trial })); setPreview(null); }}>
                     {seg.label}
                   </button>
                 ))}
