@@ -132,8 +132,8 @@ export default function SalesPage() {
   return (
     <div className="animate-fade-in">
       {noteModal && (
-        <div className="modal-backdrop">
-          <div className="modal-box" style={{ width: 400 }}>
+        <div className="modal-backdrop" onClick={() => { setNoteModal(null); setNoteText(''); }}>
+          <div className="modal-box" onClick={e => e.stopPropagation()} style={{ width: 400 }}>
             <div className="modal-header">
               <h3 className="modal-title">Add Follow-up Note</h3>
               <p className="modal-sub">{noteModal.name}</p>
