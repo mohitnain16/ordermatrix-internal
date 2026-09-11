@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Building2, CreditCard, Users, FileText,
   TrendingUp, Headphones, LogOut, ChevronRight,
   Activity, AlertTriangle, Megaphone, Mail, ShieldCheck, Tag, UserPlus,
-  PanelLeftOpen, PanelLeftClose, MessageCircle,
+  PanelLeftOpen, PanelLeftClose, MessageCircle, GitPullRequest, AlertCircle,
 } from 'lucide-react';
 
 const NAV = [
@@ -30,6 +30,7 @@ const NAV = [
     roles: ['superadmin', 'ops_admin', 'sales'],
     items: [
       { href: '/sales',           label: 'Sales',         icon: TrendingUp },
+      { href: '/sales/pipeline',  label: 'Pipeline',      icon: GitPullRequest },
       { href: '/sales/leads',     label: 'Lead Captures', icon: UserPlus },
       { href: '/lifecycle',       label: 'Lifecycle',     icon: Activity },
       { href: '/billing',         label: 'Billing Ops',   icon: AlertTriangle },
@@ -41,6 +42,7 @@ const NAV = [
     roles: ['superadmin', 'ops_admin', 'support'],
     items: [
       { href: '/support',              label: 'Support',   icon: Headphones },
+      { href: '/support/issues',       label: 'Issues',    icon: AlertCircle },
       { href: '/superadmin/enquiries', label: 'Enquiries', icon: Mail },
     ],
   },
