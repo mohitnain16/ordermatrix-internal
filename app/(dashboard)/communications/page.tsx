@@ -184,7 +184,7 @@ export default function CommunicationsPage() {
       </div>
 
       {tab === 'broadcast' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 24 }}>
+        <div className="broadcast-grid">
           <div className="admin-card">
             <div className="card-header">
               <h3 className="card-title">Compose Broadcast</h3>

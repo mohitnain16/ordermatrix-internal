@@ -1179,3 +1179,14 @@ select.admin-input { cursor: pointer; }
     display: none;
   }
 }
+
+.broadcast-grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 24px;
+}
+@media (max-width: 800px) {
+  .broadcast-grid {
+    grid-template-columns: 1fr;
+  }
+}
