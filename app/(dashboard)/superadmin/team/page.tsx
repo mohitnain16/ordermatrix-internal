@@ -127,7 +127,7 @@ export default function TeamPage() {
                     <tr key={m._id} style={{ opacity: m.isActive ? 1 : 0.5 }}>
                       <td className="cell-main">
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <div style={{ width: 28, height: 28, borderRadius: '50%', background: (ROLE_COLOR as Record<string,string>)[m.role] || '#6b7280', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#000', flexShrink: 0 }}>
+                          <div style={{ width: 28, height: 28, borderRadius: '50%', background: (ROLE_COLOR as Record<string,string>)[m.role] || 'var(--ink-3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#000', flexShrink: 0 }}>
                             {m.name.charAt(0).toUpperCase()}
                           </div>
                           {m.name}
