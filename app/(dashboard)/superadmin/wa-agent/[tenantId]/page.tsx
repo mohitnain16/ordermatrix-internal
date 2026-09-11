@@ -37,7 +37,7 @@ export default function WaAgentTenantPage() {
       </div>
 
       <div className="admin-card" style={{ marginBottom: 24 }}>
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--line)' }}>
           <span className="section-label">Connection Stats</span>
         </div>
         <div style={{ padding: '16px 20px' }}>
@@ -46,11 +46,11 @@ export default function WaAgentTenantPage() {
           {stats && (
             <div style={{ display: 'flex', gap: 40 }}>
               <div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>TOTAL MESSAGES</div>
+                <div style={{ fontSize: 11, color: 'var(--ink-4)', marginBottom: 4 }}>TOTAL MESSAGES</div>
                 <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--font-mono)' }}>{stats.messageCount.toLocaleString()}</div>
               </div>
               <div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>LAST ACTIVITY</div>
+                <div style={{ fontSize: 11, color: 'var(--ink-4)', marginBottom: 4 }}>LAST ACTIVITY</div>
                 <div style={{ fontSize: 14, fontFamily: 'var(--font-mono)' }}>{fmtDate(stats.lastActivityAt)}</div>
               </div>
             </div>
