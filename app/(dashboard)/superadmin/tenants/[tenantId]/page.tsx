@@ -357,6 +357,13 @@ export default function TenantDetailPage() {
             Impersonate
           </button>
           <button
+            className="btn btn-ghost btn-sm"
+            disabled
+            title="Plan overrides coming in the next release"
+          >
+            Override Plan
+          </button>
+          <button
             className="btn btn-danger btn-sm"
             onClick={() => setConfirmAction(tenant.isActive ? ACTIONS.deactivate : ACTIONS.reactivate)}
           >
