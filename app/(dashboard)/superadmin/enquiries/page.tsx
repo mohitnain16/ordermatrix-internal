@@ -205,7 +205,6 @@ export default function EnquiriesPage() {
                   <th>Subject</th>
                   <th>Date</th>
                   <th>Status</th>
-                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -233,18 +232,10 @@ export default function EnquiriesPage() {
                             {e.status}
                           </span>
                         </td>
-                        <td>
-                          <button
-                            className="btn btn-ghost btn-sm"
-                            onClick={ev => { ev.stopPropagation(); openEnquiry(e._id); }}
-                          >
-                            Open →
-                          </button>
-                        </td>
                       </tr>
                     ))}
                     {enquiries.length === 0 && (
-                      <tr><td colSpan={6}>
+                      <tr><td colSpan={5}>
                         <div className="empty-state">
                           <div className="empty-state-icon">✉️</div>
                           <div className="empty-state-title">No enquiries found</div>
