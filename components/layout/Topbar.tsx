@@ -1,9 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { Bell } from 'lucide-react';
+import { Bell, Sun, Moon, AlignLeft } from 'lucide-react';
 import { getAdmin } from '../../lib/auth';
 import { usePageTitle } from '../../lib/page-title-context';
+import { useTheme } from '../../hooks/useTheme';
 
 const SECTION_MAP: Record<string, string> = {
   '/superadmin/tenants': 'Tenants',
@@ -52,13 +53,20 @@ function resolveSection(pathname: string): string {
 function resolveTitle(pathname: string): string {
   if (PAGE_TITLES[pathname]) return PAGE_TITLES[pathname];
   if (pathname.startsWith('/superadmin/tenants/')) return 'Tenant Detail';
+  if (pathname.startsWith('/superadmin/wa-agent/')) return 'WA Agent Detail';
   return '';
+}
+
+function toggleMobileSidebar() {
+  const isOpen = document.body.classList.toggle('mobile-sidebar-open');
+  return isOpen;
 }
 
 export default function Topbar() {
   const pathname = usePathname();
   const [admin, setAdmin] = useState<{ name: string; role: string } | null>(null);
   const { title: contextTitle } = usePageTitle();
+  const { mode, toggle: toggleTheme } = useTheme();
 
   useEffect(() => {
     const a = getAdmin();
@@ -72,7 +80,17 @@ export default function Topbar() {
 
   return (
     <header className="topbar">
-      {/* Breadcrumb / title — left side only */}
+      {/* Mobile hamburger — CSS hides this on desktop */}
+      <button
+        className="mobile-nav-trigger"
+        onClick={toggleMobileSidebar}
+        aria-label="Toggle navigation"
+        title="Toggle navigation"
+      >
+        <AlignLeft size={18} strokeWidth={1.8} />
+      </button>
+
+      {/* Breadcrumb / title — left side */}
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
         {showBreadcrumb && (
           <>
@@ -80,18 +98,41 @@ export default function Topbar() {
             <span style={{ color: 'var(--ink-4)', fontSize: 13 }}>/</span>
           </>
         )}
-        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', letterSpacing: '-0.01em' }}>
+        <span style={{
+          fontSize: 13, fontWeight: 700, color: 'var(--ink)',
+          letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        }}>
           {pageTitle || section}
         </span>
       </div>
 
-      {/* Right: Bell → Avatar → Name → Role badge */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
-        <button style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          width: 32, height: 32, borderRadius: 8, border: 'none',
-          background: 'transparent', cursor: 'pointer', color: 'var(--ink-3)',
-        }}>
+      {/* Right: theme toggle → bell → avatar → name → role */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+        {/* Dark mode toggle */}
+        <button
+          onClick={toggleTheme}
+          title={mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          aria-label={mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            width: 32, height: 32, borderRadius: 8, border: 'none',
+            background: 'transparent', cursor: 'pointer', color: 'var(--ink-3)',
+            transition: 'color 0.15s, background 0.15s',
+          }}
+        >
+          {mode === 'dark'
+            ? <Sun  size={16} strokeWidth={1.8} />
+            : <Moon size={16} strokeWidth={1.8} />}
+        </button>
+
+        <button
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            width: 32, height: 32, borderRadius: 8, border: 'none',
+            background: 'transparent', cursor: 'pointer', color: 'var(--ink-3)',
+          }}
+          aria-label="Notifications"
+        >
           <Bell size={16} strokeWidth={1.8} />
         </button>
 
@@ -104,8 +145,10 @@ export default function Topbar() {
             }}>
               {initials}
             </div>
-            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-2)' }}>{admin.name}</span>
-            <span className="badge badge-neutral" style={{ marginLeft: 6 }}>
+            <span className="topbar-name" style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-2)' }}>
+              {admin.name}
+            </span>
+            <span className="badge badge-neutral topbar-role">
               {ROLE_LABEL[admin.role] || admin.role}
             </span>
           </div>
