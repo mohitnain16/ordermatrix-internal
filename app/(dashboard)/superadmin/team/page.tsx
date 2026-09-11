@@ -35,9 +35,11 @@ export default function TeamPage() {
   const [invite, setInvite]         = useState({ name: '', email: '', password: '', role: 'support' as AssignableRole });
   const [inviting, setInviting]     = useState(false);
 
-  const [editTarget, setEditTarget] = useState<AdminMember | null>(null);
-  const [editRole, setEditRole]     = useState<AssignableRole>('support');
-  const [editing, setEditing]       = useState(false);
+  const [editTarget, setEditTarget]       = useState<AdminMember | null>(null);
+  const [editRole, setEditRole]           = useState<AssignableRole>('support');
+  const [editing, setEditing]             = useState(false);
+  const [confirmMember, setConfirmMember] = useState<AdminMember | null>(null);
+  const [toggling, setToggling]           = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -84,13 +86,20 @@ export default function TeamPage() {
     setEditing(false);
   }
 
-  async function toggleActive(member: AdminMember) {
-    if (!confirm(`${member.isActive ? 'Deactivate' : 'Reactivate'} ${member.name}?`)) return;
+  function toggleActive(member: AdminMember) {
+    setConfirmMember(member);
+  }
+
+  async function doToggle() {
+    if (!confirmMember) return;
+    setToggling(true);
     try {
-      await api.patch(`/admin/team/${member._id}`, { isActive: !member.isActive });
-      toast(`${member.name} ${member.isActive ? 'deactivated' : 'reactivated'}`);
+      await api.patch(`/admin/team/${confirmMember._id}`, { isActive: !confirmMember.isActive });
+      toast(`${confirmMember.name} ${confirmMember.isActive ? 'deactivated' : 'reactivated'}`);
+      setConfirmMember(null);
       load();
     } catch { toast('Failed to update'); }
+    setToggling(false);
   }
 
   return (
@@ -154,6 +163,36 @@ export default function TeamPage() {
           </table>
         </div>
       </div>
+
+      {/* Deactivate / Reactivate confirm */}
+      {confirmMember && (
+        <div className="modal-backdrop" onClick={() => setConfirmMember(null)}>
+          <div className={`modal-box ${confirmMember.isActive ? 'modal-danger' : ''}`} onClick={e => e.stopPropagation()} style={{ width: 400 }}>
+            <div className="modal-header">
+              <div>
+                <div className="modal-title">
+                  {confirmMember.isActive ? 'Deactivate' : 'Reactivate'} {confirmMember.name}?
+                </div>
+                <div className="modal-sub">
+                  {confirmMember.isActive
+                    ? 'They will immediately lose access to this console.'
+                    : 'Their access to this console will be restored.'}
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-ghost btn-sm" onClick={() => setConfirmMember(null)}>Cancel</button>
+              <button
+                className={`btn btn-sm ${confirmMember.isActive ? 'btn-danger' : 'btn-primary'}`}
+                onClick={doToggle}
+                disabled={toggling}
+              >
+                {toggling ? <span className="spinner" /> : confirmMember.isActive ? 'Deactivate' : 'Reactivate'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Invite modal */}
       {showInvite && (

@@ -37,6 +37,10 @@ export default function CommunicationsPage() {
   const [preview, setPreview] = useState<{ count: number; tenants: any[] } | null>(null);
   const [bcLoading, setBcLoading] = useState(false);
   const [bcResult, setBcResult] = useState<any>(null);
+  const [confirmBcLabel, setConfirmBcLabel] = useState<string | null>(null);
+  const [confirmDelId, setConfirmDelId] = useState<string | null>(null);
+  const [confirmBC, setConfirmBC] = useState(false);
+  const [confirmDelId, setConfirmDelId] = useState<string | null>(null);
 
   useEffect(() => { loadAnnouncements(); }, []);
 
@@ -58,11 +62,13 @@ export default function CommunicationsPage() {
     } catch { /**/ }
   }
 
-  async function sendBroadcast() {
+  function sendBroadcast() {
     if (!broadcast.message) return;
-    const count = preview?.count;
-    const label = count !== undefined ? `${count} tenant${count !== 1 ? 's' : ''}` : 'all matching tenants';
-    if (!confirm(`Send broadcast to ${label} via email? This cannot be undone.`)) return;
+    setConfirmBC(true);
+  }
+
+  async function doSendBroadcast() {
+    setConfirmBC(false);
     setBcResult(null);
     setBcLoading(true);
     try {
@@ -95,8 +101,14 @@ export default function CommunicationsPage() {
     } catch { /**/ }
   }
 
-  async function deleteAnnouncement(id: string) {
-    if (!confirm('Delete this announcement?')) return;
+  function deleteAnnouncement(id: string) {
+    setConfirmDelId(id);
+  }
+
+  async function doDeleteAnnouncement() {
+    if (!confirmDelId) return;
+    const id = confirmDelId;
+    setConfirmDelId(null);
     try {
       await api.delete(`/admin/communications/announcements/${id}`);
       setAnnouncements(prev => prev.filter(a => a._id !== id));
@@ -109,8 +121,53 @@ export default function CommunicationsPage() {
     setShowAnnForm(true);
   }
 
+  const bcRecipientLabel = preview?.count !== undefined
+    ? `${preview.count} tenant${preview.count !== 1 ? 's' : ''}`
+    : 'all matching tenants';
+
   return (
     <div className="animate-fade-in">
+
+      {/* Broadcast send confirmation */}
+      {confirmBC && (
+        <div className="modal-backdrop" onClick={() => setConfirmBC(false)}>
+          <div className="modal-box modal-danger" onClick={e => e.stopPropagation()} style={{ width: 420 }}>
+            <div className="modal-header">
+              <div>
+                <div className="modal-title">Send Broadcast?</div>
+                <div className="modal-sub">
+                  This will send to {bcRecipientLabel}. This cannot be undone.
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-ghost btn-sm" onClick={() => setConfirmBC(false)}>Cancel</button>
+              <button className="btn btn-danger btn-sm" onClick={doSendBroadcast} disabled={bcLoading}>
+                {bcLoading ? <><span className="spinner" />Sending…</> : 'Send'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete announcement confirmation */}
+      {confirmDelId && (
+        <div className="modal-backdrop" onClick={() => setConfirmDelId(null)}>
+          <div className="modal-box modal-danger" onClick={e => e.stopPropagation()} style={{ width: 380 }}>
+            <div className="modal-header">
+              <div>
+                <div className="modal-title">Delete Announcement?</div>
+                <div className="modal-sub">This will remove it immediately for all tenants.</div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-ghost btn-sm" onClick={() => setConfirmDelId(null)}>Cancel</button>
+              <button className="btn btn-danger btn-sm" onClick={doDeleteAnnouncement}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="page-header">
         <h1 className="page-title">Communications</h1>
         <p className="page-sub">Broadcast messages and in-app announcements</p>
