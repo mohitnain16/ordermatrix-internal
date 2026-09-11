@@ -251,10 +251,12 @@ export default function EnquiriesPage() {
         </div>
 
         {pages > 1 && (
-          <div className="flex-center gap-2" style={{ marginTop: 12, flexShrink: 0 }}>
-            <button className="btn btn-ghost btn-sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>← Prev</button>
-            <span style={{ fontSize: 13, color: 'var(--ink-3)' }}>Page {page} of {pages}</span>
-            <button className="btn btn-ghost btn-sm" disabled={page >= pages} onClick={() => setPage(p => p + 1)}>Next →</button>
+          <div className="pagination" style={{ flexShrink: 0 }}>
+            <span className="pagination-info">Page {page} of {pages}</span>
+            <div className="pagination-controls">
+              <button className="btn btn-ghost btn-sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>← Prev</button>
+              <button className="btn btn-ghost btn-sm" disabled={page >= pages} onClick={() => setPage(p => p + 1)}>Next →</button>
+            </div>
           </div>
         )}
       </div>
