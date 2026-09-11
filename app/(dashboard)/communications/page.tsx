@@ -37,6 +37,8 @@ export default function CommunicationsPage() {
   const [preview, setPreview] = useState<{ count: number; tenants: any[] } | null>(null);
   const [bcLoading, setBcLoading] = useState(false);
   const [bcResult, setBcResult] = useState<any>(null);
+  const [confirmBC, setConfirmBC] = useState(false);
+  const [confirmDelId, setConfirmDelId] = useState<string | null>(null);
 
   useEffect(() => { loadAnnouncements(); }, []);
 
@@ -58,11 +60,13 @@ export default function CommunicationsPage() {
     } catch { /**/ }
   }
 
-  async function sendBroadcast() {
+  function sendBroadcast() {
     if (!broadcast.message) return;
-    const count = preview?.count;
-    const label = count !== undefined ? `${count} tenant${count !== 1 ? 's' : ''}` : 'all matching tenants';
-    if (!confirm(`Send broadcast to ${label} via email? This cannot be undone.`)) return;
+    setConfirmBC(true);
+  }
+
+  async function doSendBroadcast() {
+    setConfirmBC(false);
     setBcResult(null);
     setBcLoading(true);
     try {
@@ -95,8 +99,14 @@ export default function CommunicationsPage() {
     } catch { /**/ }
   }
 
-  async function deleteAnnouncement(id: string) {
-    if (!confirm('Delete this announcement?')) return;
+  function deleteAnnouncement(id: string) {
+    setConfirmDelId(id);
+  }
+
+  async function doDeleteAnnouncement() {
+    if (!confirmDelId) return;
+    const id = confirmDelId;
+    setConfirmDelId(null);
     try {
       await api.delete(`/admin/communications/announcements/${id}`);
       setAnnouncements(prev => prev.filter(a => a._id !== id));
@@ -109,8 +119,53 @@ export default function CommunicationsPage() {
     setShowAnnForm(true);
   }
 
+  const bcRecipientLabel = preview?.count !== undefined
+    ? `${preview.count} tenant${preview.count !== 1 ? 's' : ''}`
+    : 'all matching tenants';
+
   return (
     <div className="animate-fade-in">
+
+      {/* Broadcast send confirmation */}
+      {confirmBC && (
+        <div className="modal-backdrop" onClick={() => setConfirmBC(false)}>
+          <div className="modal-box modal-danger" onClick={e => e.stopPropagation()} style={{ width: 420 }}>
+            <div className="modal-header">
+              <div>
+                <div className="modal-title">Send Broadcast?</div>
+                <div className="modal-sub">
+                  This will send to {bcRecipientLabel}. This cannot be undone.
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-ghost btn-sm" onClick={() => setConfirmBC(false)}>Cancel</button>
+              <button className="btn btn-danger btn-sm" onClick={doSendBroadcast} disabled={bcLoading}>
+                {bcLoading ? <><span className="spinner" />Sending…</> : 'Send'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete announcement confirmation */}
+      {confirmDelId && (
+        <div className="modal-backdrop" onClick={() => setConfirmDelId(null)}>
+          <div className="modal-box modal-danger" onClick={e => e.stopPropagation()} style={{ width: 380 }}>
+            <div className="modal-header">
+              <div>
+                <div className="modal-title">Delete Announcement?</div>
+                <div className="modal-sub">This will remove it immediately for all tenants.</div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-ghost btn-sm" onClick={() => setConfirmDelId(null)}>Cancel</button>
+              <button className="btn btn-danger btn-sm" onClick={doDeleteAnnouncement}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="page-header">
         <h1 className="page-title">Communications</h1>
         <p className="page-sub">Broadcast messages and in-app announcements</p>
@@ -129,7 +184,7 @@ export default function CommunicationsPage() {
       </div>
 
       {tab === 'broadcast' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 24 }}>
+        <div className="broadcast-grid">
           <div className="admin-card">
             <div className="card-header">
               <h3 className="card-title">Compose Broadcast</h3>
@@ -141,13 +196,13 @@ export default function CommunicationsPage() {
                 <label className="form-label">Channel</label>
                 <select className="admin-input" value={broadcast.channel} onChange={e => setBroadcast(b => ({ ...b, channel: e.target.value }))}>
                   <option value="email">Email</option>
-                  <option value="whatsapp">WhatsApp</option>
-                  <option value="both">Email + WhatsApp</option>
+                  <option value="whatsapp" disabled>WhatsApp (coming soon)</option>
+                  <option value="both" disabled>Email + WhatsApp (coming soon)</option>
                 </select>
               </div>
               <div>
                 <label className="form-label">Filter by Plan</label>
-                <select className="admin-input" value={broadcast.filterPlan} onChange={e => setBroadcast(b => ({ ...b, filterPlan: e.target.value }))}>
+                <select className="admin-input" value={broadcast.filterPlan} onChange={e => { setBroadcast(b => ({ ...b, filterPlan: e.target.value })); setPreview(null); }}>
                   {PLANS.map(p => <option key={p} value={p} style={{ textTransform: 'capitalize' }}>{p === 'all' ? 'All Tenants' : p}</option>)}
                 </select>
               </div>
@@ -155,7 +210,7 @@ export default function CommunicationsPage() {
 
             <div style={{ marginBottom: 16 }}>
               <label className="form-label">Filter by Trial</label>
-              <select className="admin-input" style={{ maxWidth: 260 }} value={broadcast.filterTrial} onChange={e => setBroadcast(b => ({ ...b, filterTrial: e.target.value }))}>
+              <select className="admin-input" style={{ maxWidth: 260 }} value={broadcast.filterTrial} onChange={e => { setBroadcast(b => ({ ...b, filterTrial: e.target.value })); setPreview(null); }}>
                 <option value="">No filter</option>
                 <option value="expiring">Trials expiring this week</option>
               </select>
@@ -182,21 +237,20 @@ export default function CommunicationsPage() {
 
             <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
               <button className="btn btn-ghost btn-sm" onClick={previewBroadcast}>Preview Recipients</button>
-              <button className="btn btn-primary" onClick={sendBroadcast} disabled={bcLoading || !broadcast.message || (preview !== null && preview.count === 0)}>
+              <button className="btn btn-primary" onClick={sendBroadcast} disabled={bcLoading || !broadcast.message || preview === null || preview.count === 0}>
                 {bcLoading ? <><span className="spinner" />Sending…</> : 'Send Broadcast'}
               </button>
             </div>
+            {preview === null && (
+              <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--ink-4)' }}>
+                Run Preview Recipients to enable Send.
+              </p>
+            )}
             {preview !== null && preview.count === 0 && (
               <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--red)' }}>
                 No recipients match this segment — adjust filters before sending.
               </p>
             )}
-            {broadcast.channel !== 'email' && (
-              <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--ink-4)' }}>
-                WhatsApp broadcast is pending template approval — email only for now.
-              </p>
-            )}
-
             {bcResult && (
               <div style={{ marginTop: 16, padding: '12px 16px', background: bcResult.failed > 0 && bcResult.emailSent === 0 ? 'rgba(239,68,68,0.08)' : 'rgba(52,211,153,0.1)', border: `1px solid ${bcResult.failed > 0 && bcResult.emailSent === 0 ? 'rgba(239,68,68,0.3)' : 'rgba(52,211,153,0.3)'}`, borderRadius: 8 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: bcResult.failed > 0 && bcResult.emailSent === 0 ? 'var(--red)' : 'var(--green)', marginBottom: bcResult.failed > 0 ? 4 : 0 }}>{bcResult.message}</div>
@@ -237,7 +291,7 @@ export default function CommunicationsPage() {
                   { label: 'Growth Plan', plan: 'growth', trial: '' },
                 ].map(seg => (
                   <button key={seg.label} className="btn btn-ghost btn-sm" style={{ display: 'block', width: '100%', textAlign: 'left', marginBottom: 6 }}
-                    onClick={() => { setBroadcast(b => ({ ...b, filterPlan: seg.plan, filterTrial: seg.trial })); }}>
+                    onClick={() => { setBroadcast(b => ({ ...b, filterPlan: seg.plan, filterTrial: seg.trial })); setPreview(null); }}>
                     {seg.label}
                   </button>
                 ))}

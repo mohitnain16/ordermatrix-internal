@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Calendar, Settings, UserCheck, ShieldOff } from 'lucide-react';
+import { Calendar, UserCheck, ShieldOff } from 'lucide-react';
 import api from '../../../../../lib/api';
 import { getAdmin, hasRole } from '../../../../../lib/auth';
 import { usePageTitle } from '../../../../../lib/page-title-context';
@@ -352,13 +352,16 @@ export default function TenantDetailPage() {
             <Calendar size={14} style={{ marginRight: 5 }} />
             Extend Trial
           </button>
-          <button className="btn btn-ghost btn-sm" onClick={() => toast('Override Plan — coming soon')}>
-            <Settings size={14} style={{ marginRight: 5 }} />
-            Override Plan
-          </button>
           <button className="btn btn-outline btn-sm" onClick={() => setConfirmAction(ACTIONS.impersonate)}>
             <UserCheck size={14} style={{ marginRight: 5 }} />
             Impersonate
+          </button>
+          <button
+            className="btn btn-ghost btn-sm"
+            disabled
+            title="Plan overrides coming in the next release"
+          >
+            Override Plan
           </button>
           <button
             className="btn btn-danger btn-sm"

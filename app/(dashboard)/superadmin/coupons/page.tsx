@@ -95,8 +95,8 @@ export default function CouponsPage() {
       {toastErr && <div className="toast toast-error">{toastErr}</div>}
 
       {showCreate && (
-        <div className="modal-backdrop">
-          <div className="modal-box" style={{ width: 440 }}>
+        <div className="modal-backdrop" onClick={() => { setShowCreate(false); setForm(EMPTY_FORM); }}>
+          <div className="modal-box" onClick={e => e.stopPropagation()} style={{ width: 440 }}>
             <div className="modal-header">
               <div className="modal-title">Create Coupon</div>
               <button onClick={() => { setShowCreate(false); setForm(EMPTY_FORM); }} className="btn btn-ghost btn-sm btn-icon">✕</button>

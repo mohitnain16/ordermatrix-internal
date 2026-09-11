@@ -91,8 +91,8 @@ export default function BillingOpsPage() {
   return (
     <div className="animate-fade-in">
       {dunningModal && (
-        <div className="modal-backdrop">
-          <div className="modal-box">
+        <div className="modal-backdrop" onClick={() => setDunningModal(null)}>
+          <div className="modal-box" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">Send Dunning</h3>
               <p className="modal-sub">{dunningModal.name}</p>

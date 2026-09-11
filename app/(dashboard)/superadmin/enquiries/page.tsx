@@ -144,10 +144,10 @@ export default function EnquiriesPage() {
   const pages = Math.ceil(total / LIMIT);
 
   return (
-    <div className="animate-fade-in" style={{ display: 'flex', gap: 20, height: 'calc(100vh - 80px)', overflow: 'hidden' }}>
+    <div className="animate-fade-in enquiries-shell">
 
       {/* ── Left: List ─────────────────────────────────────────────── */}
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div className="enquiries-list">
 
         {/* Header */}
         <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
@@ -205,7 +205,6 @@ export default function EnquiriesPage() {
                   <th>Subject</th>
                   <th>Date</th>
                   <th>Status</th>
-                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -233,18 +232,10 @@ export default function EnquiriesPage() {
                             {e.status}
                           </span>
                         </td>
-                        <td>
-                          <button
-                            className="btn btn-ghost btn-sm"
-                            onClick={ev => { ev.stopPropagation(); openEnquiry(e._id); }}
-                          >
-                            Open →
-                          </button>
-                        </td>
                       </tr>
                     ))}
                     {enquiries.length === 0 && (
-                      <tr><td colSpan={6}>
+                      <tr><td colSpan={5}>
                         <div className="empty-state">
                           <div className="empty-state-icon">✉️</div>
                           <div className="empty-state-title">No enquiries found</div>
@@ -260,20 +251,18 @@ export default function EnquiriesPage() {
         </div>
 
         {pages > 1 && (
-          <div className="flex-center gap-2" style={{ marginTop: 12, flexShrink: 0 }}>
-            <button className="btn btn-ghost btn-sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>← Prev</button>
-            <span style={{ fontSize: 13, color: 'var(--ink-3)' }}>Page {page} of {pages}</span>
-            <button className="btn btn-ghost btn-sm" disabled={page >= pages} onClick={() => setPage(p => p + 1)}>Next →</button>
+          <div className="pagination" style={{ flexShrink: 0 }}>
+            <span className="pagination-info">Page {page} of {pages}</span>
+            <div className="pagination-controls">
+              <button className="btn btn-ghost btn-sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>← Prev</button>
+              <button className="btn btn-ghost btn-sm" disabled={page >= pages} onClick={() => setPage(p => p + 1)}>Next →</button>
+            </div>
           </div>
         )}
       </div>
 
       {/* ── Right: Detail Panel ────────────────────────────────────── */}
-      <div style={{
-        width: 440, flexShrink: 0,
-        borderLeft: '1px solid var(--line)', paddingLeft: 20,
-        overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16,
-      }}>
+      <div className={`enquiries-detail${!selected && !detailLoading ? ' enquiries-detail-empty' : ''}`}>
 
         {/* Skeleton while detail loads */}
         {detailLoading && (

@@ -1,8 +1,7 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import api from '../../../lib/api';
-import { SkRows } from '../../../components/ui/Skeleton';
 
 const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '—';
 
@@ -25,25 +24,11 @@ const PLAN_BADGE: Record<string, string> = {
 export default function SupportPage() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<any[]>([]);
-  const [issues, setIssues] = useState<any>(null);
   const [searching, setSearching] = useState(false);
-  const [issuesLoading, setIssuesLoading] = useState(true);
-  const [tab, setTab] = useState<'lookup' | 'issues'>('lookup');
   const [notesTenantId, setNotesTenantId] = useState<string | null>(null);
   const [notesTenantName, setNotesTenantName] = useState('');
   const [tenantNotes, setTenantNotes] = useState<any[]>([]);
   const [notesLoading, setNotesLoading] = useState(false);
-
-  useEffect(() => { loadIssues(); }, []);
-
-  async function loadIssues() {
-    setIssuesLoading(true);
-    try {
-      const res = await api.get('/admin/support/issues');
-      setIssues(res.data);
-    } catch { /**/ }
-    setIssuesLoading(false);
-  }
 
   async function loadNotes(tenantId: string, tenantName: string) {
     if (notesTenantId === tenantId) { setNotesTenantId(null); return; }
@@ -76,16 +61,12 @@ export default function SupportPage() {
       </div>
 
       <div className="tab-bar">
-        {(['lookup', 'issues'] as const).map(t => (
-          <button key={t} onClick={() => setTab(t)} className={`tab-btn${tab === t ? ' active' : ''}`}>
-            {t === 'lookup' ? 'Tenant Lookup' : `Issues ${issues ? `(${(issues.expiredTrials?.length || 0) + (issues.pastDue?.length || 0)})` : ''}`}
-          </button>
-        ))}
+        <span className="tab-btn active">Tenant Lookup</span>
+        <Link href="/support/issues" className="tab-btn">Issues</Link>
       </div>
 
-      {tab === 'lookup' && (
-        <>
-          <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
+      <>
+        <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
             <input
               className="admin-input"
               style={{ maxWidth: 360 }}
@@ -163,71 +144,7 @@ export default function SupportPage() {
               <div className="empty-state-sub">Try a different name, email, or phone number</div>
             </div>
           )}
-        </>
-      )}
-
-      {tab === 'issues' && issuesLoading && (
-        <div className="admin-card">
-          <table className="admin-table">
-            <thead><tr><th>Business</th><th>Email</th><th>Trial Ended</th><th>Orders</th><th></th></tr></thead>
-            <tbody><SkRows rows={5} cols={5} /></tbody>
-          </table>
-        </div>
-      )}
-      {tab === 'issues' && !issuesLoading && issues && (
-        <div>
-          {/* Expired Trials */}
-          <div style={{ marginBottom: 24 }}>
-            <div className="card-title" style={{ color: 'var(--red)', marginBottom: 12 }}>
-              Expired Trials ({issues.expiredTrials?.length || 0})
-            </div>
-            {issues.expiredTrials?.length > 0 ? (
-              <div className="admin-card">
-                <table className="admin-table">
-                  <thead><tr><th>Business</th><th>Email</th><th>Trial Ended</th><th>Orders</th><th></th></tr></thead>
-                  <tbody>
-                    {issues.expiredTrials.map((t: any) => (
-                      <tr key={t._id}>
-                        <td className="cell-main">{t.businessName}</td>
-                        <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{t.email}</td>
-                        <td style={{ fontSize: 12, color: 'var(--red)' }}>{fmtDate(t.trialEndsAt)}</td>
-                        <td style={{ fontFamily: 'var(--font-mono)' }}>{t.ordersThisMonth}</td>
-                        <td><Link href={`/superadmin/tenants/${t._id}`} className="btn btn-ghost btn-sm">View →</Link></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : <div style={{ color: 'var(--ink-4)', fontSize: 13 }}>No expired trials ✓</div>}
-          </div>
-
-          {/* Past Due */}
-          <div>
-            <div className="card-title" style={{ color: 'var(--gold)', marginBottom: 12 }}>
-              Past Due Subscriptions ({issues.pastDue?.length || 0})
-            </div>
-            {issues.pastDue?.length > 0 ? (
-              <div className="admin-card">
-                <table className="admin-table">
-                  <thead><tr><th>Business</th><th>Email</th><th>Plan</th><th></th></tr></thead>
-                  <tbody>
-                    {issues.pastDue.map((s: any) => (
-                      <tr key={s._id}>
-                        <td className="cell-main">{s.tenantId?.businessName}</td>
-                        <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{s.tenantId?.email}</td>
-                        <td style={{ textTransform: 'capitalize' }}>{s.planId}</td>
-                        <td>
-                          {s.tenantId?._id && <Link href={`/superadmin/tenants/${s.tenantId._id}`} className="btn btn-ghost btn-sm">View →</Link>}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : <div style={{ color: 'var(--ink-4)', fontSize: 13 }}>No past due subscriptions ✓</div>}
-          </div>
-        </div>
-      )}
+      </>
     </div>
   );
 }

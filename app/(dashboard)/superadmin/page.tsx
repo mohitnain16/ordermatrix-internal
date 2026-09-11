@@ -26,7 +26,7 @@ function StatCard({ label, value, sub, color = 'var(--ink)' }: { label: string; 
 }
 
 const PLAN_COLOR: Record<string, string> = {
-  trial: '#9ca3af', starter: '#6b7280', growth: '#16a34a', scale: '#7c3aed', pro: '#b45309',
+  trial: 'var(--ink-4)', starter: 'var(--ink-3)', growth: 'var(--green)', scale: 'var(--purple-text)', pro: 'var(--gold)',
 };
 
 export default function PulsePage() {
@@ -123,7 +123,7 @@ export default function PulsePage() {
             {data.planBreakdown.map(p => (
               <div key={p._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: PLAN_COLOR[p._id] || '#9ca3af' }} />
+                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: PLAN_COLOR[p._id] || 'var(--ink-3)' }} />
                   <span style={{ fontSize: 13, color: 'var(--ink-2)', textTransform: 'capitalize' }}>{p._id}</span>
                 </div>
                 <span style={{ fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--ink)' }}>{p.count}</span>
