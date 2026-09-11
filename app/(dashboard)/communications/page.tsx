@@ -196,8 +196,8 @@ export default function CommunicationsPage() {
                 <label className="form-label">Channel</label>
                 <select className="admin-input" value={broadcast.channel} onChange={e => setBroadcast(b => ({ ...b, channel: e.target.value }))}>
                   <option value="email">Email</option>
-                  <option value="whatsapp">WhatsApp</option>
-                  <option value="both">Email + WhatsApp</option>
+                  <option value="whatsapp" disabled>WhatsApp (coming soon)</option>
+                  <option value="both" disabled>Email + WhatsApp (coming soon)</option>
                 </select>
               </div>
               <div>
@@ -246,12 +246,6 @@ export default function CommunicationsPage() {
                 No recipients match this segment — adjust filters before sending.
               </p>
             )}
-            {broadcast.channel !== 'email' && (
-              <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--ink-4)' }}>
-                WhatsApp broadcast is pending template approval — email only for now.
-              </p>
-            )}
-
             {bcResult && (
               <div style={{ marginTop: 16, padding: '12px 16px', background: bcResult.failed > 0 && bcResult.emailSent === 0 ? 'rgba(239,68,68,0.08)' : 'rgba(52,211,153,0.1)', border: `1px solid ${bcResult.failed > 0 && bcResult.emailSent === 0 ? 'rgba(239,68,68,0.3)' : 'rgba(52,211,153,0.3)'}`, borderRadius: 8 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: bcResult.failed > 0 && bcResult.emailSent === 0 ? 'var(--red)' : 'var(--green)', marginBottom: bcResult.failed > 0 ? 4 : 0 }}>{bcResult.message}</div>
