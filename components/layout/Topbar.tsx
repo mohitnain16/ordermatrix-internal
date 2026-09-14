@@ -99,7 +99,7 @@ export default function Topbar() {
           </>
         )}
         <span style={{
-          fontSize: 13, fontWeight: 700, color: 'var(--ink)',
+          fontSize: 13, fontWeight: 600, color: 'var(--ink)',
           letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>
           {pageTitle || section}
@@ -141,7 +141,7 @@ export default function Topbar() {
             <div style={{
               width: 32, height: 32, borderRadius: '50%', background: 'var(--accent)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 12, fontWeight: 700, color: '#fff', flexShrink: 0,
+              fontSize: 12, fontWeight: 600, color: '#fff', flexShrink: 0,
             }}>
               {initials}
             </div>
