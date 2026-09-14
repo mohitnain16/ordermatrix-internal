@@ -1,18 +1,18 @@
 import type { Metadata } from 'next';
-import { Inter, Source_Serif_4, Geist_Mono } from 'next/font/google';
+import { Bricolage_Grotesque, DM_Sans, Geist_Mono } from 'next/font/google';
 import './globals.css';
 
-const inter = Inter({
-  variable: '--font-inter',
+const bricolage = Bricolage_Grotesque({
+  variable: '--font-bricolage',
   subsets: ['latin'],
+  weight: ['400', '500', '600'],
   display: 'swap',
 });
 
-const sourceSerif = Source_Serif_4({
-  variable: '--font-serif',
+const dmSans = DM_Sans({
+  variable: '--font-dm-sans',
   subsets: ['latin'],
-  style: ['normal', 'italic'],
-  weight: ['300', '400', '600'],
+  weight: ['400', '500', '600'],
   display: 'swap',
 });
 
@@ -58,7 +58,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${inter.variable} ${sourceSerif.variable} ${geistMono.variable} h-full`}
+      className={`${bricolage.variable} ${dmSans.variable} ${geistMono.variable} h-full`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
