@@ -175,7 +175,7 @@ export default function EnquiriesPage() {
             >
               {s}
               {s === 'new' && statusCounts.new > 0 && (
-                <span style={{ marginLeft: 4, background: 'var(--blue)', color: '#fff', borderRadius: 10, padding: '0 5px', fontSize: 10, fontWeight: 700 }}>
+                <span style={{ marginLeft: 4, background: 'var(--accent)', color: '#fff', borderRadius: 10, padding: '0 5px', fontSize: 10, fontWeight: 600 }}>
                   {statusCounts.new}
                 </span>
               )}
