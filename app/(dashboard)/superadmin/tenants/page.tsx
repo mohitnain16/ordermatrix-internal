@@ -7,7 +7,7 @@ import { SkRows } from '../../../../components/ui/Skeleton';
 const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
 const PLAN_BADGE: Record<string, string> = {
-  trial: 'badge-gray', starter: 'badge-gray', growth: 'badge-green', scale: 'badge-purple', pro: 'badge-gold',
+  trial: 'badge-gray', free: 'badge-gray', starter: 'badge-gray', growth: 'badge-green', pro: 'badge-gold',
 };
 
 interface Tenant { _id: string; businessName: string; email: string; phone: string; planId: string; isActive: boolean; ordersThisMonth: number; createdAt: string; category: string; }
@@ -55,7 +55,7 @@ export default function TenantsPage() {
         />
         <select className="admin-input" style={{ maxWidth: 140 }} value={plan} onChange={e => { setPlan(e.target.value); setPage(1); }}>
           <option value="">All Plans</option>
-          {['trial','starter','growth','scale','pro'].map(p => <option key={p} value={p}>{p}</option>)}
+          {['trial','free','starter','growth','pro'].map(p => <option key={p} value={p}>{p}</option>)}
         </select>
         <button className="btn btn-ghost btn-sm" onClick={load}>Refresh</button>
       </div>

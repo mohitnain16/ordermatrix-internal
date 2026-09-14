@@ -22,7 +22,7 @@ function TrendTooltip({ active, payload, label }: { active?: boolean; payload?: 
   const activeCount = payload[0]?.payload?.activeCount ?? 0;
   return (
     <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 8, padding: '10px 14px', fontSize: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
-      <div style={{ fontWeight: 700, marginBottom: 6, color: 'var(--ink-3)' }}>{label ? fmtDate(label) : ''}</div>
+      <div style={{ fontWeight: 600, marginBottom: 6, color: 'var(--ink-3)' }}>{label ? fmtDate(label) : ''}</div>
       <div style={{ color: 'var(--accent)', marginBottom: 2 }}>MRR: {fmt(mrr)}</div>
       <div style={{ color: 'var(--blue)', marginBottom: 4 }}>ARR: {fmt(arr)}</div>
       <div style={{ color: 'var(--ink-4)' }}>Active paid: {activeCount}</div>
@@ -288,7 +288,7 @@ export default function SalesPage() {
                     {leads.map(l => (
                       <tr key={l._id}>
                         <td>
-                          <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: 15, color: scoreColor(l.activityScore) }}>
+                          <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, fontSize: 15, color: scoreColor(l.activityScore) }}>
                             {l.activityScore}
                           </span>
                         </td>

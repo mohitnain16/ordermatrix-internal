@@ -129,7 +129,7 @@ export default function Sidebar() {
           <div style={{
             width: 36, height: 36, borderRadius: 10, background: 'var(--accent)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontWeight: 900, fontSize: 14, color: '#fff', letterSpacing: '-0.03em',
+            fontWeight: 600, fontSize: 14, color: '#fff', letterSpacing: '-0.03em',
             flexShrink: 0, fontFamily: 'var(--font-mono)',
           }}>
             OM
@@ -184,7 +184,7 @@ export default function Sidebar() {
             style={{
               width: 28, height: 28, borderRadius: '50%', background: roleColor,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 11, fontWeight: 800, color: '#000', flexShrink: 0, cursor: 'default',
+              fontSize: 11, fontWeight: 600, color: '#fff', flexShrink: 0, cursor: 'default',
             }}
           >
             {initials}
@@ -202,7 +202,7 @@ export default function Sidebar() {
           <div style={{ width: 200, display: 'flex', flexDirection: 'column', height: '100%' }}>
             <div style={{ padding: '16px 14px 8px', flexShrink: 0 }}>
               <div style={{
-                fontSize: 11, fontWeight: 700, color: 'var(--sidebar-accent)',
+                fontSize: 11, fontWeight: 600, color: 'var(--sidebar-accent)',
                 letterSpacing: '0.1em', textTransform: 'uppercase',
               }}>
                 Admin Console
@@ -218,7 +218,7 @@ export default function Sidebar() {
                 return (
                   <div key={group.section} style={{ marginBottom: 16 }}>
                     <div style={{
-                      fontSize: 9, fontWeight: 700, color: 'var(--sidebar-section-label)',
+                      fontSize: 9, fontWeight: 600, color: 'var(--sidebar-section-label)',
                       letterSpacing: '0.12em', padding: '0 6px', marginBottom: 3,
                       textTransform: 'uppercase',
                     }}>

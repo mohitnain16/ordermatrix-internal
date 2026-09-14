@@ -162,7 +162,7 @@ export default function SalesPipelinePage() {
                           {t.daysLeft}d
                         </span>
                       </td>
-                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: (t.lead?.activityScore || 0) >= 70 ? 'var(--green)' : (t.lead?.activityScore || 0) >= 40 ? 'var(--gold)' : 'var(--ink-4)' }}>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: (t.lead?.activityScore || 0) >= 70 ? 'var(--green)' : (t.lead?.activityScore || 0) >= 40 ? 'var(--gold)' : 'var(--ink-4)' }}>
                         {t.lead?.activityScore ?? '—'}
                       </td>
                       <td>

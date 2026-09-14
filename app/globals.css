@@ -2,12 +2,12 @@
 
 :root {
   /* Typography */
-  --font-sans:    var(--font-inter), 'Helvetica Neue', system-ui, sans-serif;
-  --font-heading: var(--font-serif), Georgia, serif;
+  --font-sans:    var(--font-dm-sans), 'Helvetica Neue', system-ui, sans-serif;
+  --font-heading: var(--font-bricolage), system-ui, sans-serif;
   --font-mono:    var(--font-geist-mono), 'JetBrains Mono', monospace;
 
   /* Page */
-  --page-bg: #F4F3EE;   /* Pampas */
+  --page-bg: #F4F1EB;   /* Canvas */
 
   /* Sidebar — always dark, never flips */
   --sidebar-bg: #0b0d10;
@@ -16,8 +16,8 @@
   --sidebar-panel-width: 200px;
   --sidebar-text: #5a6072;
   --sidebar-text-active: #ffffff;
-  --sidebar-accent: #D97A56;    /* dark-adapted Crail — legible on dark bg */
-  --sidebar-active-bg: rgba(193,95,60,0.18);
+  --sidebar-accent: #F07A5A;    /* dark-adapted coral — legible on dark bg */
+  --sidebar-active-bg: rgba(236,98,64,0.18);
   --sidebar-section-label: #2e3240;
 
   /* Surfaces */
@@ -27,7 +27,7 @@
   --surface-hover: #F4F3EE;
 
   /* Ink scale */
-  --ink: #2A2724;
+  --ink: #0B0D10;
   --ink-2: #2d3142;
   --ink-3: #6B655D;
   --ink-4: #B1ADA1;
@@ -36,11 +36,11 @@
   --line: rgba(42,39,36,0.10);
   --line-2: rgba(42,39,36,0.18);
 
-  /* Brand — Crail terracotta */
-  --accent: #C15F3C;
-  --accent-hover: #A84E2F;
-  --accent-soft: #F3E3DA;
-  --accent-text: #C15F3C;
+  /* Brand — Coral primary */
+  --accent: #EC6240;
+  --accent-hover: #C94E2F;
+  --accent-soft: #FDEEE9;
+  --accent-text: #EC6240;
 
   /* Semantic */
   --green: #16a34a;
@@ -74,7 +74,7 @@
   /* Shape */
   --radius: 12px;
   --radius-sm: 8px;
-  --radius-xs: 5px;
+  --radius-xs: 4px;
 
   /* Shadow */
   --shadow-sm: 0 1px 2px rgba(0,0,0,0.06);
@@ -86,7 +86,7 @@
 
   /* Topbar */
   --topbar-height: 56px;
-  --topbar-bg: #ffffff;
+  --topbar-bg: #F4F1EB;
   --topbar-border: var(--line);
 }
 
@@ -161,8 +161,9 @@ body.sidebar-expanded .topbar {
 
 .page-title {
   font-size: 22px;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--ink);
+  font-family: var(--font-heading);
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
@@ -193,7 +194,7 @@ body.sidebar-expanded .topbar {
 
 .card-title {
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--ink);
   letter-spacing: -0.01em;
 }
@@ -235,7 +236,7 @@ body.sidebar-expanded .topbar {
 
 .stat-label {
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--ink-4);
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -243,7 +244,7 @@ body.sidebar-expanded .topbar {
 
 .stat-value {
   font-size: 28px;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--ink);
   font-family: var(--font-mono);
   letter-spacing: -0.03em;
@@ -258,7 +259,7 @@ body.sidebar-expanded .topbar {
 .order-count {
   font-size: 22px;
   font-variant-numeric: normal;
-  font-family: var(--font-geist-sans);
+  font-family: var(--font-sans);
 }
 
 .stat-delta {
@@ -475,7 +476,7 @@ select.admin-input { cursor: pointer; }
   border-bottom: 1px solid var(--line);
 }
 
-.modal-title { font-size: 16px; font-weight: 700; color: var(--ink); letter-spacing: -0.01em; }
+.modal-title { font-size: 16px; font-weight: 600; color: var(--ink); letter-spacing: -0.01em; }
 .modal-sub   { font-size: 12px; color: var(--ink-3); margin-top: 3px; }
 
 .modal-body {
@@ -592,12 +593,12 @@ select.admin-input { cursor: pointer; }
   color: var(--ink-4);
 }
 
-.empty-title { font-size: 15px; font-weight: 700; color: var(--ink-2); }
+.empty-title { font-size: 15px; font-weight: 600; color: var(--ink-2); }
 .empty-sub   { font-size: 13px; color: var(--ink-3); max-width: 320px; }
 
 /* Legacy class names — keep pages working without edits */
 .empty-state-icon  { font-size: 28px; opacity: 0.4; line-height: 1; }
-.empty-state-title { font-size: 14px; font-weight: 700; color: var(--ink-2); margin-top: 4px; }
+.empty-state-title { font-size: 14px; font-weight: 600; color: var(--ink-2); margin-top: 4px; }
 .empty-state-sub   { font-size: 12px; color: var(--ink-3); }
 
 /* ─── Utility ────────────────────────────────── */
@@ -809,8 +810,9 @@ select.admin-input { cursor: pointer; }
 
 .tenant-name {
   font-size: 26px;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--ink);
+  font-family: var(--font-heading);
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
@@ -845,10 +847,10 @@ select.admin-input { cursor: pointer; }
 
 .order-activity-count {
   font-size: 24px;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--ink);
   font-variant-numeric: normal;
-  font-family: var(--font-geist-sans);
+  font-family: var(--font-sans);
   line-height: 1;
 }
 
@@ -868,21 +870,21 @@ select.admin-input { cursor: pointer; }
   --surface-3: #3A3530;
   --surface-hover: #322F2B;
 
-  --ink: #F4F3EE;
+  --ink: #F4F1EB;
   --ink-2: #D4CFC6;
   --ink-3: #B1ADA1;
   --ink-4: #7A756C;
 
-  --line: rgba(244,243,238,0.10);
-  --line-2: rgba(244,243,238,0.18);
+  --line: rgba(244,241,235,0.10);
+  --line-2: rgba(244,241,235,0.18);
 
-  --accent: #D97A56;
-  --accent-hover: #E68B67;
-  --accent-soft: #3D2A20;
-  --accent-text: #E68B67;
+  --accent: #EC6240;
+  --accent-hover: #C94E2F;
+  --accent-soft: #3D2010;
+  --accent-text: #F07A5A;
 
   --topbar-bg: #292623;
-  --topbar-border: rgba(244,243,238,0.08);
+  --topbar-border: rgba(244,241,235,0.08);
 
   /* Semantic soft colors — dark */
   --green-soft: rgba(22,163,74,0.18);
@@ -913,21 +915,21 @@ select.admin-input { cursor: pointer; }
     --surface-3: #3A3530;
     --surface-hover: #322F2B;
 
-    --ink: #F4F3EE;
+    --ink: #F4F1EB;
     --ink-2: #D4CFC6;
     --ink-3: #B1ADA1;
     --ink-4: #7A756C;
 
-    --line: rgba(244,243,238,0.10);
-    --line-2: rgba(244,243,238,0.18);
+    --line: rgba(244,241,235,0.10);
+    --line-2: rgba(244,241,235,0.18);
 
-    --accent: #D97A56;
-    --accent-hover: #E68B67;
-    --accent-soft: #3D2A20;
-    --accent-text: #E68B67;
+    --accent: #EC6240;
+    --accent-hover: #C94E2F;
+    --accent-soft: #3D2010;
+    --accent-text: #F07A5A;
 
     --topbar-bg: #292623;
-    --topbar-border: rgba(244,243,238,0.08);
+    --topbar-border: rgba(244,241,235,0.08);
 
     --green-soft: rgba(22,163,74,0.18);
     --green-text: #4ade80;

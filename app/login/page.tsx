@@ -70,11 +70,11 @@ export default function LoginPage() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontWeight: 900,
+              fontWeight: 600,
               fontSize: 14,
               color: "#fff",
               letterSpacing: "-0.03em",
-              fontFamily: "var(--font-mono)",
+              fontFamily: "var(--font-heading)",
               flexShrink: 0,
             }}
           >
@@ -84,7 +84,7 @@ export default function LoginPage() {
             <div
               style={{
                 fontSize: 14,
-                fontWeight: 700,
+                fontWeight: 600,
                 color: "#ffffff",
                 letterSpacing: "-0.01em",
               }}
@@ -110,8 +110,9 @@ export default function LoginPage() {
           <div
             style={{
               fontSize: 32,
-              fontWeight: 800,
+              fontWeight: 600,
               color: "#ffffff",
+              fontFamily: "var(--font-heading)",
               letterSpacing: "-0.03em",
               lineHeight: 1.2,
               marginBottom: 16,
@@ -136,7 +137,7 @@ export default function LoginPage() {
 
         {/* Bottom note */}
         <div
-          style={{ fontSize: 11, color: "#2e3240", letterSpacing: "0.04em" }}
+          style={{ fontSize: 11, color: "var(--sidebar-text)", letterSpacing: "0.04em" }}
         >
           Restricted access · Internal use only
         </div>
@@ -158,8 +159,9 @@ export default function LoginPage() {
             <h1
               style={{
                 fontSize: 24,
-                fontWeight: 800,
+                fontWeight: 600,
                 color: "var(--ink)",
+                fontFamily: "var(--font-heading)",
                 letterSpacing: "-0.02em",
                 marginBottom: 6,
               }}
