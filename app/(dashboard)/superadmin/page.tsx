@@ -26,7 +26,7 @@ function StatCard({ label, value, sub, color = 'var(--ink)' }: { label: string; 
 }
 
 const PLAN_COLOR: Record<string, string> = {
-  trial: 'var(--ink-4)', starter: 'var(--ink-3)', growth: 'var(--green)', scale: 'var(--purple-text)', pro: 'var(--gold)',
+  trial: 'var(--ink-4)', free: 'var(--ink-4)', starter: 'var(--ink-3)', growth: 'var(--green)', pro: 'var(--gold)',
 };
 
 export default function PulsePage() {
