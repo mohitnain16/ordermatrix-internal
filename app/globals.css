@@ -950,6 +950,39 @@ select.admin-input { cursor: pointer; }
 }
 
 /* ═══════════════════════════════════════════════
+   TABLET  ≤ 899px
+   Sidebar is icon-only rail; page never gets the
+   264px expanded-panel offset (JS sets expanded=false
+   below 900px, but guard in CSS in case of SSR flash).
+═══════════════════════════════════════════════ */
+@media (max-width: 899px) {
+  body.sidebar-expanded .page-content {
+    margin-left: var(--sidebar-rail-width) !important;
+  }
+  body.sidebar-expanded .topbar {
+    left: var(--sidebar-rail-width) !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   SMALL MOBILE  ≤ 600px
+   Stat grids collapse to single column; page inner
+   padding tightens further.
+═══════════════════════════════════════════════ */
+@media (max-width: 600px) {
+  .stat-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .page-inner {
+    padding: 12px;
+  }
+  /* Broadcast grid already stacks at 800px; belt-and-braces here */
+  .broadcast-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════
    MOBILE RESPONSIVE  ≤ 767px
    Sidebar becomes a drawer; page goes full-width.
 ═══════════════════════════════════════════════ */
