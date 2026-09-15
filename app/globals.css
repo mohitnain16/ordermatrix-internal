@@ -20,11 +20,11 @@
   --sidebar-active-bg: rgba(236,98,64,0.18);
   --sidebar-section-label: #2e3240;
 
-  /* Surfaces */
-  --surface: #ffffff;
-  --surface-2: #f9f8f5;
-  --surface-3: #f0ede6;
-  --surface-hover: #F4F3EE;
+  /* Surfaces — warm cream hierarchy per DESIGN.md */
+  --surface: #E8E0D2;       /* surface-card: main card bg */
+  --surface-2: #EFE9DE;     /* surface-soft: card footers, thead, section bands */
+  --surface-3: #E0D5C0;     /* surface-cream-strong: ghost buttons, selected states */
+  --surface-hover: #EFE9DE; /* surface-soft: row hover lift */
 
   /* Ink scale */
   --ink: #0B0D10;
@@ -179,7 +179,6 @@ body.sidebar-expanded .topbar {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
   overflow: hidden;
 }
 
@@ -221,7 +220,6 @@ body.sidebar-expanded .topbar {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 20px;
-  box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
   gap: 4px;
