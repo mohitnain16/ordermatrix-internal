@@ -31,6 +31,87 @@ const ALL_STATUSES = [
   'delivered', 'returned', 'rto', 'cancelled',
 ] as const;
 
+const PLAN_OPTIONS = [
+  { id: 'trial',      label: 'Trial' },
+  { id: 'starter',    label: 'Starter' },
+  { id: 'growth',     label: 'Growth' },
+  { id: 'pro',        label: 'Pro' },
+  { id: 'enterprise', label: 'Enterprise' },
+];
+
+const SUB_STATUS_OPTIONS = ['active', 'trialing', 'past_due', 'cancelled', 'paused'];
+
+function OverridePlanModal({ subId, current, onClose, onSuccess, toast }: any) {
+  const [form, setForm] = useState({
+    planId: current?.planId || '',
+    status: current?.status || '',
+    currentPeriodEnd: current?.currentPeriodEnd ? current.currentPeriodEnd.slice(0, 10) : '',
+    seats: current?.seats ? String(current.seats) : '',
+  });
+  const [loading, setLoading] = useState(false);
+
+  async function submit() {
+    setLoading(true);
+    try {
+      const body: any = {};
+      if (form.planId && form.planId !== current?.planId) body.planId = form.planId;
+      if (form.status && form.status !== current?.status) body.status = form.status;
+      if (form.currentPeriodEnd) body.currentPeriodEnd = form.currentPeriodEnd;
+      if (form.seats) body.seats = parseInt(form.seats);
+      if (!Object.keys(body).length) { toast('No changes to apply'); setLoading(false); return; }
+      await api.patch(`/admin/subscriptions/${subId}/override`, body);
+      toast('Plan override applied');
+      onSuccess();
+    } catch (e: any) {
+      toast(e?.response?.data?.error || 'Override failed');
+    }
+    setLoading(false);
+  }
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-box modal-warning" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+        <div className="modal-header">
+          <div>
+            <div className="modal-title">Override Plan</div>
+            <div className="modal-sub">Changes take effect immediately. Razorpay billing is not affected.</div>
+          </div>
+        </div>
+        <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div className="input-group">
+            <label className="input-label">Plan</label>
+            <select className="admin-input" value={form.planId} onChange={e => setForm(f => ({ ...f, planId: e.target.value }))}>
+              <option value="">— no change —</option>
+              {PLAN_OPTIONS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
+            </select>
+          </div>
+          <div className="input-group">
+            <label className="input-label">Subscription Status</label>
+            <select className="admin-input" value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))}>
+              <option value="">— no change —</option>
+              {SUB_STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+          <div className="input-group">
+            <label className="input-label">Period End Date</label>
+            <input type="date" className="admin-input" value={form.currentPeriodEnd} onChange={e => setForm(f => ({ ...f, currentPeriodEnd: e.target.value }))} />
+          </div>
+          <div className="input-group">
+            <label className="input-label">Seats</label>
+            <input type="number" className="admin-input" min={1} value={form.seats} onChange={e => setForm(f => ({ ...f, seats: e.target.value }))} placeholder="Leave blank to keep current" />
+          </div>
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn-ghost btn-sm" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary btn-sm" onClick={submit} disabled={loading}>
+            {loading ? <span className="spinner" /> : 'Apply Override'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ConfirmModal({ action, onConfirm, onCancel, loading, trialDays, setTrialDays }: any) {
   const [verifyValue, setVerifyValue] = useState('');
   return (
@@ -112,6 +193,8 @@ export default function TenantDetailPage() {
   const [ordersStatus, setOrdersStatus] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [orderDetailLoading, setOrderDetailLoading] = useState(false);
+  // override plan modal
+  const [overrideOpen, setOverrideOpen] = useState(false);
   // customers tab
   const [customers, setCustomers] = useState<any[]>([]);
   const [customersTotal, setCustomersTotal] = useState(0);
@@ -389,6 +472,16 @@ export default function TenantDetailPage() {
         />
       )}
 
+      {overrideOpen && sub && (
+        <OverridePlanModal
+          subId={sub._id}
+          current={sub}
+          onClose={() => setOverrideOpen(false)}
+          onSuccess={() => { setOverrideOpen(false); load(); }}
+          toast={toast}
+        />
+      )}
+
       {/* Back link */}
       <button
         onClick={() => router.back()}
@@ -425,8 +518,7 @@ export default function TenantDetailPage() {
           </button>
           <button
             className="btn btn-ghost btn-sm"
-            disabled
-            title="Plan overrides coming in the next release"
+            onClick={() => setOverrideOpen(true)}
           >
             Override Plan
           </button>
