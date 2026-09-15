@@ -149,9 +149,10 @@ export default function TenantDetailPage() {
   async function impersonate() {
     try {
       const res = await api.post(`/admin/tenants/${tenantId}/impersonate`);
-      const { token, user } = res.data;
-      toast(`Impersonating ${user.email} — token copied`);
-      navigator.clipboard?.writeText(token);
+      const { token } = res.data;
+      const base = (process.env.NEXT_PUBLIC_TENANT_APP_URL || 'https://app.ordermatrix.in').replace(/\/$/, '');
+      window.open(`${base}/en/admin-session?admin_token=${encodeURIComponent(token)}`, '_blank', 'noopener');
+      toast('Impersonation session opened in new tab (15 min)');
     } catch (e: any) { toast(e?.response?.data?.error || 'Failed to impersonate'); }
   }
 
@@ -278,11 +279,11 @@ export default function TenantDetailPage() {
     impersonate: {
       type: 'impersonate',
       title: 'Impersonate Tenant',
-      message: `You are about to log in as ${tenant.businessName}. All actions will be performed as this tenant.`,
-      detail: 'Session expires in 15 minutes. This action is logged.',
+      message: `Open a 15-minute admin session as ${tenant.businessName}? A new tab will open in the tenant app. This action is audit-logged.`,
+      detail: 'The session token expires in 15 minutes and cannot be extended.',
       level: 'warning',
       verifyText: null,
-      confirmLabel: 'Start Session',
+      confirmLabel: 'Open Session',
       confirmClass: 'btn-primary',
     },
     deactivate: {
