@@ -550,6 +550,8 @@ export default function TenantDetailPage() {
   // settings tab
   const [tenantSettings, setTenantSettings] = useState<any>(null);
   const [settingsLoading, setSettingsLoading] = useState(false);
+  const [settingsDraft, setSettingsDraft] = useState<any>(null);
+  const [settingsSaving, setSettingsSaving] = useState(false);
   // team tab
   const [teamData, setTeamData] = useState<any>(null);
   const [teamLoading, setTeamLoading] = useState(false);
@@ -758,6 +760,33 @@ export default function TenantDetailPage() {
       setTenantSettings(res.data);
     } catch { toast('Failed to load settings'); }
     setSettingsLoading(false);
+  }
+
+  async function saveSettings() {
+    if (!settingsDraft) return;
+    setSettingsSaving(true);
+    try {
+      await api.patch(`/admin/tenants/${tenantId}/settings`, {
+        businessName:  settingsDraft.businessName,
+        settings: {
+          timezone:    settingsDraft.settings?.timezone,
+          currency:    settingsDraft.settings?.currency,
+          orderPrefix: settingsDraft.settings?.orderPrefix,
+          density:     settingsDraft.settings?.density,
+        },
+        invoiceConfig: {
+          prefix:    settingsDraft.invoiceConfig?.prefix,
+          gstin:     settingsDraft.invoiceConfig?.gstin,
+          upiId:     settingsDraft.invoiceConfig?.upiId,
+          showUpiQr: settingsDraft.invoiceConfig?.showUpiQr,
+        },
+        whatsappConfig: { templateSids: settingsDraft.whatsapp?.templateSids },
+      });
+      setTenantSettings(settingsDraft);
+      setSettingsDraft(null);
+      toast('Settings saved');
+    } catch { toast('Failed to save settings'); }
+    setSettingsSaving(false);
   }
 
   async function loadTeam() {
@@ -1563,44 +1592,121 @@ export default function TenantDetailPage() {
             <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
           ) : tenantSettings ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+              {/* Edit / Save / Cancel — ops_admin+ only */}
+              {canEdit && (
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                  {settingsDraft ? (
+                    <>
+                      <button className="btn btn-ghost btn-sm" onClick={() => setSettingsDraft(null)} disabled={settingsSaving}>Cancel</button>
+                      <button className="btn btn-primary btn-sm" onClick={saveSettings} disabled={settingsSaving}>
+                        {settingsSaving ? <><span className="spinner" />Saving…</> : 'Save Changes'}
+                      </button>
+                    </>
+                  ) : (
+                    <button className="btn btn-ghost btn-sm" onClick={() => setSettingsDraft(JSON.parse(JSON.stringify(tenantSettings)))}>Edit Settings</button>
+                  )}
+                </div>
+              )}
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+
+                {/* General card */}
                 <div className="admin-card">
                   <div className="card-header"><div className="card-title">General</div></div>
                   <div className="card-body">
-                    {[
-                      ['Business Name', tenantSettings.businessName],
-                      ['Category',      tenantSettings.category],
-                      ['Timezone',      tenantSettings.settings?.timezone],
-                      ['Currency',      tenantSettings.settings?.currency],
-                      ['Order Prefix',  tenantSettings.settings?.orderPrefix],
-                      ['Density',       tenantSettings.settings?.density],
-                      ['Accent Color',  tenantSettings.settings?.accentColor],
-                    ].map(([k, v]) => (
-                      <div key={k as string} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 10 }}>
-                        <span style={{ color: 'var(--ink-4)' }}>{k}</span>
-                        <span className="cell-main">{v?.toString() || '—'}</span>
+                    {settingsDraft ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {([
+                          ['Business Name', 'businessName',       (d: any) => d.businessName,              (d: any, v: string) => ({ ...d, businessName: v })],
+                          ['Timezone',      'settings.timezone',  (d: any) => d.settings?.timezone,        (d: any, v: string) => ({ ...d, settings: { ...d.settings, timezone: v } })],
+                          ['Currency',      'settings.currency',  (d: any) => d.settings?.currency,        (d: any, v: string) => ({ ...d, settings: { ...d.settings, currency: v } })],
+                          ['Order Prefix',  'settings.prefix',    (d: any) => d.settings?.orderPrefix,     (d: any, v: string) => ({ ...d, settings: { ...d.settings, orderPrefix: v } })],
+                          ['Density',       'settings.density',   (d: any) => d.settings?.density,         (d: any, v: string) => ({ ...d, settings: { ...d.settings, density: v } })],
+                        ] as [string, string, (d: any) => any, (d: any, v: string) => any][]).map(([label, key, get, set]) => (
+                          <div key={key} style={{ display: 'grid', gridTemplateColumns: '110px 1fr', gap: 8, alignItems: 'center' }}>
+                            <span style={{ fontSize: 12, color: 'var(--ink-4)' }}>{label}</span>
+                            <input className="admin-input" style={{ fontSize: 12, padding: '4px 8px' }}
+                              value={get(settingsDraft) || ''}
+                              onChange={e => setSettingsDraft((d: any) => set(d, e.target.value))} />
+                          </div>
+                        ))}
+                        {[['Category', tenantSettings.category], ['Accent Color', tenantSettings.settings?.accentColor]].map(([k, v]) => (
+                          <div key={k as string} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                            <span style={{ color: 'var(--ink-4)' }}>{k}</span>
+                            <span className="cell-main" style={{ color: 'var(--ink-4)', fontStyle: 'italic' }}>{v?.toString() || '—'}</span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    ) : (
+                      [
+                        ['Business Name', tenantSettings.businessName],
+                        ['Category',      tenantSettings.category],
+                        ['Timezone',      tenantSettings.settings?.timezone],
+                        ['Currency',      tenantSettings.settings?.currency],
+                        ['Order Prefix',  tenantSettings.settings?.orderPrefix],
+                        ['Density',       tenantSettings.settings?.density],
+                        ['Accent Color',  tenantSettings.settings?.accentColor],
+                      ].map(([k, v]) => (
+                        <div key={k as string} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 10 }}>
+                          <span style={{ color: 'var(--ink-4)' }}>{k}</span>
+                          <span className="cell-main">{v?.toString() || '—'}</span>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
+
+                {/* Invoice Config card */}
                 <div className="admin-card">
                   <div className="card-header"><div className="card-title">Invoice Config</div></div>
                   <div className="card-body">
-                    {[
-                      ['Prefix',      tenantSettings.invoiceConfig?.prefix],
-                      ['Current #',   tenantSettings.invoiceConfig?.currentNumber],
-                      ['GSTIN',       tenantSettings.invoiceConfig?.gstin],
-                      ['UPI ID',      tenantSettings.invoiceConfig?.upiId],
-                      ['Show UPI QR', tenantSettings.invoiceConfig?.showUpiQr ? 'Yes' : 'No'],
-                    ].map(([k, v]) => (
-                      <div key={k as string} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 10 }}>
-                        <span style={{ color: 'var(--ink-4)' }}>{k}</span>
-                        <span className="cell-main">{v?.toString() || '—'}</span>
+                    {settingsDraft ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {([
+                          ['Prefix',  'invoiceConfig.prefix', (d: any) => d.invoiceConfig?.prefix, (d: any, v: string) => ({ ...d, invoiceConfig: { ...d.invoiceConfig, prefix: v } })],
+                          ['GSTIN',   'invoiceConfig.gstin',  (d: any) => d.invoiceConfig?.gstin,  (d: any, v: string) => ({ ...d, invoiceConfig: { ...d.invoiceConfig, gstin: v } })],
+                          ['UPI ID',  'invoiceConfig.upiId',  (d: any) => d.invoiceConfig?.upiId,  (d: any, v: string) => ({ ...d, invoiceConfig: { ...d.invoiceConfig, upiId: v } })],
+                        ] as [string, string, (d: any) => any, (d: any, v: string) => any][]).map(([label, key, get, set]) => (
+                          <div key={key} style={{ display: 'grid', gridTemplateColumns: '90px 1fr', gap: 8, alignItems: 'center' }}>
+                            <span style={{ fontSize: 12, color: 'var(--ink-4)' }}>{label}</span>
+                            <input className="admin-input" style={{ fontSize: 12, padding: '4px 8px' }}
+                              value={get(settingsDraft) || ''}
+                              onChange={e => setSettingsDraft((d: any) => set(d, e.target.value))} />
+                          </div>
+                        ))}
+                        <div style={{ display: 'grid', gridTemplateColumns: '90px 1fr', gap: 8, alignItems: 'center' }}>
+                          <span style={{ fontSize: 12, color: 'var(--ink-4)' }}>Show UPI QR</span>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+                            <input type="checkbox" checked={!!settingsDraft.invoiceConfig?.showUpiQr}
+                              onChange={e => setSettingsDraft((d: any) => ({ ...d, invoiceConfig: { ...d.invoiceConfig, showUpiQr: e.target.checked } }))} />
+                            <span style={{ color: 'var(--ink-3)' }}>Enabled</span>
+                          </label>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginTop: 4 }}>
+                          <span style={{ color: 'var(--ink-4)' }}>Current #</span>
+                          <span className="cell-main" style={{ color: 'var(--ink-4)', fontStyle: 'italic' }}>{tenantSettings.invoiceConfig?.currentNumber ?? '—'}</span>
+                        </div>
                       </div>
-                    ))}
+                    ) : (
+                      [
+                        ['Prefix',      tenantSettings.invoiceConfig?.prefix],
+                        ['Current #',   tenantSettings.invoiceConfig?.currentNumber],
+                        ['GSTIN',       tenantSettings.invoiceConfig?.gstin],
+                        ['UPI ID',      tenantSettings.invoiceConfig?.upiId],
+                        ['Show UPI QR', tenantSettings.invoiceConfig?.showUpiQr ? 'Yes' : 'No'],
+                      ].map(([k, v]) => (
+                        <div key={k as string} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 10 }}>
+                          <span style={{ color: 'var(--ink-4)' }}>{k}</span>
+                          <span className="cell-main">{v?.toString() || '—'}</span>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
+
+              {/* WhatsApp / Authkey card */}
               <div className="admin-card">
                 <div className="card-header"><div className="card-title">WhatsApp / Authkey</div></div>
                 <div className="card-body">
@@ -1610,13 +1716,28 @@ export default function TenantDetailPage() {
                       {tenantSettings.whatsapp?.hasApiKey ? 'Configured' : 'Not configured'}
                     </span>
                   </div>
-                  {Object.keys(tenantSettings.whatsapp?.templateSids || {}).length > 0 && (
-                    <div>
-                      <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-4)', marginBottom: 8 }}>Template SIDs</div>
-                      {Object.entries(tenantSettings.whatsapp.templateSids as Record<string, boolean>).map(([courier, configured]) => (
-                        <div key={courier} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 8 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-4)', marginBottom: 8 }}>Template SIDs</div>
+                  {settingsDraft ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+                      {(['default', 'delhivery', 'shiprocket', 'dtdc', 'ekart', 'bluedart'] as const).map(courier => (
+                        <div key={courier} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          <span style={{ fontSize: 11, color: 'var(--ink-4)', textTransform: 'capitalize' }}>{courier}</span>
+                          <input className="admin-input" style={{ fontSize: 12, padding: '4px 8px' }}
+                            placeholder="SID value"
+                            value={settingsDraft.whatsapp?.templateSids?.[courier] || ''}
+                            onChange={e => setSettingsDraft((d: any) => ({
+                              ...d,
+                              whatsapp: { ...d.whatsapp, templateSids: { ...d.whatsapp?.templateSids, [courier]: e.target.value } },
+                            }))} />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                      {Object.entries((tenantSettings.whatsapp?.templateSids || {}) as Record<string, string | null>).map(([courier, sid]) => (
+                        <div key={courier} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
                           <span style={{ color: 'var(--ink-4)', textTransform: 'capitalize' }}>{courier}</span>
-                          <span className={`badge ${configured ? 'badge-green' : 'badge-gray'}`}>{configured ? 'Set' : 'Not set'}</span>
+                          <span className={`badge ${sid ? 'badge-green' : 'badge-gray'}`}>{sid ? 'Set' : 'Not set'}</span>
                         </div>
                       ))}
                     </div>
