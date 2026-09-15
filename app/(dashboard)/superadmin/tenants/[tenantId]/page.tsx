@@ -509,7 +509,7 @@ export default function TenantDetailPage() {
   const [loading, setLoading] = useState(true);
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
-  const [tab, setTab] = useState<'overview' | 'subscription' | 'notes' | 'orders' | 'customers' | 'deliveries' | 'flags' | 'analytics'>('overview');
+  const [tab, setTab] = useState<'overview' | 'subscription' | 'notes' | 'orders' | 'customers' | 'deliveries' | 'flags' | 'analytics' | 'settings'>('overview');
   const [toastMsg, setToastMsg] = useState('');
   const [trialDays, setTrialDays] = useState(14);
   const [deliveries, setDeliveries] = useState<any[]>([]);
@@ -547,6 +547,9 @@ export default function TenantDetailPage() {
   // analytics tab
   const [analytics, setAnalytics] = useState<any>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  // settings tab
+  const [tenantSettings, setTenantSettings] = useState<any>(null);
+  const [settingsLoading, setSettingsLoading] = useState(false);
   const { setTitle } = usePageTitle();
 
   useEffect(() => { load(); }, [tenantId]);
@@ -565,6 +568,8 @@ export default function TenantDetailPage() {
   useEffect(() => { if (tab === 'customers') loadCustomers(1, customerSearch); }, [tab]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (tab === 'analytics') loadAnalytics(); }, [tab]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (tab === 'settings') loadTenantSettings(); }, [tab]);
 
   async function load() {
     setLoading(true);
@@ -717,6 +722,15 @@ export default function TenantDetailPage() {
       setAnalytics(res.data);
     } catch { toast('Failed to load analytics'); }
     setAnalyticsLoading(false);
+  }
+
+  async function loadTenantSettings() {
+    setSettingsLoading(true);
+    try {
+      const res = await api.get(`/admin/tenants/${tenantId}/settings`);
+      setTenantSettings(res.data);
+    } catch { toast('Failed to load settings'); }
+    setSettingsLoading(false);
   }
 
   function timeAgo(d: string) {
@@ -955,7 +969,7 @@ export default function TenantDetailPage() {
 
       {/* Tabs */}
       <div className="tab-bar">
-        {(['overview', 'subscription', 'notes', 'orders', 'customers', 'deliveries', 'analytics', ...(hasRole(admin, 'superadmin') ? ['flags'] : [])] as const).map((t: any) => (
+        {(['overview', 'subscription', 'notes', 'orders', 'customers', 'deliveries', 'analytics', 'settings', ...(hasRole(admin, 'superadmin') ? ['flags'] : [])] as const).map((t: any) => (
           <button key={t} onClick={() => setTab(t)} className={`tab-btn${tab === t ? ' active' : ''}`} style={{ textTransform: 'capitalize' }}>
             {t}
           </button>
@@ -1446,6 +1460,79 @@ export default function TenantDetailPage() {
             </div>
           ) : (
             <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>No analytics data</div>
+          )}
+        </div>
+      )}
+
+      {tab === 'settings' && (
+        <div>
+          {settingsLoading ? (
+            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+          ) : tenantSettings ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div className="admin-card">
+                  <div className="card-header"><div className="card-title">General</div></div>
+                  <div className="card-body">
+                    {[
+                      ['Business Name', tenantSettings.businessName],
+                      ['Category',      tenantSettings.category],
+                      ['Timezone',      tenantSettings.settings?.timezone],
+                      ['Currency',      tenantSettings.settings?.currency],
+                      ['Order Prefix',  tenantSettings.settings?.orderPrefix],
+                      ['Density',       tenantSettings.settings?.density],
+                      ['Accent Color',  tenantSettings.settings?.accentColor],
+                    ].map(([k, v]) => (
+                      <div key={k as string} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 10 }}>
+                        <span style={{ color: 'var(--ink-4)' }}>{k}</span>
+                        <span className="cell-main">{v?.toString() || '—'}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="admin-card">
+                  <div className="card-header"><div className="card-title">Invoice Config</div></div>
+                  <div className="card-body">
+                    {[
+                      ['Prefix',      tenantSettings.invoiceConfig?.prefix],
+                      ['Current #',   tenantSettings.invoiceConfig?.currentNumber],
+                      ['GSTIN',       tenantSettings.invoiceConfig?.gstin],
+                      ['UPI ID',      tenantSettings.invoiceConfig?.upiId],
+                      ['Show UPI QR', tenantSettings.invoiceConfig?.showUpiQr ? 'Yes' : 'No'],
+                    ].map(([k, v]) => (
+                      <div key={k as string} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 10 }}>
+                        <span style={{ color: 'var(--ink-4)' }}>{k}</span>
+                        <span className="cell-main">{v?.toString() || '—'}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="admin-card">
+                <div className="card-header"><div className="card-title">WhatsApp / Authkey</div></div>
+                <div className="card-body">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 14 }}>
+                    <span style={{ color: 'var(--ink-4)' }}>API Key</span>
+                    <span className={`badge ${tenantSettings.whatsapp?.hasApiKey ? 'badge-green' : 'badge-red'}`}>
+                      {tenantSettings.whatsapp?.hasApiKey ? 'Configured' : 'Not configured'}
+                    </span>
+                  </div>
+                  {Object.keys(tenantSettings.whatsapp?.templateSids || {}).length > 0 && (
+                    <div>
+                      <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-4)', marginBottom: 8 }}>Template SIDs</div>
+                      {Object.entries(tenantSettings.whatsapp.templateSids as Record<string, boolean>).map(([courier, configured]) => (
+                        <div key={courier} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 8 }}>
+                          <span style={{ color: 'var(--ink-4)', textTransform: 'capitalize' }}>{courier}</span>
+                          <span className={`badge ${configured ? 'badge-green' : 'badge-gray'}`}>{configured ? 'Set' : 'Not set'}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>No settings data</div>
           )}
         </div>
       )}
