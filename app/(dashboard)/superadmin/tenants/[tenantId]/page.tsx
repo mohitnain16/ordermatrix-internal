@@ -165,6 +165,341 @@ function ConfirmModal({ action, onConfirm, onCancel, loading, trialDays, setTria
   );
 }
 
+const VALID_TRANSITIONS: Record<string, string[]> = {
+  new: ['confirmed', 'ready_to_dispatch', 'dispatched', 'cancelled'],
+  confirmed: ['processing', 'ready_to_dispatch', 'dispatched', 'cancelled'],
+  processing: ['ready_to_dispatch', 'dispatched', 'cancelled'],
+  ready_to_dispatch: ['dispatched', 'cancelled'],
+  dispatched: ['delivered', 'returned', 'rto'],
+  delivered: ['returned'],
+  rto: ['delivered', 'returned'],
+};
+
+const PAYMENT_MODES = [
+  { id: 'cod', label: 'Cash on Delivery' },
+  { id: 'upi', label: 'UPI' },
+  { id: 'bank_transfer', label: 'Bank Transfer' },
+  { id: 'prepaid', label: 'Prepaid' },
+  { id: 'other', label: 'Other' },
+];
+
+function OrderStatusModal({ order, tenantId, onClose, onSuccess, toast }: any) {
+  const validNext = VALID_TRANSITIONS[order.status] || [];
+  const [status, setStatus] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
+
+  async function submit() {
+    if (!status) return;
+    setLoading(true); setErr('');
+    try {
+      await api.put(`/admin/tenants/${tenantId}/orders/${order._id}`, { status });
+      toast(`Status updated to ${STATUS_LABEL[status] || status}`);
+      onSuccess();
+    } catch (e: any) {
+      const data = e?.response?.data;
+      if (e?.response?.status === 422) {
+        setErr(`Cannot transition: ${data?.error || 'invalid'}. Valid next: ${(data?.validNext || []).map((s: string) => STATUS_LABEL[s] || s).join(', ')}`);
+      } else {
+        setErr(data?.error || 'Failed to update status');
+      }
+    }
+    setLoading(false);
+  }
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-box modal-warning" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+        <div className="modal-header">
+          <div>
+            <div className="modal-title">Update Order Status</div>
+            <div className="modal-sub">
+              Order {order.orderId || order._id?.toString().slice(-8)} · Current: <span className={`badge ${STATUS_COLOR[order.status]}`}>{STATUS_LABEL[order.status]}</span>
+            </div>
+          </div>
+        </div>
+        <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {validNext.length === 0 ? (
+            <p style={{ fontSize: 13, color: 'var(--ink-4)' }}>This order is in a terminal status and cannot be changed.</p>
+          ) : (
+            <div className="input-group">
+              <label className="input-label">New Status</label>
+              <select className="admin-input" value={status} onChange={e => { setStatus(e.target.value); setErr(''); }}>
+                <option value="">— select —</option>
+                {validNext.map((s: string) => <option key={s} value={s}>{STATUS_LABEL[s] || s}</option>)}
+              </select>
+            </div>
+          )}
+          {err && <p style={{ fontSize: 12, color: 'var(--red, #E53E3E)', margin: 0 }}>{err}</p>}
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn-ghost btn-sm" onClick={onClose}>Cancel</button>
+          {validNext.length > 0 && (
+            <button className="btn btn-primary btn-sm" onClick={submit} disabled={loading || !status}>
+              {loading ? <span className="spinner" /> : 'Update Status'}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RecordPaymentModal({ order, tenantId, onClose, onSuccess, toast }: any) {
+  const [form, setForm] = useState({ amount: '', mode: 'upi', utr: '', note: '' });
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
+
+  async function submit() {
+    if (!form.amount || isNaN(Number(form.amount))) { setErr('Enter a valid amount'); return; }
+    setLoading(true); setErr('');
+    try {
+      await api.post(`/admin/tenants/${tenantId}/orders/${order._id}/payment`, {
+        amount: Number(form.amount), mode: form.mode,
+        utr: form.utr.trim() || undefined, note: form.note.trim() || undefined,
+      });
+      toast('Payment recorded');
+      onSuccess();
+    } catch (e: any) {
+      const data = e?.response?.data;
+      if (e?.response?.status === 409) {
+        const conflict = data?.conflictingOrder;
+        setErr(`Duplicate UTR — already on order ${conflict?.orderNumber || 'another order'}`);
+      } else {
+        setErr(data?.error || 'Failed to record payment');
+      }
+    }
+    setLoading(false);
+  }
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-box modal-warning" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+        <div className="modal-header">
+          <div>
+            <div className="modal-title">Record Payment</div>
+            <div className="modal-sub">Order {order.orderId || order._id?.toString().slice(-8)} · Balance: {order.balanceDue != null ? `₹${order.balanceDue}` : '—'}</div>
+          </div>
+        </div>
+        <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div className="input-group">
+              <label className="input-label">Amount (₹) *</label>
+              <input type="number" min={1} className="admin-input" value={form.amount} onChange={e => { setForm(f => ({ ...f, amount: e.target.value })); setErr(''); }} />
+            </div>
+            <div className="input-group">
+              <label className="input-label">Mode *</label>
+              <select className="admin-input" value={form.mode} onChange={e => setForm(f => ({ ...f, mode: e.target.value }))}>
+                {PAYMENT_MODES.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="input-group">
+            <label className="input-label">UTR / Reference</label>
+            <input className="admin-input" value={form.utr} onChange={e => { setForm(f => ({ ...f, utr: e.target.value })); setErr(''); }} placeholder="Optional — checked for duplicates across workspace" />
+          </div>
+          <div className="input-group">
+            <label className="input-label">Note</label>
+            <input className="admin-input" value={form.note} onChange={e => setForm(f => ({ ...f, note: e.target.value }))} placeholder="Optional" />
+          </div>
+          {err && <p style={{ fontSize: 12, color: 'var(--red, #E53E3E)', margin: 0 }}>{err}</p>}
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn-ghost btn-sm" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary btn-sm" onClick={submit} disabled={loading}>
+            {loading ? <span className="spinner" /> : 'Record Payment'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AddCommentModal({ order, tenantId, onClose, onSuccess, toast }: any) {
+  const [text, setText] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
+
+  async function submit() {
+    if (!text.trim()) { setErr('Comment text is required'); return; }
+    setLoading(true); setErr('');
+    try {
+      await api.post(`/admin/tenants/${tenantId}/orders/${order._id}/comments`, { text: text.trim() });
+      toast('Internal note added');
+      onSuccess();
+    } catch (e: any) {
+      setErr(e?.response?.data?.error || 'Failed to add comment');
+    }
+    setLoading(false);
+  }
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-box" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+        <div className="modal-header">
+          <div>
+            <div className="modal-title">Add Internal Note</div>
+            <div className="modal-sub">Visible to admin team only — tenants cannot see this</div>
+          </div>
+        </div>
+        <div className="modal-body">
+          <textarea
+            className="admin-input"
+            rows={4}
+            value={text}
+            onChange={e => { setText(e.target.value); setErr(''); }}
+            placeholder="Internal support note…"
+            style={{ width: '100%', resize: 'vertical' }}
+          />
+          {err && <p style={{ fontSize: 12, color: 'var(--red, #E53E3E)', margin: '6px 0 0' }}>{err}</p>}
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn-ghost btn-sm" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary btn-sm" onClick={submit} disabled={loading}>
+            {loading ? <span className="spinner" /> : 'Add Note'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DispatchModal({ order, tenantId, onClose, onSuccess, toast }: any) {
+  const isAlreadyDispatched = ['dispatched', 'delivered', 'rto'].includes(order.status);
+  const [form, setForm] = useState({
+    courierName: order.courier?.name || '',
+    trackingNumber: order.courier?.trackingNumber || '',
+    dispatchDate: '',
+  });
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
+
+  async function submit() {
+    if (!form.courierName.trim()) { setErr('Courier name is required'); return; }
+    setLoading(true); setErr('');
+    try {
+      await api.post(`/admin/tenants/${tenantId}/orders/${order._id}/dispatch`, {
+        courierName: form.courierName.trim(),
+        trackingNumber: form.trackingNumber.trim() || undefined,
+        dispatchDate: form.dispatchDate || undefined,
+      });
+      toast(isAlreadyDispatched ? 'Courier info updated' : 'Order dispatched');
+      onSuccess();
+    } catch (e: any) {
+      const data = e?.response?.data;
+      if (e?.response?.status === 422) {
+        setErr(`${data?.error || 'Invalid transition'}. Valid next: ${(data?.validNext || []).map((s: string) => STATUS_LABEL[s] || s).join(', ')}`);
+      } else {
+        setErr(data?.error || 'Failed to update dispatch info');
+      }
+    }
+    setLoading(false);
+  }
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-box modal-warning" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+        <div className="modal-header">
+          <div>
+            <div className="modal-title">{isAlreadyDispatched ? 'Update Courier Info' : 'Dispatch Order'}</div>
+            <div className="modal-sub">Order {order.orderId || order._id?.toString().slice(-8)}{isAlreadyDispatched ? ' — updating tracking only, status unchanged' : ' — will advance status to Dispatched'}</div>
+          </div>
+        </div>
+        <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div className="input-group">
+            <label className="input-label">Courier Name *</label>
+            <input className="admin-input" value={form.courierName} onChange={e => { setForm(f => ({ ...f, courierName: e.target.value })); setErr(''); }} placeholder="e.g. Delhivery, DTDC" />
+          </div>
+          <div className="input-group">
+            <label className="input-label">Tracking / AWB Number</label>
+            <input className="admin-input" value={form.trackingNumber} onChange={e => setForm(f => ({ ...f, trackingNumber: e.target.value }))} placeholder="Optional — marks tracking pending if blank" />
+          </div>
+          <div className="input-group">
+            <label className="input-label">Dispatch Date</label>
+            <input type="date" className="admin-input" value={form.dispatchDate} onChange={e => setForm(f => ({ ...f, dispatchDate: e.target.value }))} />
+          </div>
+          {err && <p style={{ fontSize: 12, color: 'var(--red, #E53E3E)', margin: 0 }}>{err}</p>}
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn-ghost btn-sm" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary btn-sm" onClick={submit} disabled={loading}>
+            {loading ? <span className="spinner" /> : isAlreadyDispatched ? 'Update Courier' : 'Dispatch'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EditCustomerModal({ customer, tenantId, onClose, onSuccess, toast }: any) {
+  const [form, setForm] = useState({
+    name:  customer.name  || '',
+    email: customer.email || '',
+    phone: customer.phone || '',
+    notes: customer.notes || '',
+  });
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
+
+  async function submit() {
+    if (!form.name.trim()) { setErr('Name is required'); return; }
+    setLoading(true); setErr('');
+    try {
+      await api.put(`/admin/tenants/${tenantId}/customers/${customer._id}`, {
+        name:  form.name.trim()  || undefined,
+        email: form.email.trim() || undefined,
+        phone: form.phone.trim() || undefined,
+        notes: form.notes.trim() || undefined,
+      });
+      toast('Customer profile updated');
+      onSuccess();
+    } catch (e: any) {
+      setErr(e?.response?.data?.error || 'Failed to update customer');
+    }
+    setLoading(false);
+  }
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-box modal-warning" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+        <div className="modal-header">
+          <div>
+            <div className="modal-title">Edit Customer</div>
+            <div className="modal-sub">Changes are audit-logged with before/after diff</div>
+          </div>
+        </div>
+        <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div className="input-group">
+            <label className="input-label">Name *</label>
+            <input className="admin-input" value={form.name} onChange={e => { setForm(f => ({ ...f, name: e.target.value })); setErr(''); }} />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div className="input-group">
+              <label className="input-label">Phone</label>
+              <input className="admin-input" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
+            </div>
+            <div className="input-group">
+              <label className="input-label">Email</label>
+              <input type="email" className="admin-input" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+            </div>
+          </div>
+          <div className="input-group">
+            <label className="input-label">Notes</label>
+            <textarea className="admin-input" rows={2} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} style={{ resize: 'none' }} />
+          </div>
+          {err && <p style={{ fontSize: 12, color: 'var(--red, #E53E3E)', margin: 0 }}>{err}</p>}
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn-ghost btn-sm" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary btn-sm" onClick={submit} disabled={loading}>
+            {loading ? <span className="spinner" /> : 'Save Changes'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function TenantDetailPage() {
   const { tenantId } = useParams<{ tenantId: string }>();
   const router = useRouter();
@@ -203,6 +538,12 @@ export default function TenantDetailPage() {
   const [customerSearch, setCustomerSearch] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   const [customerDetailLoading, setCustomerDetailLoading] = useState(false);
+  // write-on-behalf modal state
+  const [statusModal, setStatusModal] = useState<any>(null);      // { order }
+  const [paymentModal, setPaymentModal] = useState<any>(null);    // { order }
+  const [commentModal, setCommentModal] = useState<any>(null);    // { order }
+  const [dispatchModal, setDispatchModal] = useState<any>(null);  // { order }
+  const [editCustomerModal, setEditCustomerModal] = useState<any>(null); // { customer }
   const { setTitle } = usePageTitle();
 
   useEffect(() => { load(); }, [tenantId]);
@@ -482,6 +823,52 @@ export default function TenantDetailPage() {
         />
       )}
 
+      {statusModal && (
+        <OrderStatusModal
+          order={statusModal.order}
+          tenantId={tenantId}
+          onClose={() => setStatusModal(null)}
+          onSuccess={() => { setStatusModal(null); loadOrders(ordersPage, ordersStatus); setSelectedOrder(null); }}
+          toast={toast}
+        />
+      )}
+      {paymentModal && (
+        <RecordPaymentModal
+          order={paymentModal.order}
+          tenantId={tenantId}
+          onClose={() => setPaymentModal(null)}
+          onSuccess={() => { setPaymentModal(null); loadOrderDetail(paymentModal.order._id); }}
+          toast={toast}
+        />
+      )}
+      {commentModal && (
+        <AddCommentModal
+          order={commentModal.order}
+          tenantId={tenantId}
+          onClose={() => setCommentModal(null)}
+          onSuccess={() => { setCommentModal(null); loadOrderDetail(commentModal.order._id); }}
+          toast={toast}
+        />
+      )}
+      {dispatchModal && (
+        <DispatchModal
+          order={dispatchModal.order}
+          tenantId={tenantId}
+          onClose={() => setDispatchModal(null)}
+          onSuccess={() => { setDispatchModal(null); loadOrders(ordersPage, ordersStatus); setSelectedOrder(null); }}
+          toast={toast}
+        />
+      )}
+      {editCustomerModal && (
+        <EditCustomerModal
+          customer={editCustomerModal.customer}
+          tenantId={tenantId}
+          onClose={() => setEditCustomerModal(null)}
+          onSuccess={() => { setEditCustomerModal(null); loadCustomerDetail(editCustomerModal.customer._id); }}
+          toast={toast}
+        />
+      )}
+
       {/* Back link */}
       <button
         onClick={() => router.back()}
@@ -740,15 +1127,16 @@ export default function TenantDetailPage() {
                                   <div style={{ padding: '20px 18px', color: 'var(--ink-4)', fontSize: 13 }}>Loading…</div>
                                 ) : selectedOrder && (
                                   <div style={{ padding: '16px 18px', background: 'var(--surface-soft, var(--surface))', borderTop: '1px solid var(--line)' }}>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '8px 24px' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '8px 24px', marginBottom: 14 }}>
                                       {[
-                                        ['Payment', selectedOrder.paymentStatus || selectedOrder.payment?.status || '—'],
-                                        ['Payment Mode', selectedOrder.paymentMode || selectedOrder.payment?.mode || '—'],
-                                        ['Amount Paid', selectedOrder.amountPaid || selectedOrder.payment?.amountPaid ? fmt(selectedOrder.amountPaid || selectedOrder.payment?.amountPaid) : '—'],
-                                        ['Courier', selectedOrder.courier || selectedOrder.dispatch?.courier || '—'],
-                                        ['Tracking', selectedOrder.trackingNumber || selectedOrder.dispatch?.trackingNumber || '—'],
+                                        ['Payment', selectedOrder.paymentStatus || '—'],
+                                        ['Mode', selectedOrder.paymentMode || '—'],
+                                        ['Paid', selectedOrder.amountPaid != null ? fmt(selectedOrder.amountPaid) : '—'],
+                                        ['Balance', selectedOrder.balanceDue != null ? fmt(selectedOrder.balanceDue) : '—'],
+                                        ['Courier', selectedOrder.courier?.name || '—'],
+                                        ['Tracking', selectedOrder.courier?.trackingNumber || '—'],
                                         ['Items', (selectedOrder.items?.length || 0) + ' item(s)'],
-                                        ['Comments', (selectedOrder.comments?.length || 0) + ' comment(s)'],
+                                        ['Admin Notes', (selectedOrder.comments?.filter((c: any) => c.adminOnly) || []).length + ' note(s)'],
                                       ].map(([k, v]) => (
                                         <div key={k as string}>
                                           <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-4)', marginBottom: 3 }}>{k}</div>
@@ -756,6 +1144,22 @@ export default function TenantDetailPage() {
                                         </div>
                                       ))}
                                     </div>
+                                    {canEdit && (
+                                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, borderTop: '1px solid var(--line)', paddingTop: 12 }}>
+                                        <button className="btn btn-ghost btn-sm" onClick={() => setStatusModal({ order: selectedOrder })}>
+                                          Update Status
+                                        </button>
+                                        <button className="btn btn-ghost btn-sm" onClick={() => setDispatchModal({ order: selectedOrder })}>
+                                          {['dispatched', 'delivered', 'rto'].includes(selectedOrder.status) ? 'Update Courier' : 'Dispatch'}
+                                        </button>
+                                        <button className="btn btn-ghost btn-sm" onClick={() => setPaymentModal({ order: selectedOrder })}>
+                                          Record Payment
+                                        </button>
+                                        <button className="btn btn-ghost btn-sm" onClick={() => setCommentModal({ order: selectedOrder })}>
+                                          Add Note
+                                        </button>
+                                      </div>
+                                    )}
                                   </div>
                                 )}
                               </td>
@@ -808,7 +1212,17 @@ export default function TenantDetailPage() {
               </button>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                 <div className="admin-card">
-                  <div className="card-header"><div className="card-title">Customer Profile</div></div>
+                  <div className="card-header">
+                    <div className="card-title">Customer Profile</div>
+                    {canEdit && (
+                      <button
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => setEditCustomerModal({ customer: selectedCustomer.customer })}
+                      >
+                        Edit
+                      </button>
+                    )}
+                  </div>
                   <div className="card-body">
                     {[
                       ['Name', selectedCustomer.customer?.name],
