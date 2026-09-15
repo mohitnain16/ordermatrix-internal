@@ -93,7 +93,7 @@ export default function TenantDetailPage() {
   const [loading, setLoading] = useState(true);
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
-  const [tab, setTab] = useState<'overview' | 'subscription' | 'notes' | 'deliveries' | 'flags'>('overview');
+  const [tab, setTab] = useState<'overview' | 'subscription' | 'notes' | 'orders' | 'customers' | 'deliveries' | 'flags'>('overview');
   const [toastMsg, setToastMsg] = useState('');
   const [trialDays, setTrialDays] = useState(14);
   const [deliveries, setDeliveries] = useState<any[]>([]);
@@ -104,6 +104,14 @@ export default function TenantDetailPage() {
   const [flagsLoading, setFlagsLoading] = useState(false);
   const [confirmAction, setConfirmAction] = useState<any>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  // orders tab
+  const [orders, setOrders] = useState<any[]>([]);
+  const [ordersTotal, setOrdersTotal] = useState(0);
+  const [ordersPage, setOrdersPage] = useState(1);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersStatus, setOrdersStatus] = useState('');
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [orderDetailLoading, setOrderDetailLoading] = useState(false);
   const { setTitle } = usePageTitle();
 
   useEffect(() => { load(); }, [tenantId]);
@@ -116,6 +124,8 @@ export default function TenantDetailPage() {
   useEffect(() => { if (tab === 'deliveries') loadDeliveries(1); }, [tab]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (tab === 'flags') loadFlags(); }, [tab]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (tab === 'orders') loadOrders(1, ordersStatus); }, [tab]);
 
   async function load() {
     setLoading(true);
@@ -213,6 +223,29 @@ export default function TenantDetailPage() {
       setFlags(prev);
       toast('Failed to update flag');
     }
+  }
+
+  async function loadOrders(page: number, status: string) {
+    setOrdersLoading(true);
+    setOrdersPage(page);
+    setSelectedOrder(null);
+    try {
+      const params = new URLSearchParams({ page: String(page), limit: '25' });
+      if (status) params.set('status', status);
+      const res = await api.get(`/admin/tenants/${tenantId}/orders?${params}`);
+      setOrders(res.data.orders || []);
+      setOrdersTotal(res.data.total || 0);
+    } catch { /**/ }
+    setOrdersLoading(false);
+  }
+
+  async function loadOrderDetail(oid: string) {
+    setOrderDetailLoading(true);
+    try {
+      const res = await api.get(`/admin/tenants/${tenantId}/orders/${oid}`);
+      setSelectedOrder(res.data.order);
+    } catch { toast('Failed to load order detail'); }
+    setOrderDetailLoading(false);
   }
 
   function timeAgo(d: string) {
@@ -396,7 +429,7 @@ export default function TenantDetailPage() {
 
       {/* Tabs */}
       <div className="tab-bar">
-        {(['overview', 'subscription', 'notes', 'deliveries', ...(hasRole(admin, 'superadmin') ? ['flags'] : [])] as const).map((t: any) => (
+        {(['overview', 'subscription', 'notes', 'orders', 'customers', 'deliveries', ...(hasRole(admin, 'superadmin') ? ['flags'] : [])] as const).map((t: any) => (
           <button key={t} onClick={() => setTab(t)} className={`tab-btn${tab === t ? ' active' : ''}`} style={{ textTransform: 'capitalize' }}>
             {t}
           </button>
@@ -529,6 +562,100 @@ export default function TenantDetailPage() {
                 ))
             }
           </div>
+        </div>
+      )}
+
+      {tab === 'orders' && (
+        <div>
+          {/* Status filter chips */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
+            {(['', ...ALL_STATUSES] as const).map((s: any) => (
+              <button
+                key={s || 'all'}
+                className={`btn btn-ghost btn-sm${ordersStatus === s ? ' active' : ''}`}
+                style={{ fontWeight: ordersStatus === s ? 600 : 400 }}
+                onClick={() => { setOrdersStatus(s); loadOrders(1, s); }}
+              >
+                {s ? STATUS_LABEL[s] : 'All'}
+              </button>
+            ))}
+          </div>
+
+          {ordersLoading ? (
+            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+          ) : (
+            <>
+              <div className="admin-card">
+                <div className="table-shell">
+                  <table className="admin-table">
+                    <thead>
+                      <tr><th>Order ID</th><th>Customer</th><th>Status</th><th>Amount</th><th>Date</th></tr>
+                    </thead>
+                    <tbody>
+                      {orders.map((o: any) => (
+                        <>
+                          <tr
+                            key={o._id}
+                            style={{ cursor: 'pointer', background: selectedOrder?._id === o._id ? 'var(--surface-selected, var(--surface-hover))' : undefined }}
+                            onClick={() => selectedOrder?._id === o._id ? setSelectedOrder(null) : loadOrderDetail(o._id)}
+                          >
+                            <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{o.orderId || o._id?.toString().slice(-8)}</td>
+                            <td>
+                              <div className="cell-main">{o.customerName || o.customer?.name || '—'}</div>
+                              <div className="cell-sub">{o.customerPhone || o.customer?.phone || ''}</div>
+                            </td>
+                            <td><span className={`badge ${STATUS_COLOR[o.status] || 'badge-gray'}`}>{STATUS_LABEL[o.status] || o.status}</span></td>
+                            <td style={{ fontVariantNumeric: 'tabular-nums' }}>{o.totalAmount || o.amount ? fmt(o.totalAmount || o.amount) : '—'}</td>
+                            <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{fmtDate(o.createdAt)}</td>
+                          </tr>
+                          {selectedOrder?._id === o._id && (
+                            <tr key={`${o._id}-detail`}>
+                              <td colSpan={5} style={{ padding: 0 }}>
+                                {orderDetailLoading ? (
+                                  <div style={{ padding: '20px 18px', color: 'var(--ink-4)', fontSize: 13 }}>Loading…</div>
+                                ) : selectedOrder && (
+                                  <div style={{ padding: '16px 18px', background: 'var(--surface-soft, var(--surface))', borderTop: '1px solid var(--line)' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '8px 24px' }}>
+                                      {[
+                                        ['Payment', selectedOrder.paymentStatus || selectedOrder.payment?.status || '—'],
+                                        ['Payment Mode', selectedOrder.paymentMode || selectedOrder.payment?.mode || '—'],
+                                        ['Amount Paid', selectedOrder.amountPaid || selectedOrder.payment?.amountPaid ? fmt(selectedOrder.amountPaid || selectedOrder.payment?.amountPaid) : '—'],
+                                        ['Courier', selectedOrder.courier || selectedOrder.dispatch?.courier || '—'],
+                                        ['Tracking', selectedOrder.trackingNumber || selectedOrder.dispatch?.trackingNumber || '—'],
+                                        ['Items', (selectedOrder.items?.length || 0) + ' item(s)'],
+                                        ['Comments', (selectedOrder.comments?.length || 0) + ' comment(s)'],
+                                      ].map(([k, v]) => (
+                                        <div key={k as string}>
+                                          <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-4)', marginBottom: 3 }}>{k}</div>
+                                          <div style={{ fontSize: 13, color: 'var(--ink)', fontFamily: ['Courier', 'Tracking'].includes(k as string) ? 'var(--font-mono)' : undefined }}>{v}</div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                          )}
+                        </>
+                      ))}
+                      {orders.length === 0 && (
+                        <tr><td colSpan={5} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>No orders found</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                {ordersTotal > 25 && (
+                  <div className="pagination">
+                    <span className="pagination-info">{(ordersPage - 1) * 25 + 1}–{Math.min(ordersPage * 25, ordersTotal)} of {ordersTotal}</span>
+                    <div className="pagination-controls">
+                      <button className="btn btn-ghost btn-sm" disabled={ordersPage === 1} onClick={() => loadOrders(ordersPage - 1, ordersStatus)}>← Prev</button>
+                      <button className="btn btn-ghost btn-sm" disabled={ordersPage * 25 >= ordersTotal} onClick={() => loadOrders(ordersPage + 1, ordersStatus)}>Next →</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </div>
       )}
 
