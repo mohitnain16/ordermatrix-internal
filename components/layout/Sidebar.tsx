@@ -64,7 +64,7 @@ export default function Sidebar() {
   const admin = getAdmin();
 
   useEffect(() => {
-    const wide = typeof window !== 'undefined' && window.innerWidth >= 1280;
+    const wide = typeof window !== 'undefined' && window.innerWidth >= 900;
     setExpanded(wide);
     document.body.classList.toggle('sidebar-expanded', wide);
   }, []);

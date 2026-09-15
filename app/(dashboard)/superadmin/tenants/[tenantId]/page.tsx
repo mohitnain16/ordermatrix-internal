@@ -31,6 +31,87 @@ const ALL_STATUSES = [
   'delivered', 'returned', 'rto', 'cancelled',
 ] as const;
 
+const PLAN_OPTIONS = [
+  { id: 'trial',      label: 'Trial' },
+  { id: 'starter',    label: 'Starter' },
+  { id: 'growth',     label: 'Growth' },
+  { id: 'pro',        label: 'Pro' },
+  { id: 'enterprise', label: 'Enterprise' },
+];
+
+const SUB_STATUS_OPTIONS = ['active', 'trialing', 'past_due', 'cancelled', 'paused'];
+
+function OverridePlanModal({ subId, current, onClose, onSuccess, toast }: any) {
+  const [form, setForm] = useState({
+    planId: current?.planId || '',
+    status: current?.status || '',
+    currentPeriodEnd: current?.currentPeriodEnd ? current.currentPeriodEnd.slice(0, 10) : '',
+    seats: current?.seats ? String(current.seats) : '',
+  });
+  const [loading, setLoading] = useState(false);
+
+  async function submit() {
+    setLoading(true);
+    try {
+      const body: any = {};
+      if (form.planId && form.planId !== current?.planId) body.planId = form.planId;
+      if (form.status && form.status !== current?.status) body.status = form.status;
+      if (form.currentPeriodEnd) body.currentPeriodEnd = form.currentPeriodEnd;
+      if (form.seats) body.seats = parseInt(form.seats);
+      if (!Object.keys(body).length) { toast('No changes to apply'); setLoading(false); return; }
+      await api.patch(`/admin/subscriptions/${subId}/override`, body);
+      toast('Plan override applied');
+      onSuccess();
+    } catch (e: any) {
+      toast(e?.response?.data?.error || 'Override failed');
+    }
+    setLoading(false);
+  }
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-box modal-warning" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+        <div className="modal-header">
+          <div>
+            <div className="modal-title">Override Plan</div>
+            <div className="modal-sub">Changes take effect immediately. Razorpay billing is not affected.</div>
+          </div>
+        </div>
+        <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div className="input-group">
+            <label className="input-label">Plan</label>
+            <select className="admin-input" value={form.planId} onChange={e => setForm(f => ({ ...f, planId: e.target.value }))}>
+              <option value="">— no change —</option>
+              {PLAN_OPTIONS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
+            </select>
+          </div>
+          <div className="input-group">
+            <label className="input-label">Subscription Status</label>
+            <select className="admin-input" value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))}>
+              <option value="">— no change —</option>
+              {SUB_STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+          <div className="input-group">
+            <label className="input-label">Period End Date</label>
+            <input type="date" className="admin-input" value={form.currentPeriodEnd} onChange={e => setForm(f => ({ ...f, currentPeriodEnd: e.target.value }))} />
+          </div>
+          <div className="input-group">
+            <label className="input-label">Seats</label>
+            <input type="number" className="admin-input" min={1} value={form.seats} onChange={e => setForm(f => ({ ...f, seats: e.target.value }))} placeholder="Leave blank to keep current" />
+          </div>
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn-ghost btn-sm" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary btn-sm" onClick={submit} disabled={loading}>
+            {loading ? <span className="spinner" /> : 'Apply Override'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ConfirmModal({ action, onConfirm, onCancel, loading, trialDays, setTrialDays }: any) {
   const [verifyValue, setVerifyValue] = useState('');
   return (
@@ -84,6 +165,341 @@ function ConfirmModal({ action, onConfirm, onCancel, loading, trialDays, setTria
   );
 }
 
+const VALID_TRANSITIONS: Record<string, string[]> = {
+  new: ['confirmed', 'ready_to_dispatch', 'dispatched', 'cancelled'],
+  confirmed: ['processing', 'ready_to_dispatch', 'dispatched', 'cancelled'],
+  processing: ['ready_to_dispatch', 'dispatched', 'cancelled'],
+  ready_to_dispatch: ['dispatched', 'cancelled'],
+  dispatched: ['delivered', 'returned', 'rto'],
+  delivered: ['returned'],
+  rto: ['delivered', 'returned'],
+};
+
+const PAYMENT_MODES = [
+  { id: 'cod', label: 'Cash on Delivery' },
+  { id: 'upi', label: 'UPI' },
+  { id: 'bank_transfer', label: 'Bank Transfer' },
+  { id: 'prepaid', label: 'Prepaid' },
+  { id: 'other', label: 'Other' },
+];
+
+function OrderStatusModal({ order, tenantId, onClose, onSuccess, toast }: any) {
+  const validNext = VALID_TRANSITIONS[order.status] || [];
+  const [status, setStatus] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
+
+  async function submit() {
+    if (!status) return;
+    setLoading(true); setErr('');
+    try {
+      await api.put(`/admin/tenants/${tenantId}/orders/${order._id}`, { status });
+      toast(`Status updated to ${STATUS_LABEL[status] || status}`);
+      onSuccess();
+    } catch (e: any) {
+      const data = e?.response?.data;
+      if (e?.response?.status === 422) {
+        setErr(`Cannot transition: ${data?.error || 'invalid'}. Valid next: ${(data?.validNext || []).map((s: string) => STATUS_LABEL[s] || s).join(', ')}`);
+      } else {
+        setErr(data?.error || 'Failed to update status');
+      }
+    }
+    setLoading(false);
+  }
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-box modal-warning" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+        <div className="modal-header">
+          <div>
+            <div className="modal-title">Update Order Status</div>
+            <div className="modal-sub">
+              Order {order.orderId || order._id?.toString().slice(-8)} · Current: <span className={`badge ${STATUS_COLOR[order.status]}`}>{STATUS_LABEL[order.status]}</span>
+            </div>
+          </div>
+        </div>
+        <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {validNext.length === 0 ? (
+            <p style={{ fontSize: 13, color: 'var(--ink-4)' }}>This order is in a terminal status and cannot be changed.</p>
+          ) : (
+            <div className="input-group">
+              <label className="input-label">New Status</label>
+              <select className="admin-input" value={status} onChange={e => { setStatus(e.target.value); setErr(''); }}>
+                <option value="">— select —</option>
+                {validNext.map((s: string) => <option key={s} value={s}>{STATUS_LABEL[s] || s}</option>)}
+              </select>
+            </div>
+          )}
+          {err && <p style={{ fontSize: 12, color: 'var(--red, #E53E3E)', margin: 0 }}>{err}</p>}
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn-ghost btn-sm" onClick={onClose}>Cancel</button>
+          {validNext.length > 0 && (
+            <button className="btn btn-primary btn-sm" onClick={submit} disabled={loading || !status}>
+              {loading ? <span className="spinner" /> : 'Update Status'}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RecordPaymentModal({ order, tenantId, onClose, onSuccess, toast }: any) {
+  const [form, setForm] = useState({ amount: '', mode: 'upi', utr: '', note: '' });
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
+
+  async function submit() {
+    if (!form.amount || isNaN(Number(form.amount))) { setErr('Enter a valid amount'); return; }
+    setLoading(true); setErr('');
+    try {
+      await api.post(`/admin/tenants/${tenantId}/orders/${order._id}/payment`, {
+        amount: Number(form.amount), mode: form.mode,
+        utr: form.utr.trim() || undefined, note: form.note.trim() || undefined,
+      });
+      toast('Payment recorded');
+      onSuccess();
+    } catch (e: any) {
+      const data = e?.response?.data;
+      if (e?.response?.status === 409) {
+        const conflict = data?.conflictingOrder;
+        setErr(`Duplicate UTR — already on order ${conflict?.orderNumber || 'another order'}`);
+      } else {
+        setErr(data?.error || 'Failed to record payment');
+      }
+    }
+    setLoading(false);
+  }
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-box modal-warning" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+        <div className="modal-header">
+          <div>
+            <div className="modal-title">Record Payment</div>
+            <div className="modal-sub">Order {order.orderId || order._id?.toString().slice(-8)} · Balance: {order.balanceDue != null ? `₹${order.balanceDue}` : '—'}</div>
+          </div>
+        </div>
+        <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div className="input-group">
+              <label className="input-label">Amount (₹) *</label>
+              <input type="number" min={1} className="admin-input" value={form.amount} onChange={e => { setForm(f => ({ ...f, amount: e.target.value })); setErr(''); }} />
+            </div>
+            <div className="input-group">
+              <label className="input-label">Mode *</label>
+              <select className="admin-input" value={form.mode} onChange={e => setForm(f => ({ ...f, mode: e.target.value }))}>
+                {PAYMENT_MODES.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="input-group">
+            <label className="input-label">UTR / Reference</label>
+            <input className="admin-input" value={form.utr} onChange={e => { setForm(f => ({ ...f, utr: e.target.value })); setErr(''); }} placeholder="Optional — checked for duplicates across workspace" />
+          </div>
+          <div className="input-group">
+            <label className="input-label">Note</label>
+            <input className="admin-input" value={form.note} onChange={e => setForm(f => ({ ...f, note: e.target.value }))} placeholder="Optional" />
+          </div>
+          {err && <p style={{ fontSize: 12, color: 'var(--red, #E53E3E)', margin: 0 }}>{err}</p>}
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn-ghost btn-sm" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary btn-sm" onClick={submit} disabled={loading}>
+            {loading ? <span className="spinner" /> : 'Record Payment'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AddCommentModal({ order, tenantId, onClose, onSuccess, toast }: any) {
+  const [text, setText] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
+
+  async function submit() {
+    if (!text.trim()) { setErr('Comment text is required'); return; }
+    setLoading(true); setErr('');
+    try {
+      await api.post(`/admin/tenants/${tenantId}/orders/${order._id}/comments`, { text: text.trim() });
+      toast('Internal note added');
+      onSuccess();
+    } catch (e: any) {
+      setErr(e?.response?.data?.error || 'Failed to add comment');
+    }
+    setLoading(false);
+  }
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-box" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+        <div className="modal-header">
+          <div>
+            <div className="modal-title">Add Internal Note</div>
+            <div className="modal-sub">Visible to admin team only — tenants cannot see this</div>
+          </div>
+        </div>
+        <div className="modal-body">
+          <textarea
+            className="admin-input"
+            rows={4}
+            value={text}
+            onChange={e => { setText(e.target.value); setErr(''); }}
+            placeholder="Internal support note…"
+            style={{ width: '100%', resize: 'vertical' }}
+          />
+          {err && <p style={{ fontSize: 12, color: 'var(--red, #E53E3E)', margin: '6px 0 0' }}>{err}</p>}
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn-ghost btn-sm" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary btn-sm" onClick={submit} disabled={loading}>
+            {loading ? <span className="spinner" /> : 'Add Note'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DispatchModal({ order, tenantId, onClose, onSuccess, toast }: any) {
+  const isAlreadyDispatched = ['dispatched', 'delivered', 'rto'].includes(order.status);
+  const [form, setForm] = useState({
+    courierName: order.courier?.name || '',
+    trackingNumber: order.courier?.trackingNumber || '',
+    dispatchDate: '',
+  });
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
+
+  async function submit() {
+    if (!form.courierName.trim()) { setErr('Courier name is required'); return; }
+    setLoading(true); setErr('');
+    try {
+      await api.post(`/admin/tenants/${tenantId}/orders/${order._id}/dispatch`, {
+        courierName: form.courierName.trim(),
+        trackingNumber: form.trackingNumber.trim() || undefined,
+        dispatchDate: form.dispatchDate || undefined,
+      });
+      toast(isAlreadyDispatched ? 'Courier info updated' : 'Order dispatched');
+      onSuccess();
+    } catch (e: any) {
+      const data = e?.response?.data;
+      if (e?.response?.status === 422) {
+        setErr(`${data?.error || 'Invalid transition'}. Valid next: ${(data?.validNext || []).map((s: string) => STATUS_LABEL[s] || s).join(', ')}`);
+      } else {
+        setErr(data?.error || 'Failed to update dispatch info');
+      }
+    }
+    setLoading(false);
+  }
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-box modal-warning" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+        <div className="modal-header">
+          <div>
+            <div className="modal-title">{isAlreadyDispatched ? 'Update Courier Info' : 'Dispatch Order'}</div>
+            <div className="modal-sub">Order {order.orderId || order._id?.toString().slice(-8)}{isAlreadyDispatched ? ' — updating tracking only, status unchanged' : ' — will advance status to Dispatched'}</div>
+          </div>
+        </div>
+        <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div className="input-group">
+            <label className="input-label">Courier Name *</label>
+            <input className="admin-input" value={form.courierName} onChange={e => { setForm(f => ({ ...f, courierName: e.target.value })); setErr(''); }} placeholder="e.g. Delhivery, DTDC" />
+          </div>
+          <div className="input-group">
+            <label className="input-label">Tracking / AWB Number</label>
+            <input className="admin-input" value={form.trackingNumber} onChange={e => setForm(f => ({ ...f, trackingNumber: e.target.value }))} placeholder="Optional — marks tracking pending if blank" />
+          </div>
+          <div className="input-group">
+            <label className="input-label">Dispatch Date</label>
+            <input type="date" className="admin-input" value={form.dispatchDate} onChange={e => setForm(f => ({ ...f, dispatchDate: e.target.value }))} />
+          </div>
+          {err && <p style={{ fontSize: 12, color: 'var(--red, #E53E3E)', margin: 0 }}>{err}</p>}
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn-ghost btn-sm" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary btn-sm" onClick={submit} disabled={loading}>
+            {loading ? <span className="spinner" /> : isAlreadyDispatched ? 'Update Courier' : 'Dispatch'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EditCustomerModal({ customer, tenantId, onClose, onSuccess, toast }: any) {
+  const [form, setForm] = useState({
+    name:  customer.name  || '',
+    email: customer.email || '',
+    phone: customer.phone || '',
+    notes: customer.notes || '',
+  });
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
+
+  async function submit() {
+    if (!form.name.trim()) { setErr('Name is required'); return; }
+    setLoading(true); setErr('');
+    try {
+      await api.put(`/admin/tenants/${tenantId}/customers/${customer._id}`, {
+        name:  form.name.trim()  || undefined,
+        email: form.email.trim() || undefined,
+        phone: form.phone.trim() || undefined,
+        notes: form.notes.trim() || undefined,
+      });
+      toast('Customer profile updated');
+      onSuccess();
+    } catch (e: any) {
+      setErr(e?.response?.data?.error || 'Failed to update customer');
+    }
+    setLoading(false);
+  }
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-box modal-warning" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+        <div className="modal-header">
+          <div>
+            <div className="modal-title">Edit Customer</div>
+            <div className="modal-sub">Changes are audit-logged with before/after diff</div>
+          </div>
+        </div>
+        <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div className="input-group">
+            <label className="input-label">Name *</label>
+            <input className="admin-input" value={form.name} onChange={e => { setForm(f => ({ ...f, name: e.target.value })); setErr(''); }} />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div className="input-group">
+              <label className="input-label">Phone</label>
+              <input className="admin-input" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
+            </div>
+            <div className="input-group">
+              <label className="input-label">Email</label>
+              <input type="email" className="admin-input" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+            </div>
+          </div>
+          <div className="input-group">
+            <label className="input-label">Notes</label>
+            <textarea className="admin-input" rows={2} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} style={{ resize: 'none' }} />
+          </div>
+          {err && <p style={{ fontSize: 12, color: 'var(--red, #E53E3E)', margin: 0 }}>{err}</p>}
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn-ghost btn-sm" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary btn-sm" onClick={submit} disabled={loading}>
+            {loading ? <span className="spinner" /> : 'Save Changes'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function TenantDetailPage() {
   const { tenantId } = useParams<{ tenantId: string }>();
   const router = useRouter();
@@ -93,7 +509,7 @@ export default function TenantDetailPage() {
   const [loading, setLoading] = useState(true);
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
-  const [tab, setTab] = useState<'overview' | 'subscription' | 'notes' | 'deliveries' | 'flags'>('overview');
+  const [tab, setTab] = useState<'overview' | 'subscription' | 'notes' | 'orders' | 'customers' | 'deliveries' | 'flags' | 'analytics' | 'settings' | 'team' | 'overdue' | 'products' | 'invoices'>('overview');
   const [toastMsg, setToastMsg] = useState('');
   const [trialDays, setTrialDays] = useState(14);
   const [deliveries, setDeliveries] = useState<any[]>([]);
@@ -104,6 +520,63 @@ export default function TenantDetailPage() {
   const [flagsLoading, setFlagsLoading] = useState(false);
   const [confirmAction, setConfirmAction] = useState<any>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  // orders tab
+  const [orders, setOrders] = useState<any[]>([]);
+  const [ordersTotal, setOrdersTotal] = useState(0);
+  const [ordersPage, setOrdersPage] = useState(1);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersStatus, setOrdersStatus] = useState('');
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [orderDetailLoading, setOrderDetailLoading] = useState(false);
+  // override plan modal
+  const [overrideOpen, setOverrideOpen] = useState(false);
+  // customers tab
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [customersTotal, setCustomersTotal] = useState(0);
+  const [customersPage, setCustomersPage] = useState(1);
+  const [customersLoading, setCustomersLoading] = useState(false);
+  const [customerSearch, setCustomerSearch] = useState('');
+  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+  const [customerDetailLoading, setCustomerDetailLoading] = useState(false);
+  // write-on-behalf modal state
+  const [statusModal, setStatusModal] = useState<any>(null);      // { order }
+  const [paymentModal, setPaymentModal] = useState<any>(null);    // { order }
+  const [commentModal, setCommentModal] = useState<any>(null);    // { order }
+  const [dispatchModal, setDispatchModal] = useState<any>(null);  // { order }
+  const [editCustomerModal, setEditCustomerModal] = useState<any>(null); // { customer }
+  // analytics tab
+  const [analytics, setAnalytics] = useState<any>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  // settings tab
+  const [tenantSettings, setTenantSettings] = useState<any>(null);
+  const [settingsLoading, setSettingsLoading] = useState(false);
+  const [settingsDraft, setSettingsDraft] = useState<any>(null);
+  const [settingsSaving, setSettingsSaving] = useState(false);
+  // wa-agent card (inside settings tab)
+  const [waAgent, setWaAgent] = useState<any>(null);
+  const [waAgentLoading, setWaAgentLoading] = useState(false);
+  const [waAgentProvisionForm, setWaAgentProvisionForm] = useState<any>(null);
+  const [waAgentTemplatesDraft, setWaAgentTemplatesDraft] = useState<any>(null);
+  const [waAgentSaving, setWaAgentSaving] = useState(false);
+  // team tab
+  const [teamData, setTeamData] = useState<any>(null);
+  const [teamLoading, setTeamLoading] = useState(false);
+  // overdue payments tab
+  const [overdueOrders, setOverdueOrders] = useState<any[]>([]);
+  const [overdueTotal, setOverdueTotal] = useState(0);
+  const [overduePage, setOverduePage] = useState(1);
+  const [overdueLoading, setOverdueLoading] = useState(false);
+  // products tab
+  const [products, setProducts] = useState<any[]>([]);
+  const [productsTotal, setProductsTotal] = useState(0);
+  const [productsPage, setProductsPage] = useState(1);
+  const [productsSearch, setProductsSearch] = useState('');
+  const [productsLoading, setProductsLoading] = useState(false);
+  // invoices tab
+  const [invoices, setInvoices] = useState<any[]>([]);
+  const [invoicesTotal, setInvoicesTotal] = useState(0);
+  const [invoicesPage, setInvoicesPage] = useState(1);
+  const [invoicesLoading, setInvoicesLoading] = useState(false);
   const { setTitle } = usePageTitle();
 
   useEffect(() => { load(); }, [tenantId]);
@@ -116,6 +589,22 @@ export default function TenantDetailPage() {
   useEffect(() => { if (tab === 'deliveries') loadDeliveries(1); }, [tab]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (tab === 'flags') loadFlags(); }, [tab]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (tab === 'orders') loadOrders(1, ordersStatus); }, [tab]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (tab === 'customers') loadCustomers(1, customerSearch); }, [tab]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (tab === 'analytics') loadAnalytics(); }, [tab]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (tab === 'settings') { loadTenantSettings(); loadWaAgent(); } }, [tab]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (tab === 'team') loadTeam(); }, [tab]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (tab === 'overdue') loadOverdue(1); }, [tab]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (tab === 'products') loadProducts(1, ''); }, [tab]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (tab === 'invoices') loadInvoices(1); }, [tab]);
 
   async function load() {
     setLoading(true);
@@ -149,9 +638,10 @@ export default function TenantDetailPage() {
   async function impersonate() {
     try {
       const res = await api.post(`/admin/tenants/${tenantId}/impersonate`);
-      const { token, user } = res.data;
-      toast(`Impersonating ${user.email} — token copied`);
-      navigator.clipboard?.writeText(token);
+      const { token } = res.data;
+      const base = (process.env.NEXT_PUBLIC_TENANT_APP_URL || 'https://app.ordermatrix.in').replace(/\/$/, '');
+      window.open(`${base}/en/admin-session?admin_token=${encodeURIComponent(token)}`, '_blank', 'noopener');
+      toast('Impersonation session opened in new tab (15 min)');
     } catch (e: any) { toast(e?.response?.data?.error || 'Failed to impersonate'); }
   }
 
@@ -212,6 +702,175 @@ export default function TenantDetailPage() {
       setFlags(prev);
       toast('Failed to update flag');
     }
+  }
+
+  async function loadOrders(page: number, status: string) {
+    setOrdersLoading(true);
+    setOrdersPage(page);
+    setSelectedOrder(null);
+    try {
+      const params = new URLSearchParams({ page: String(page), limit: '25' });
+      if (status) params.set('status', status);
+      const res = await api.get(`/admin/tenants/${tenantId}/orders?${params}`);
+      setOrders(res.data.orders || []);
+      setOrdersTotal(res.data.total || 0);
+    } catch { /**/ }
+    setOrdersLoading(false);
+  }
+
+  async function loadCustomers(page: number, search: string) {
+    setCustomersLoading(true);
+    setCustomersPage(page);
+    setSelectedCustomer(null);
+    try {
+      const params = new URLSearchParams({ page: String(page), limit: '25' });
+      if (search.trim()) params.set('search', search.trim());
+      const res = await api.get(`/admin/tenants/${tenantId}/customers?${params}`);
+      setCustomers(res.data.customers || []);
+      setCustomersTotal(res.data.total || 0);
+    } catch { /**/ }
+    setCustomersLoading(false);
+  }
+
+  async function loadCustomerDetail(cid: string) {
+    setCustomerDetailLoading(true);
+    try {
+      const res = await api.get(`/admin/tenants/${tenantId}/customers/${cid}`);
+      setSelectedCustomer(res.data);
+    } catch { toast('Failed to load customer'); }
+    setCustomerDetailLoading(false);
+  }
+
+  async function loadOrderDetail(oid: string) {
+    setOrderDetailLoading(true);
+    try {
+      const res = await api.get(`/admin/tenants/${tenantId}/orders/${oid}`);
+      setSelectedOrder(res.data.order);
+    } catch { toast('Failed to load order detail'); }
+    setOrderDetailLoading(false);
+  }
+
+  async function loadAnalytics() {
+    setAnalyticsLoading(true);
+    try {
+      const res = await api.get(`/admin/tenants/${tenantId}/analytics`);
+      setAnalytics(res.data);
+    } catch { toast('Failed to load analytics'); }
+    setAnalyticsLoading(false);
+  }
+
+  async function loadTenantSettings() {
+    setSettingsLoading(true);
+    try {
+      const res = await api.get(`/admin/tenants/${tenantId}/settings`);
+      setTenantSettings(res.data);
+    } catch { toast('Failed to load settings'); }
+    setSettingsLoading(false);
+  }
+
+  async function saveSettings() {
+    if (!settingsDraft) return;
+    setSettingsSaving(true);
+    try {
+      await api.patch(`/admin/tenants/${tenantId}/settings`, {
+        businessName:  settingsDraft.businessName,
+        settings: {
+          timezone:    settingsDraft.settings?.timezone,
+          currency:    settingsDraft.settings?.currency,
+          orderPrefix: settingsDraft.settings?.orderPrefix,
+          density:     settingsDraft.settings?.density,
+        },
+        invoiceConfig: {
+          prefix:    settingsDraft.invoiceConfig?.prefix,
+          gstin:     settingsDraft.invoiceConfig?.gstin,
+          upiId:     settingsDraft.invoiceConfig?.upiId,
+          showUpiQr: settingsDraft.invoiceConfig?.showUpiQr,
+        },
+        whatsappConfig: { templateSids: settingsDraft.whatsapp?.templateSids },
+      });
+      setTenantSettings(settingsDraft);
+      setSettingsDraft(null);
+      toast('Settings saved');
+    } catch { toast('Failed to save settings'); }
+    setSettingsSaving(false);
+  }
+
+  async function loadWaAgent() {
+    setWaAgentLoading(true);
+    try {
+      const res = await api.get(`/admin/tenants/${tenantId}/wa-agent`);
+      setWaAgent(res.data);
+    } catch { setWaAgent(null); }
+    setWaAgentLoading(false);
+  }
+
+  async function provisionWaAgent() {
+    if (!waAgentProvisionForm) return;
+    setWaAgentSaving(true);
+    try {
+      await api.post(`/admin/tenants/${tenantId}/wa-agent`, waAgentProvisionForm);
+      toast('WA Agent provisioned');
+      setWaAgentProvisionForm(null);
+      await loadWaAgent();
+    } catch (e: any) { toast(e?.response?.data?.error || 'Provisioning failed'); }
+    setWaAgentSaving(false);
+  }
+
+  async function saveWaTemplates() {
+    if (!waAgentTemplatesDraft) return;
+    setWaAgentSaving(true);
+    try {
+      await api.patch(`/admin/tenants/${tenantId}/wa-agent/templates`, waAgentTemplatesDraft);
+      setWaAgent((w: any) => ({ ...w, courierTemplates: waAgentTemplatesDraft }));
+      setWaAgentTemplatesDraft(null);
+      toast('Templates saved');
+    } catch (e: any) { toast(e?.response?.data?.error || 'Failed to save templates'); }
+    setWaAgentSaving(false);
+  }
+
+  async function loadTeam() {
+    setTeamLoading(true);
+    try {
+      const res = await api.get(`/admin/tenants/${tenantId}/users`);
+      setTeamData(res.data);
+    } catch { toast('Failed to load team'); }
+    setTeamLoading(false);
+  }
+
+  async function loadProducts(page: number, search: string) {
+    setProductsLoading(true);
+    setProductsPage(page);
+    try {
+      const params = new URLSearchParams({ page: String(page), limit: '50' });
+      if (search.trim()) params.set('search', search.trim());
+      const res = await api.get(`/admin/tenants/${tenantId}/products?${params}`);
+      setProducts(res.data.products || []);
+      setProductsTotal(res.data.total || 0);
+    } catch { /**/ }
+    setProductsLoading(false);
+  }
+
+  async function loadInvoices(page: number) {
+    setInvoicesLoading(true);
+    setInvoicesPage(page);
+    try {
+      const res = await api.get(`/admin/tenants/${tenantId}/invoices?page=${page}&limit=25`);
+      setInvoices(res.data.invoices || []);
+      setInvoicesTotal(res.data.total || 0);
+    } catch { /**/ }
+    setInvoicesLoading(false);
+  }
+
+  async function loadOverdue(page: number) {
+    setOverdueLoading(true);
+    setOverduePage(page);
+    try {
+      const params = new URLSearchParams({ page: String(page), limit: '25', hasBalance: 'true' });
+      const res = await api.get(`/admin/tenants/${tenantId}/orders?${params}`);
+      setOverdueOrders(res.data.orders || []);
+      setOverdueTotal(res.data.total || 0);
+    } catch { /**/ }
+    setOverdueLoading(false);
   }
 
   function timeAgo(d: string) {
@@ -278,11 +937,11 @@ export default function TenantDetailPage() {
     impersonate: {
       type: 'impersonate',
       title: 'Impersonate Tenant',
-      message: `You are about to log in as ${tenant.businessName}. All actions will be performed as this tenant.`,
-      detail: 'Session expires in 15 minutes. This action is logged.',
+      message: `Open a 15-minute admin session as ${tenant.businessName}? A new tab will open in the tenant app. This action is audit-logged.`,
+      detail: 'The session token expires in 15 minutes and cannot be extended.',
       level: 'warning',
       verifyText: null,
-      confirmLabel: 'Start Session',
+      confirmLabel: 'Open Session',
       confirmClass: 'btn-primary',
     },
     deactivate: {
@@ -322,6 +981,62 @@ export default function TenantDetailPage() {
         />
       )}
 
+      {overrideOpen && sub && (
+        <OverridePlanModal
+          subId={sub._id}
+          current={sub}
+          onClose={() => setOverrideOpen(false)}
+          onSuccess={() => { setOverrideOpen(false); load(); }}
+          toast={toast}
+        />
+      )}
+
+      {statusModal && (
+        <OrderStatusModal
+          order={statusModal.order}
+          tenantId={tenantId}
+          onClose={() => setStatusModal(null)}
+          onSuccess={() => { setStatusModal(null); loadOrders(ordersPage, ordersStatus); setSelectedOrder(null); }}
+          toast={toast}
+        />
+      )}
+      {paymentModal && (
+        <RecordPaymentModal
+          order={paymentModal.order}
+          tenantId={tenantId}
+          onClose={() => setPaymentModal(null)}
+          onSuccess={() => { setPaymentModal(null); loadOrderDetail(paymentModal.order._id); }}
+          toast={toast}
+        />
+      )}
+      {commentModal && (
+        <AddCommentModal
+          order={commentModal.order}
+          tenantId={tenantId}
+          onClose={() => setCommentModal(null)}
+          onSuccess={() => { setCommentModal(null); loadOrderDetail(commentModal.order._id); }}
+          toast={toast}
+        />
+      )}
+      {dispatchModal && (
+        <DispatchModal
+          order={dispatchModal.order}
+          tenantId={tenantId}
+          onClose={() => setDispatchModal(null)}
+          onSuccess={() => { setDispatchModal(null); loadOrders(ordersPage, ordersStatus); setSelectedOrder(null); }}
+          toast={toast}
+        />
+      )}
+      {editCustomerModal && (
+        <EditCustomerModal
+          customer={editCustomerModal.customer}
+          tenantId={tenantId}
+          onClose={() => setEditCustomerModal(null)}
+          onSuccess={() => { setEditCustomerModal(null); loadCustomerDetail(editCustomerModal.customer._id); }}
+          toast={toast}
+        />
+      )}
+
       {/* Back link */}
       <button
         onClick={() => router.back()}
@@ -358,8 +1073,7 @@ export default function TenantDetailPage() {
           </button>
           <button
             className="btn btn-ghost btn-sm"
-            disabled
-            title="Plan overrides coming in the next release"
+            onClick={() => setOverrideOpen(true)}
           >
             Override Plan
           </button>
@@ -395,7 +1109,7 @@ export default function TenantDetailPage() {
 
       {/* Tabs */}
       <div className="tab-bar">
-        {(['overview', 'subscription', 'notes', 'deliveries', ...(hasRole(admin, 'superadmin') ? ['flags'] : [])] as const).map((t: any) => (
+        {(['overview', 'subscription', 'notes', 'orders', 'customers', 'deliveries', 'analytics', 'settings', 'team', 'overdue', 'products', 'invoices', ...(hasRole(admin, 'superadmin') ? ['flags'] : [])] as const).map((t: any) => (
           <button key={t} onClick={() => setTab(t)} className={`tab-btn${tab === t ? ' active' : ''}`} style={{ textTransform: 'capitalize' }}>
             {t}
           </button>
@@ -531,6 +1245,257 @@ export default function TenantDetailPage() {
         </div>
       )}
 
+      {tab === 'orders' && (
+        <div>
+          {/* Status filter chips */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
+            {(['', ...ALL_STATUSES] as const).map((s: any) => (
+              <button
+                key={s || 'all'}
+                className={`btn btn-ghost btn-sm${ordersStatus === s ? ' active' : ''}`}
+                style={{ fontWeight: ordersStatus === s ? 600 : 400 }}
+                onClick={() => { setOrdersStatus(s); loadOrders(1, s); }}
+              >
+                {s ? STATUS_LABEL[s] : 'All'}
+              </button>
+            ))}
+          </div>
+
+          {ordersLoading ? (
+            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+          ) : (
+            <>
+              <div className="admin-card">
+                <div className="table-shell">
+                  <table className="admin-table">
+                    <thead>
+                      <tr><th>Order ID</th><th>Customer</th><th>Status</th><th>Amount</th><th>Date</th></tr>
+                    </thead>
+                    <tbody>
+                      {orders.map((o: any) => (
+                        <>
+                          <tr
+                            key={o._id}
+                            style={{ cursor: 'pointer', background: selectedOrder?._id === o._id ? 'var(--surface-selected, var(--surface-hover))' : undefined }}
+                            onClick={() => selectedOrder?._id === o._id ? setSelectedOrder(null) : loadOrderDetail(o._id)}
+                          >
+                            <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{o.orderId || o._id?.toString().slice(-8)}</td>
+                            <td>
+                              <div className="cell-main">{o.customerName || o.customer?.name || '—'}</div>
+                              <div className="cell-sub">{o.customerPhone || o.customer?.phone || ''}</div>
+                            </td>
+                            <td><span className={`badge ${STATUS_COLOR[o.status] || 'badge-gray'}`}>{STATUS_LABEL[o.status] || o.status}</span></td>
+                            <td style={{ fontVariantNumeric: 'tabular-nums' }}>{o.totalAmount || o.amount ? fmt(o.totalAmount || o.amount) : '—'}</td>
+                            <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{fmtDate(o.createdAt)}</td>
+                          </tr>
+                          {selectedOrder?._id === o._id && (
+                            <tr key={`${o._id}-detail`}>
+                              <td colSpan={5} style={{ padding: 0 }}>
+                                {orderDetailLoading ? (
+                                  <div style={{ padding: '20px 18px', color: 'var(--ink-4)', fontSize: 13 }}>Loading…</div>
+                                ) : selectedOrder && (
+                                  <div style={{ padding: '16px 18px', background: 'var(--surface-soft, var(--surface))', borderTop: '1px solid var(--line)' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '8px 24px', marginBottom: 14 }}>
+                                      {[
+                                        ['Payment', selectedOrder.paymentStatus || '—'],
+                                        ['Mode', selectedOrder.paymentMode || '—'],
+                                        ['Paid', selectedOrder.amountPaid != null ? fmt(selectedOrder.amountPaid) : '—'],
+                                        ['Balance', selectedOrder.balanceDue != null ? fmt(selectedOrder.balanceDue) : '—'],
+                                        ['Courier', selectedOrder.courier?.name || '—'],
+                                        ['Tracking', selectedOrder.courier?.trackingNumber || '—'],
+                                        ['Items', (selectedOrder.items?.length || 0) + ' item(s)'],
+                                        ['Admin Notes', (selectedOrder.comments?.filter((c: any) => c.adminOnly) || []).length + ' note(s)'],
+                                      ].map(([k, v]) => (
+                                        <div key={k as string}>
+                                          <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-4)', marginBottom: 3 }}>{k}</div>
+                                          <div style={{ fontSize: 13, color: 'var(--ink)', fontFamily: ['Courier', 'Tracking'].includes(k as string) ? 'var(--font-mono)' : undefined }}>{v}</div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                    {['returned', 'rto', 'cancelled'].includes(selectedOrder.status) && (
+                                      <div style={{ borderTop: '1px solid var(--line)', paddingTop: 12, marginBottom: 12 }}>
+                                        <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-4)', marginBottom: 8 }}>Return / Refund</div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '8px 24px' }}>
+                                          {[
+                                            selectedOrder.rto?.reason       ? ['RTO Reason',      selectedOrder.rto.reason]       : null,
+                                            selectedOrder.rto?.resolution   ? ['RTO Resolution',  selectedOrder.rto.resolution]   : null,
+                                            selectedOrder.cancellation?.reason ? ['Cancel Reason', selectedOrder.cancellation.reason] : null,
+                                            selectedOrder.cancellation?.refundStatus && selectedOrder.cancellation.refundStatus !== 'not_applicable'
+                                              ? ['Refund Status', selectedOrder.cancellation.refundStatus] : null,
+                                            selectedOrder.refundRequest?.status ? ['Refund Request', selectedOrder.refundRequest.status] : null,
+                                            selectedOrder.refundRequest?.amount != null ? ['Refund Amount', fmt(selectedOrder.refundRequest.amount)] : null,
+                                          ].filter((entry): entry is [string, string] => entry !== null).map(([k, v]) => (
+                                            <div key={k as string}>
+                                              <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-4)', marginBottom: 3 }}>{k}</div>
+                                              <div style={{ fontSize: 13, color: 'var(--ink)', textTransform: 'capitalize' }}>{v}</div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                    {canEdit && (
+                                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, borderTop: '1px solid var(--line)', paddingTop: 12 }}>
+                                        <button className="btn btn-ghost btn-sm" onClick={() => setStatusModal({ order: selectedOrder })}>
+                                          Update Status
+                                        </button>
+                                        <button className="btn btn-ghost btn-sm" onClick={() => setDispatchModal({ order: selectedOrder })}>
+                                          {['dispatched', 'delivered', 'rto'].includes(selectedOrder.status) ? 'Update Courier' : 'Dispatch'}
+                                        </button>
+                                        <button className="btn btn-ghost btn-sm" onClick={() => setPaymentModal({ order: selectedOrder })}>
+                                          Record Payment
+                                        </button>
+                                        <button className="btn btn-ghost btn-sm" onClick={() => setCommentModal({ order: selectedOrder })}>
+                                          Add Note
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                          )}
+                        </>
+                      ))}
+                      {orders.length === 0 && (
+                        <tr><td colSpan={5} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>No orders found</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                {ordersTotal > 25 && (
+                  <div className="pagination">
+                    <span className="pagination-info">{(ordersPage - 1) * 25 + 1}–{Math.min(ordersPage * 25, ordersTotal)} of {ordersTotal}</span>
+                    <div className="pagination-controls">
+                      <button className="btn btn-ghost btn-sm" disabled={ordersPage === 1} onClick={() => loadOrders(ordersPage - 1, ordersStatus)}>← Prev</button>
+                      <button className="btn btn-ghost btn-sm" disabled={ordersPage * 25 >= ordersTotal} onClick={() => loadOrders(ordersPage + 1, ordersStatus)}>Next →</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {tab === 'customers' && (
+        <div>
+          {/* Search bar */}
+          <div style={{ marginBottom: 14 }}>
+            <input
+              className="admin-input"
+              placeholder="Search by name, phone, or email…"
+              value={customerSearch}
+              onChange={e => setCustomerSearch(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && loadCustomers(1, customerSearch)}
+              style={{ maxWidth: 340 }}
+            />
+          </div>
+
+          {customersLoading ? (
+            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+          ) : selectedCustomer ? (
+            /* Customer detail panel */
+            <div>
+              <button className="btn btn-ghost btn-sm" style={{ marginBottom: 12 }} onClick={() => setSelectedCustomer(null)}>
+                ← Back to customers
+              </button>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div className="admin-card">
+                  <div className="card-header">
+                    <div className="card-title">Customer Profile</div>
+                    {canEdit && (
+                      <button
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => setEditCustomerModal({ customer: selectedCustomer.customer })}
+                      >
+                        Edit
+                      </button>
+                    )}
+                  </div>
+                  <div className="card-body">
+                    {[
+                      ['Name', selectedCustomer.customer?.name],
+                      ['Phone', selectedCustomer.customer?.phone],
+                      ['Email', selectedCustomer.customer?.email || '—'],
+                      ['Instagram', selectedCustomer.customer?.instagramHandle || '—'],
+                      ['Total Orders', selectedCustomer.customer?.totalOrders],
+                      ['Total Spent', selectedCustomer.customer?.totalSpent ? fmt(selectedCustomer.customer.totalSpent) : '—'],
+                      ['Last Order', selectedCustomer.customer?.lastOrderAt ? fmtDate(selectedCustomer.customer.lastOrderAt) : '—'],
+                      ['Tags', (selectedCustomer.customer?.tags || []).join(', ') || '—'],
+                      ['Notes', selectedCustomer.customer?.notes || '—'],
+                    ].map(([k, v]) => (
+                      <div key={k as string} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 10 }}>
+                        <span style={{ color: 'var(--ink-4)' }}>{k}</span>
+                        <span className="cell-main">{v?.toString() || '—'}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="admin-card">
+                  <div className="card-header"><div className="card-title">Recent Orders</div></div>
+                  {customerDetailLoading ? (
+                    <div className="card-body" style={{ textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+                  ) : (
+                    <div className="table-shell">
+                      <table className="admin-table">
+                        <thead><tr><th>ID</th><th>Status</th><th>Amount</th><th>Date</th></tr></thead>
+                        <tbody>
+                          {(selectedCustomer.orders || []).map((o: any) => (
+                            <tr key={o._id}>
+                              <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11 }}>{o.orderId || o._id?.toString().slice(-8)}</td>
+                              <td><span className={`badge ${STATUS_COLOR[o.status] || 'badge-gray'}`}>{STATUS_LABEL[o.status] || o.status}</span></td>
+                              <td style={{ fontVariantNumeric: 'tabular-nums', fontSize: 12 }}>{o.totalAmount || o.amount ? fmt(o.totalAmount || o.amount) : '—'}</td>
+                              <td style={{ fontSize: 11, color: 'var(--ink-4)' }}>{fmtDate(o.createdAt)}</td>
+                            </tr>
+                          ))}
+                          {(selectedCustomer.orders || []).length === 0 && (
+                            <tr><td colSpan={4} style={{ textAlign: 'center', padding: 24, color: 'var(--ink-4)' }}>No orders</td></tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="admin-card">
+              <div className="table-shell">
+                <table className="admin-table">
+                  <thead>
+                    <tr><th>Name</th><th>Phone</th><th>Email</th><th>Orders</th><th>Spent</th><th>Last Order</th></tr>
+                  </thead>
+                  <tbody>
+                    {customers.map((c: any) => (
+                      <tr key={c._id} style={{ cursor: 'pointer' }} onClick={() => loadCustomerDetail(c._id)}>
+                        <td className="cell-main">{c.name}</td>
+                        <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{c.phone}</td>
+                        <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{c.email || '—'}</td>
+                        <td style={{ fontVariantNumeric: 'tabular-nums' }}>{c.totalOrders || 0}</td>
+                        <td style={{ fontVariantNumeric: 'tabular-nums' }}>{c.totalSpent ? fmt(c.totalSpent) : '—'}</td>
+                        <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{c.lastOrderAt ? fmtDate(c.lastOrderAt) : '—'}</td>
+                      </tr>
+                    ))}
+                    {customers.length === 0 && (
+                      <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>No customers found</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              {customersTotal > 25 && (
+                <div className="pagination">
+                  <span className="pagination-info">{(customersPage - 1) * 25 + 1}–{Math.min(customersPage * 25, customersTotal)} of {customersTotal}</span>
+                  <div className="pagination-controls">
+                    <button className="btn btn-ghost btn-sm" disabled={customersPage === 1} onClick={() => loadCustomers(customersPage - 1, customerSearch)}>← Prev</button>
+                    <button className="btn btn-ghost btn-sm" disabled={customersPage * 25 >= customersTotal} onClick={() => loadCustomers(customersPage + 1, customerSearch)}>Next →</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {tab === 'deliveries' && (
         <div>
           {dlLoading ? (
@@ -568,6 +1533,616 @@ export default function TenantDetailPage() {
                   <div className="pagination-controls">
                     <button className="btn btn-ghost btn-sm" disabled={dlPage === 1} onClick={() => loadDeliveries(dlPage - 1)}>← Prev</button>
                     <button className="btn btn-ghost btn-sm" disabled={dlPage * 20 >= dlTotal} onClick={() => loadDeliveries(dlPage + 1)}>Next →</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === 'analytics' && (
+        <div>
+          {analyticsLoading ? (
+            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+          ) : analytics ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+                <div className="stat-card">
+                  <div className="stat-label">Revenue This Month</div>
+                  <div className="stat-value">{fmt(analytics.revenueThisMonth || 0)}</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-label">Orders This Month</div>
+                  <div className="stat-value">{analytics.ordersThisMonth || 0}</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-label">Avg Order Value</div>
+                  <div className="stat-value">
+                    {analytics.ordersThisMonth ? fmt(Math.round((analytics.revenueThisMonth || 0) / analytics.ordersThisMonth)) : '—'}
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div className="admin-card">
+                  <div className="card-header"><div className="card-title">Orders by Status</div></div>
+                  <div className="table-shell">
+                    <table className="admin-table">
+                      <thead><tr><th>Status</th><th style={{ textAlign: 'right' }}>Count</th></tr></thead>
+                      <tbody>
+                        {(analytics.statusBreakdown || []).sort((a: any, b: any) => b.count - a.count).map((row: any) => (
+                          <tr key={row._id}>
+                            <td><span className={`badge ${STATUS_COLOR[row._id] || 'badge-gray'}`}>{STATUS_LABEL[row._id] || row._id}</span></td>
+                            <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{row.count}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div className="admin-card">
+                  <div className="card-header"><div className="card-title">Payment Modes</div></div>
+                  <div className="table-shell">
+                    <table className="admin-table">
+                      <thead><tr><th>Mode</th><th style={{ textAlign: 'right' }}>Orders</th><th style={{ textAlign: 'right' }}>Amount</th></tr></thead>
+                      <tbody>
+                        {(analytics.paymentModeBreakdown || []).sort((a: any, b: any) => b.count - a.count).map((row: any) => (
+                          <tr key={row._id}>
+                            <td style={{ textTransform: 'capitalize' }}>{row._id || 'Unknown'}</td>
+                            <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{row.count}</td>
+                            <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(row.amount || 0)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <div className="admin-card">
+                <div className="card-header"><div className="card-title">Daily Orders — Last 14 Days</div></div>
+                <div className="table-shell">
+                  <table className="admin-table">
+                    <thead><tr><th>Date</th><th style={{ textAlign: 'right' }}>Orders</th><th style={{ textAlign: 'right' }}>Revenue</th></tr></thead>
+                    <tbody>
+                      {(analytics.dailyOrders || []).map((row: any) => (
+                        <tr key={row._id}>
+                          <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{row._id}</td>
+                          <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{row.count}</td>
+                          <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(row.revenue || 0)}</td>
+                        </tr>
+                      ))}
+                      {(analytics.dailyOrders || []).length === 0 && (
+                        <tr><td colSpan={3} style={{ textAlign: 'center', padding: 24, color: 'var(--ink-4)' }}>No orders in last 14 days</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>No analytics data</div>
+          )}
+        </div>
+      )}
+
+      {tab === 'settings' && (
+        <div>
+          {settingsLoading ? (
+            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+          ) : tenantSettings ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+              {/* Edit / Save / Cancel — ops_admin+ only */}
+              {canEdit && (
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                  {settingsDraft ? (
+                    <>
+                      <button className="btn btn-ghost btn-sm" onClick={() => setSettingsDraft(null)} disabled={settingsSaving}>Cancel</button>
+                      <button className="btn btn-primary btn-sm" onClick={saveSettings} disabled={settingsSaving}>
+                        {settingsSaving ? <><span className="spinner" />Saving…</> : 'Save Changes'}
+                      </button>
+                    </>
+                  ) : (
+                    <button className="btn btn-ghost btn-sm" onClick={() => setSettingsDraft(JSON.parse(JSON.stringify(tenantSettings)))}>Edit Settings</button>
+                  )}
+                </div>
+              )}
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+
+                {/* General card */}
+                <div className="admin-card">
+                  <div className="card-header"><div className="card-title">General</div></div>
+                  <div className="card-body">
+                    {settingsDraft ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {([
+                          ['Business Name', 'businessName',       (d: any) => d.businessName,              (d: any, v: string) => ({ ...d, businessName: v })],
+                          ['Timezone',      'settings.timezone',  (d: any) => d.settings?.timezone,        (d: any, v: string) => ({ ...d, settings: { ...d.settings, timezone: v } })],
+                          ['Currency',      'settings.currency',  (d: any) => d.settings?.currency,        (d: any, v: string) => ({ ...d, settings: { ...d.settings, currency: v } })],
+                          ['Order Prefix',  'settings.prefix',    (d: any) => d.settings?.orderPrefix,     (d: any, v: string) => ({ ...d, settings: { ...d.settings, orderPrefix: v } })],
+                          ['Density',       'settings.density',   (d: any) => d.settings?.density,         (d: any, v: string) => ({ ...d, settings: { ...d.settings, density: v } })],
+                        ] as [string, string, (d: any) => any, (d: any, v: string) => any][]).map(([label, key, get, set]) => (
+                          <div key={key} style={{ display: 'grid', gridTemplateColumns: '110px 1fr', gap: 8, alignItems: 'center' }}>
+                            <span style={{ fontSize: 12, color: 'var(--ink-4)' }}>{label}</span>
+                            <input className="admin-input" style={{ fontSize: 12, padding: '4px 8px' }}
+                              value={get(settingsDraft) || ''}
+                              onChange={e => setSettingsDraft((d: any) => set(d, e.target.value))} />
+                          </div>
+                        ))}
+                        {[['Category', tenantSettings.category], ['Accent Color', tenantSettings.settings?.accentColor]].map(([k, v]) => (
+                          <div key={k as string} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                            <span style={{ color: 'var(--ink-4)' }}>{k}</span>
+                            <span className="cell-main" style={{ color: 'var(--ink-4)', fontStyle: 'italic' }}>{v?.toString() || '—'}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      [
+                        ['Business Name', tenantSettings.businessName],
+                        ['Category',      tenantSettings.category],
+                        ['Timezone',      tenantSettings.settings?.timezone],
+                        ['Currency',      tenantSettings.settings?.currency],
+                        ['Order Prefix',  tenantSettings.settings?.orderPrefix],
+                        ['Density',       tenantSettings.settings?.density],
+                        ['Accent Color',  tenantSettings.settings?.accentColor],
+                      ].map(([k, v]) => (
+                        <div key={k as string} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 10 }}>
+                          <span style={{ color: 'var(--ink-4)' }}>{k}</span>
+                          <span className="cell-main">{v?.toString() || '—'}</span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {/* Invoice Config card */}
+                <div className="admin-card">
+                  <div className="card-header"><div className="card-title">Invoice Config</div></div>
+                  <div className="card-body">
+                    {settingsDraft ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {([
+                          ['Prefix',  'invoiceConfig.prefix', (d: any) => d.invoiceConfig?.prefix, (d: any, v: string) => ({ ...d, invoiceConfig: { ...d.invoiceConfig, prefix: v } })],
+                          ['GSTIN',   'invoiceConfig.gstin',  (d: any) => d.invoiceConfig?.gstin,  (d: any, v: string) => ({ ...d, invoiceConfig: { ...d.invoiceConfig, gstin: v } })],
+                          ['UPI ID',  'invoiceConfig.upiId',  (d: any) => d.invoiceConfig?.upiId,  (d: any, v: string) => ({ ...d, invoiceConfig: { ...d.invoiceConfig, upiId: v } })],
+                        ] as [string, string, (d: any) => any, (d: any, v: string) => any][]).map(([label, key, get, set]) => (
+                          <div key={key} style={{ display: 'grid', gridTemplateColumns: '90px 1fr', gap: 8, alignItems: 'center' }}>
+                            <span style={{ fontSize: 12, color: 'var(--ink-4)' }}>{label}</span>
+                            <input className="admin-input" style={{ fontSize: 12, padding: '4px 8px' }}
+                              value={get(settingsDraft) || ''}
+                              onChange={e => setSettingsDraft((d: any) => set(d, e.target.value))} />
+                          </div>
+                        ))}
+                        <div style={{ display: 'grid', gridTemplateColumns: '90px 1fr', gap: 8, alignItems: 'center' }}>
+                          <span style={{ fontSize: 12, color: 'var(--ink-4)' }}>Show UPI QR</span>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+                            <input type="checkbox" checked={!!settingsDraft.invoiceConfig?.showUpiQr}
+                              onChange={e => setSettingsDraft((d: any) => ({ ...d, invoiceConfig: { ...d.invoiceConfig, showUpiQr: e.target.checked } }))} />
+                            <span style={{ color: 'var(--ink-3)' }}>Enabled</span>
+                          </label>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginTop: 4 }}>
+                          <span style={{ color: 'var(--ink-4)' }}>Current #</span>
+                          <span className="cell-main" style={{ color: 'var(--ink-4)', fontStyle: 'italic' }}>{tenantSettings.invoiceConfig?.currentNumber ?? '—'}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      [
+                        ['Prefix',      tenantSettings.invoiceConfig?.prefix],
+                        ['Current #',   tenantSettings.invoiceConfig?.currentNumber],
+                        ['GSTIN',       tenantSettings.invoiceConfig?.gstin],
+                        ['UPI ID',      tenantSettings.invoiceConfig?.upiId],
+                        ['Show UPI QR', tenantSettings.invoiceConfig?.showUpiQr ? 'Yes' : 'No'],
+                      ].map(([k, v]) => (
+                        <div key={k as string} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 10 }}>
+                          <span style={{ color: 'var(--ink-4)' }}>{k}</span>
+                          <span className="cell-main">{v?.toString() || '—'}</span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* WhatsApp / Authkey card */}
+              <div className="admin-card">
+                <div className="card-header"><div className="card-title">WhatsApp / Authkey</div></div>
+                <div className="card-body">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 14 }}>
+                    <span style={{ color: 'var(--ink-4)' }}>API Key</span>
+                    <span className={`badge ${tenantSettings.whatsapp?.hasApiKey ? 'badge-green' : 'badge-red'}`}>
+                      {tenantSettings.whatsapp?.hasApiKey ? 'Configured' : 'Not configured'}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-4)', marginBottom: 8 }}>Template SIDs</div>
+                  {settingsDraft ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+                      {(['default', 'delhivery', 'shiprocket', 'dtdc', 'ekart', 'bluedart'] as const).map(courier => (
+                        <div key={courier} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          <span style={{ fontSize: 11, color: 'var(--ink-4)', textTransform: 'capitalize' }}>{courier}</span>
+                          <input className="admin-input" style={{ fontSize: 12, padding: '4px 8px' }}
+                            placeholder="SID value"
+                            value={settingsDraft.whatsapp?.templateSids?.[courier] || ''}
+                            onChange={e => setSettingsDraft((d: any) => ({
+                              ...d,
+                              whatsapp: { ...d.whatsapp, templateSids: { ...d.whatsapp?.templateSids, [courier]: e.target.value } },
+                            }))} />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                      {Object.entries((tenantSettings.whatsapp?.templateSids || {}) as Record<string, string | null>).map(([courier, sid]) => (
+                        <div key={courier} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                          <span style={{ color: 'var(--ink-4)', textTransform: 'capitalize' }}>{courier}</span>
+                          <span className={`badge ${sid ? 'badge-green' : 'badge-gray'}`}>{sid ? 'Set' : 'Not set'}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* WA Agent (Meta) card */}
+              <div className="admin-card">
+                <div className="card-header">
+                  <div className="card-title">WA Agent (Meta)</div>
+                  {waAgent?.provisioned && !waAgentTemplatesDraft && canEdit && (
+                    <button className="btn btn-ghost btn-sm" onClick={() => setWaAgentTemplatesDraft({ ...waAgent.courierTemplates })}>
+                      Edit Templates
+                    </button>
+                  )}
+                  {waAgentTemplatesDraft && (
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button className="btn btn-ghost btn-sm" onClick={() => setWaAgentTemplatesDraft(null)} disabled={waAgentSaving}>Cancel</button>
+                      <button className="btn btn-primary btn-sm" onClick={saveWaTemplates} disabled={waAgentSaving}>
+                        {waAgentSaving ? <><span className="spinner" />Saving…</> : 'Save'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <div className="card-body">
+                  {waAgentLoading ? (
+                    <div style={{ fontSize: 13, color: 'var(--ink-4)' }}>Loading…</div>
+                  ) : !waAgent ? (
+                    <div style={{ fontSize: 13, color: 'var(--ink-4)' }}>Could not load WA Agent status</div>
+                  ) : !waAgent.provisioned ? (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, marginBottom: 14 }}>
+                        <span style={{ color: 'var(--ink-4)' }}>Status</span>
+                        <span className="badge badge-gray">Not provisioned</span>
+                      </div>
+                      {hasRole(admin, 'superadmin') && (
+                        waAgentProvisionForm ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                            <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-4)', marginBottom: 4 }}>Provision WA Agent</div>
+                            {([
+                              ['Phone Number ID', 'phoneNumberId', 'text', 'Meta phone_number_id'],
+                              ['WABA ID', 'whatsappBusinessAccountId', 'text', 'WhatsApp Business Account ID'],
+                              ['Meta Token', 'metaWhatsappToken', 'password', 'System user token'],
+                              ['Webhook Secret', 'metaWebhookSecret', 'password', 'Optional'],
+                              ['Display Name', 'businessDisplayName', 'text', 'Shown in WA Agent config'],
+                            ] as [string, string, string, string][]).map(([label, field, type, placeholder]) => (
+                              <div key={field} style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 8, alignItems: 'center' }}>
+                                <span style={{ fontSize: 12, color: 'var(--ink-4)' }}>{label}</span>
+                                <input
+                                  className="admin-input" type={type} style={{ fontSize: 12, padding: '4px 8px' }}
+                                  placeholder={placeholder}
+                                  value={waAgentProvisionForm[field] || ''}
+                                  onChange={e => setWaAgentProvisionForm((f: any) => ({ ...f, [field]: e.target.value }))}
+                                />
+                              </div>
+                            ))}
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
+                              <button className="btn btn-ghost btn-sm" onClick={() => setWaAgentProvisionForm(null)} disabled={waAgentSaving}>Cancel</button>
+                              <button className="btn btn-primary btn-sm" onClick={provisionWaAgent} disabled={waAgentSaving}>
+                                {waAgentSaving ? <><span className="spinner" />Provisioning…</> : 'Provision'}
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button className="btn btn-ghost btn-sm" onClick={() => setWaAgentProvisionForm({ phoneNumberId: '', whatsappBusinessAccountId: '', metaWhatsappToken: '', metaWebhookSecret: '', businessDisplayName: '' })}>
+                            Provision WA Agent
+                          </button>
+                        )
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 6 }}>
+                        <span style={{ color: 'var(--ink-4)' }}>Status</span>
+                        <span className="badge badge-green">Provisioned</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 14 }}>
+                        <span style={{ color: 'var(--ink-4)' }}>Agent ID</span>
+                        <span className="cell-main" style={{ fontFamily: 'var(--font-mono)', fontSize: 11 }}>{waAgent.waAgentTenantId}</span>
+                      </div>
+                      <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-4)', marginBottom: 8 }}>Courier Templates</div>
+                      {waAgentTemplatesDraft ? (
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+                          {(['default', 'delhivery', 'shiprocket', 'dtdc', 'ekart', 'bluedart'] as const).map(courier => (
+                            <div key={courier} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                              <span style={{ fontSize: 11, color: 'var(--ink-4)', textTransform: 'capitalize' }}>{courier}</span>
+                              <input className="admin-input" style={{ fontSize: 12, padding: '4px 8px' }}
+                                placeholder="template_name"
+                                value={waAgentTemplatesDraft[courier] || ''}
+                                onChange={e => setWaAgentTemplatesDraft((d: any) => ({ ...d, [courier]: e.target.value }))} />
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                          {(['default', 'delhivery', 'shiprocket', 'dtdc', 'ekart', 'bluedart'] as const).map(courier => {
+                            const name = waAgent.courierTemplates?.[courier];
+                            return (
+                              <div key={courier} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                                <span style={{ color: 'var(--ink-4)', textTransform: 'capitalize' }}>{courier}</span>
+                                <span className={`badge ${name ? 'badge-green' : 'badge-gray'}`}>{name ? 'Set' : 'Not set'}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>No settings data</div>
+          )}
+        </div>
+      )}
+
+      {tab === 'team' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {teamLoading ? (
+            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+          ) : teamData ? (
+            <>
+              <div className="admin-card">
+                <div className="card-header">
+                  <div className="card-title">Team Members</div>
+                  <span style={{ fontSize: 12, color: 'var(--ink-4)' }}>{(teamData.users || []).length} active</span>
+                </div>
+                <div className="table-shell">
+                  <table className="admin-table">
+                    <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Last Active</th><th>Joined</th></tr></thead>
+                    <tbody>
+                      {(teamData.users || []).map((u: any) => (
+                        <tr key={u._id}>
+                          <td className="cell-main">{u.name}</td>
+                          <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{u.email}</td>
+                          <td><span className="badge badge-blue" style={{ textTransform: 'capitalize' }}>{u.role}</span></td>
+                          <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{u.lastActive ? timeAgo(u.lastActive) : '—'}</td>
+                          <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{fmtDate(u.createdAt)}</td>
+                        </tr>
+                      ))}
+                      {(teamData.users || []).length === 0 && (
+                        <tr><td colSpan={5} style={{ textAlign: 'center', padding: 32, color: 'var(--ink-4)' }}>No active members</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div className="admin-card">
+                <div className="card-header">
+                  <div className="card-title">Pending Invites</div>
+                  <span style={{ fontSize: 12, color: 'var(--ink-4)' }}>{(teamData.invites || []).length} pending</span>
+                </div>
+                <div className="table-shell">
+                  <table className="admin-table">
+                    <thead><tr><th>Email</th><th>Role</th><th>Invited By</th><th>Expires</th></tr></thead>
+                    <tbody>
+                      {(teamData.invites || []).map((inv: any) => (
+                        <tr key={inv._id}>
+                          <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{inv.email}</td>
+                          <td><span className="badge badge-blue" style={{ textTransform: 'capitalize' }}>{inv.role}</span></td>
+                          <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{inv.invitedBy?.name || inv.invitedBy?.email || '—'}</td>
+                          <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{fmtDate(inv.expiresAt)}</td>
+                        </tr>
+                      ))}
+                      {(teamData.invites || []).length === 0 && (
+                        <tr><td colSpan={4} style={{ textAlign: 'center', padding: 24, color: 'var(--ink-4)' }}>No pending invites</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>No team data</div>
+          )}
+        </div>
+      )}
+
+      {tab === 'overdue' && (
+        <div>
+          {overdueLoading ? (
+            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+          ) : (
+            <div className="admin-card">
+              <div className="card-header">
+                <div className="card-title">Orders with Outstanding Balance</div>
+                <span style={{ fontSize: 12, color: 'var(--ink-4)' }}>{overdueTotal} total</span>
+              </div>
+              <div className="table-shell">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Order ID</th><th>Customer</th><th>Status</th>
+                      <th style={{ textAlign: 'right' }}>Total</th>
+                      <th style={{ textAlign: 'right' }}>Paid</th>
+                      <th style={{ textAlign: 'right' }}>Balance</th>
+                      <th>Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {overdueOrders.map((o: any) => (
+                      <tr key={o._id}>
+                        <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{o.orderId || o._id?.toString().slice(-8)}</td>
+                        <td>
+                          <div className="cell-main">{o.customerName || o.customer?.name || '—'}</div>
+                          <div className="cell-sub">{o.customerPhone || o.customer?.phone || ''}</div>
+                        </td>
+                        <td><span className={`badge ${STATUS_COLOR[o.status] || 'badge-gray'}`}>{STATUS_LABEL[o.status] || o.status}</span></td>
+                        <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{o.totalAmount ? fmt(o.totalAmount) : '—'}</td>
+                        <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--green)' }}>{o.amountPaid ? fmt(o.amountPaid) : '—'}</td>
+                        <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--red, #E53E3E)', fontWeight: 600 }}>{o.balanceDue ? fmt(o.balanceDue) : '—'}</td>
+                        <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{fmtDate(o.createdAt)}</td>
+                      </tr>
+                    ))}
+                    {overdueOrders.length === 0 && (
+                      <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>No orders with outstanding balance</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              {overdueTotal > 25 && (
+                <div className="pagination">
+                  <span className="pagination-info">{(overduePage - 1) * 25 + 1}–{Math.min(overduePage * 25, overdueTotal)} of {overdueTotal}</span>
+                  <div className="pagination-controls">
+                    <button className="btn btn-ghost btn-sm" disabled={overduePage === 1} onClick={() => loadOverdue(overduePage - 1)}>← Prev</button>
+                    <button className="btn btn-ghost btn-sm" disabled={overduePage * 25 >= overdueTotal} onClick={() => loadOverdue(overduePage + 1)}>Next →</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === 'products' && (
+        <div>
+          <div style={{ marginBottom: 14 }}>
+            <input
+              className="admin-input"
+              placeholder="Search by name or SKU…"
+              value={productsSearch}
+              onChange={e => setProductsSearch(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && loadProducts(1, productsSearch)}
+              style={{ maxWidth: 340 }}
+            />
+          </div>
+          {productsLoading ? (
+            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+          ) : (
+            <div className="admin-card">
+              <div className="table-shell">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th><th>SKU</th><th>Category</th>
+                      <th style={{ textAlign: 'right' }}>Price</th>
+                      <th style={{ textAlign: 'right' }}>Stock</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {products.map((p: any) => (
+                      <tr key={p._id}>
+                        <td>
+                          <div className="cell-main">{p.name}</div>
+                          {(p.variants || []).length > 0 && (
+                            <div className="cell-sub">{p.variants.length} variant{p.variants.length !== 1 ? 's' : ''}</div>
+                          )}
+                        </td>
+                        <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{p.sku || '—'}</td>
+                        <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{p.category || '—'}</td>
+                        <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(p.price || 0)}</td>
+                        <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+                          {p.totalStock == null ? (
+                            <span style={{ color: 'var(--ink-4)' }}>—</span>
+                          ) : (
+                            <span style={{ color: p.lowStock ? 'var(--red, #E53E3E)' : undefined, fontWeight: p.lowStock ? 600 : undefined }}>
+                              {p.totalStock}
+                              {p.lowStock && <span style={{ marginLeft: 6, fontSize: 10 }}>LOW</span>}
+                            </span>
+                          )}
+                        </td>
+                        <td>
+                          <span className={`badge ${p.isActive ? 'badge-green' : 'badge-gray'}`}>
+                            {p.isActive ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                    {products.length === 0 && (
+                      <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>No products found</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              {productsTotal > 50 && (
+                <div className="pagination">
+                  <span className="pagination-info">{(productsPage - 1) * 50 + 1}–{Math.min(productsPage * 50, productsTotal)} of {productsTotal}</span>
+                  <div className="pagination-controls">
+                    <button className="btn btn-ghost btn-sm" disabled={productsPage === 1} onClick={() => loadProducts(productsPage - 1, productsSearch)}>← Prev</button>
+                    <button className="btn btn-ghost btn-sm" disabled={productsPage * 50 >= productsTotal} onClick={() => loadProducts(productsPage + 1, productsSearch)}>Next →</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === 'invoices' && (
+        <div>
+          {invoicesLoading ? (
+            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+          ) : (
+            <div className="admin-card">
+              <div className="table-shell">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Invoice #</th><th>Customer</th><th>Order ID</th>
+                      <th style={{ textAlign: 'right' }}>Amount</th>
+                      <th>Payment</th><th>Date</th><th>PDF</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {invoices.map((inv: any) => (
+                      <tr key={inv._id}>
+                        <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{inv.invoiceNumber}</td>
+                        <td className="cell-main">{inv.customer?.name || '—'}</td>
+                        <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-4)' }}>
+                          {inv.orderId ? inv.orderId.toString().slice(-8) : '—'}
+                        </td>
+                        <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(inv.grandTotal || 0)}</td>
+                        <td>
+                          <span className={`badge ${inv.paymentStatus === 'paid' ? 'badge-green' : inv.paymentStatus ? 'badge-amber' : 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>
+                            {inv.paymentStatus || '—'}
+                          </span>
+                        </td>
+                        <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>
+                          {inv.invoiceDate ? fmtDate(inv.invoiceDate) : fmtDate(inv.createdAt)}
+                        </td>
+                        <td>
+                          {inv.invoiceUrl ? (
+                            <a href={inv.invoiceUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: 'var(--accent)' }}>
+                              View PDF
+                            </a>
+                          ) : (
+                            <span style={{ fontSize: 12, color: 'var(--ink-4)' }}>—</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                    {invoices.length === 0 && (
+                      <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>No invoices generated yet</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              {invoicesTotal > 25 && (
+                <div className="pagination">
+                  <span className="pagination-info">{(invoicesPage - 1) * 25 + 1}–{Math.min(invoicesPage * 25, invoicesTotal)} of {invoicesTotal}</span>
+                  <div className="pagination-controls">
+                    <button className="btn btn-ghost btn-sm" disabled={invoicesPage === 1} onClick={() => loadInvoices(invoicesPage - 1)}>← Prev</button>
+                    <button className="btn btn-ghost btn-sm" disabled={invoicesPage * 25 >= invoicesTotal} onClick={() => loadInvoices(invoicesPage + 1)}>Next →</button>
                   </div>
                 </div>
               )}

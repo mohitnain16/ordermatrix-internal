@@ -20,11 +20,11 @@
   --sidebar-active-bg: rgba(236,98,64,0.18);
   --sidebar-section-label: #2e3240;
 
-  /* Surfaces */
-  --surface: #ffffff;
-  --surface-2: #f9f8f5;
-  --surface-3: #f0ede6;
-  --surface-hover: #F4F3EE;
+  /* Surfaces — warm cream hierarchy per DESIGN.md */
+  --surface: #E8E0D2;       /* surface-card: main card bg */
+  --surface-2: #EFE9DE;     /* surface-soft: card footers, thead, section bands */
+  --surface-3: #E0D5C0;     /* surface-cream-strong: ghost buttons, selected states */
+  --surface-hover: #EFE9DE; /* surface-soft: row hover lift */
 
   /* Ink scale */
   --ink: #0B0D10;
@@ -179,7 +179,6 @@ body.sidebar-expanded .topbar {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
   overflow: hidden;
 }
 
@@ -221,7 +220,6 @@ body.sidebar-expanded .topbar {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 20px;
-  box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -948,6 +946,39 @@ select.admin-input { cursor: pointer; }
     --shadow: 0 1px 4px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.28);
     --shadow-md: 0 4px 16px rgba(0,0,0,0.40);
     --shadow-lg: 0 8px 32px rgba(0,0,0,0.55);
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   TABLET  ≤ 899px
+   Sidebar is icon-only rail; page never gets the
+   264px expanded-panel offset (JS sets expanded=false
+   below 900px, but guard in CSS in case of SSR flash).
+═══════════════════════════════════════════════ */
+@media (max-width: 899px) {
+  body.sidebar-expanded .page-content {
+    margin-left: var(--sidebar-rail-width) !important;
+  }
+  body.sidebar-expanded .topbar {
+    left: var(--sidebar-rail-width) !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   SMALL MOBILE  ≤ 600px
+   Stat grids collapse to single column; page inner
+   padding tightens further.
+═══════════════════════════════════════════════ */
+@media (max-width: 600px) {
+  .stat-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .page-inner {
+    padding: 12px;
+  }
+  /* Broadcast grid already stacks at 800px; belt-and-braces here */
+  .broadcast-grid {
+    grid-template-columns: 1fr !important;
   }
 }
 
