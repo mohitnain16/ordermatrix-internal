@@ -1324,7 +1324,7 @@ export default function TenantDetailPage() {
                                               ? ['Refund Status', selectedOrder.cancellation.refundStatus] : null,
                                             selectedOrder.refundRequest?.status ? ['Refund Request', selectedOrder.refundRequest.status] : null,
                                             selectedOrder.refundRequest?.amount != null ? ['Refund Amount', fmt(selectedOrder.refundRequest.amount)] : null,
-                                          ].filter(Boolean).map(([k, v]) => (
+                                          ].filter((entry): entry is [string, string] => entry !== null).map(([k, v]) => (
                                             <div key={k as string}>
                                               <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-4)', marginBottom: 3 }}>{k}</div>
                                               <div style={{ fontSize: 13, color: 'var(--ink)', textTransform: 'capitalize' }}>{v}</div>
