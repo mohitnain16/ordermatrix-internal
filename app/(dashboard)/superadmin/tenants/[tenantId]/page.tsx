@@ -509,7 +509,7 @@ export default function TenantDetailPage() {
   const [loading, setLoading] = useState(true);
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
-  const [tab, setTab] = useState<'overview' | 'subscription' | 'notes' | 'orders' | 'customers' | 'deliveries' | 'flags' | 'analytics' | 'settings' | 'team' | 'overdue'>('overview');
+  const [tab, setTab] = useState<'overview' | 'subscription' | 'notes' | 'orders' | 'customers' | 'deliveries' | 'flags' | 'analytics' | 'settings' | 'team' | 'overdue' | 'products'>('overview');
   const [toastMsg, setToastMsg] = useState('');
   const [trialDays, setTrialDays] = useState(14);
   const [deliveries, setDeliveries] = useState<any[]>([]);
@@ -558,6 +558,12 @@ export default function TenantDetailPage() {
   const [overdueTotal, setOverdueTotal] = useState(0);
   const [overduePage, setOverduePage] = useState(1);
   const [overdueLoading, setOverdueLoading] = useState(false);
+  // products tab
+  const [products, setProducts] = useState<any[]>([]);
+  const [productsTotal, setProductsTotal] = useState(0);
+  const [productsPage, setProductsPage] = useState(1);
+  const [productsSearch, setProductsSearch] = useState('');
+  const [productsLoading, setProductsLoading] = useState(false);
   const { setTitle } = usePageTitle();
 
   useEffect(() => { load(); }, [tenantId]);
@@ -582,6 +588,8 @@ export default function TenantDetailPage() {
   useEffect(() => { if (tab === 'team') loadTeam(); }, [tab]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (tab === 'overdue') loadOverdue(1); }, [tab]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (tab === 'products') loadProducts(1, ''); }, [tab]);
 
   async function load() {
     setLoading(true);
@@ -752,6 +760,19 @@ export default function TenantDetailPage() {
       setTeamData(res.data);
     } catch { toast('Failed to load team'); }
     setTeamLoading(false);
+  }
+
+  async function loadProducts(page: number, search: string) {
+    setProductsLoading(true);
+    setProductsPage(page);
+    try {
+      const params = new URLSearchParams({ page: String(page), limit: '50' });
+      if (search.trim()) params.set('search', search.trim());
+      const res = await api.get(`/admin/tenants/${tenantId}/products?${params}`);
+      setProducts(res.data.products || []);
+      setProductsTotal(res.data.total || 0);
+    } catch { /**/ }
+    setProductsLoading(false);
   }
 
   async function loadOverdue(page: number) {
@@ -1002,7 +1023,7 @@ export default function TenantDetailPage() {
 
       {/* Tabs */}
       <div className="tab-bar">
-        {(['overview', 'subscription', 'notes', 'orders', 'customers', 'deliveries', 'analytics', 'settings', 'team', 'overdue', ...(hasRole(admin, 'superadmin') ? ['flags'] : [])] as const).map((t: any) => (
+        {(['overview', 'subscription', 'notes', 'orders', 'customers', 'deliveries', 'analytics', 'settings', 'team', 'overdue', 'products', ...(hasRole(admin, 'superadmin') ? ['flags'] : [])] as const).map((t: any) => (
           <button key={t} onClick={() => setTab(t)} className={`tab-btn${tab === t ? ' active' : ''}`} style={{ textTransform: 'capitalize' }}>
             {t}
           </button>
@@ -1680,6 +1701,81 @@ export default function TenantDetailPage() {
                   <div className="pagination-controls">
                     <button className="btn btn-ghost btn-sm" disabled={overduePage === 1} onClick={() => loadOverdue(overduePage - 1)}>← Prev</button>
                     <button className="btn btn-ghost btn-sm" disabled={overduePage * 25 >= overdueTotal} onClick={() => loadOverdue(overduePage + 1)}>Next →</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === 'products' && (
+        <div>
+          <div style={{ marginBottom: 14 }}>
+            <input
+              className="admin-input"
+              placeholder="Search by name or SKU…"
+              value={productsSearch}
+              onChange={e => setProductsSearch(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && loadProducts(1, productsSearch)}
+              style={{ maxWidth: 340 }}
+            />
+          </div>
+          {productsLoading ? (
+            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+          ) : (
+            <div className="admin-card">
+              <div className="table-shell">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th><th>SKU</th><th>Category</th>
+                      <th style={{ textAlign: 'right' }}>Price</th>
+                      <th style={{ textAlign: 'right' }}>Stock</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {products.map((p: any) => (
+                      <tr key={p._id}>
+                        <td>
+                          <div className="cell-main">{p.name}</div>
+                          {(p.variants || []).length > 0 && (
+                            <div className="cell-sub">{p.variants.length} variant{p.variants.length !== 1 ? 's' : ''}</div>
+                          )}
+                        </td>
+                        <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{p.sku || '—'}</td>
+                        <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{p.category || '—'}</td>
+                        <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(p.price || 0)}</td>
+                        <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+                          {p.totalStock == null ? (
+                            <span style={{ color: 'var(--ink-4)' }}>—</span>
+                          ) : (
+                            <span style={{ color: p.lowStock ? 'var(--red, #E53E3E)' : undefined, fontWeight: p.lowStock ? 600 : undefined }}>
+                              {p.totalStock}
+                              {p.lowStock && <span style={{ marginLeft: 6, fontSize: 10 }}>LOW</span>}
+                            </span>
+                          )}
+                        </td>
+                        <td>
+                          <span className={`badge ${p.isActive ? 'badge-green' : 'badge-gray'}`}>
+                            {p.isActive ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                    {products.length === 0 && (
+                      <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>No products found</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              {productsTotal > 50 && (
+                <div className="pagination">
+                  <span className="pagination-info">{(productsPage - 1) * 50 + 1}–{Math.min(productsPage * 50, productsTotal)} of {productsTotal}</span>
+                  <div className="pagination-controls">
+                    <button className="btn btn-ghost btn-sm" disabled={productsPage === 1} onClick={() => loadProducts(productsPage - 1, productsSearch)}>← Prev</button>
+                    <button className="btn btn-ghost btn-sm" disabled={productsPage * 50 >= productsTotal} onClick={() => loadProducts(productsPage + 1, productsSearch)}>Next →</button>
                   </div>
                 </div>
               )}
