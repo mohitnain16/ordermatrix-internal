@@ -509,7 +509,7 @@ export default function TenantDetailPage() {
   const [loading, setLoading] = useState(true);
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
-  const [tab, setTab] = useState<'overview' | 'subscription' | 'notes' | 'orders' | 'customers' | 'deliveries' | 'flags'>('overview');
+  const [tab, setTab] = useState<'overview' | 'subscription' | 'notes' | 'orders' | 'customers' | 'deliveries' | 'flags' | 'analytics'>('overview');
   const [toastMsg, setToastMsg] = useState('');
   const [trialDays, setTrialDays] = useState(14);
   const [deliveries, setDeliveries] = useState<any[]>([]);
@@ -544,6 +544,9 @@ export default function TenantDetailPage() {
   const [commentModal, setCommentModal] = useState<any>(null);    // { order }
   const [dispatchModal, setDispatchModal] = useState<any>(null);  // { order }
   const [editCustomerModal, setEditCustomerModal] = useState<any>(null); // { customer }
+  // analytics tab
+  const [analytics, setAnalytics] = useState<any>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const { setTitle } = usePageTitle();
 
   useEffect(() => { load(); }, [tenantId]);
@@ -560,6 +563,8 @@ export default function TenantDetailPage() {
   useEffect(() => { if (tab === 'orders') loadOrders(1, ordersStatus); }, [tab]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (tab === 'customers') loadCustomers(1, customerSearch); }, [tab]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (tab === 'analytics') loadAnalytics(); }, [tab]);
 
   async function load() {
     setLoading(true);
@@ -703,6 +708,15 @@ export default function TenantDetailPage() {
       setSelectedOrder(res.data.order);
     } catch { toast('Failed to load order detail'); }
     setOrderDetailLoading(false);
+  }
+
+  async function loadAnalytics() {
+    setAnalyticsLoading(true);
+    try {
+      const res = await api.get(`/admin/tenants/${tenantId}/analytics`);
+      setAnalytics(res.data);
+    } catch { toast('Failed to load analytics'); }
+    setAnalyticsLoading(false);
   }
 
   function timeAgo(d: string) {
@@ -941,7 +955,7 @@ export default function TenantDetailPage() {
 
       {/* Tabs */}
       <div className="tab-bar">
-        {(['overview', 'subscription', 'notes', 'orders', 'customers', 'deliveries', ...(hasRole(admin, 'superadmin') ? ['flags'] : [])] as const).map((t: any) => (
+        {(['overview', 'subscription', 'notes', 'orders', 'customers', 'deliveries', 'analytics', ...(hasRole(admin, 'superadmin') ? ['flags'] : [])] as const).map((t: any) => (
           <button key={t} onClick={() => setTab(t)} className={`tab-btn${tab === t ? ' active' : ''}`} style={{ textTransform: 'capitalize' }}>
             {t}
           </button>
@@ -1348,6 +1362,90 @@ export default function TenantDetailPage() {
                 </div>
               )}
             </div>
+          )}
+        </div>
+      )}
+
+      {tab === 'analytics' && (
+        <div>
+          {analyticsLoading ? (
+            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+          ) : analytics ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+                <div className="stat-card">
+                  <div className="stat-label">Revenue This Month</div>
+                  <div className="stat-value">{fmt(analytics.revenueThisMonth || 0)}</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-label">Orders This Month</div>
+                  <div className="stat-value">{analytics.ordersThisMonth || 0}</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-label">Avg Order Value</div>
+                  <div className="stat-value">
+                    {analytics.ordersThisMonth ? fmt(Math.round((analytics.revenueThisMonth || 0) / analytics.ordersThisMonth)) : '—'}
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div className="admin-card">
+                  <div className="card-header"><div className="card-title">Orders by Status</div></div>
+                  <div className="table-shell">
+                    <table className="admin-table">
+                      <thead><tr><th>Status</th><th style={{ textAlign: 'right' }}>Count</th></tr></thead>
+                      <tbody>
+                        {(analytics.statusBreakdown || []).sort((a: any, b: any) => b.count - a.count).map((row: any) => (
+                          <tr key={row._id}>
+                            <td><span className={`badge ${STATUS_COLOR[row._id] || 'badge-gray'}`}>{STATUS_LABEL[row._id] || row._id}</span></td>
+                            <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{row.count}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div className="admin-card">
+                  <div className="card-header"><div className="card-title">Payment Modes</div></div>
+                  <div className="table-shell">
+                    <table className="admin-table">
+                      <thead><tr><th>Mode</th><th style={{ textAlign: 'right' }}>Orders</th><th style={{ textAlign: 'right' }}>Amount</th></tr></thead>
+                      <tbody>
+                        {(analytics.paymentModeBreakdown || []).sort((a: any, b: any) => b.count - a.count).map((row: any) => (
+                          <tr key={row._id}>
+                            <td style={{ textTransform: 'capitalize' }}>{row._id || 'Unknown'}</td>
+                            <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{row.count}</td>
+                            <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(row.amount || 0)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <div className="admin-card">
+                <div className="card-header"><div className="card-title">Daily Orders — Last 14 Days</div></div>
+                <div className="table-shell">
+                  <table className="admin-table">
+                    <thead><tr><th>Date</th><th style={{ textAlign: 'right' }}>Orders</th><th style={{ textAlign: 'right' }}>Revenue</th></tr></thead>
+                    <tbody>
+                      {(analytics.dailyOrders || []).map((row: any) => (
+                        <tr key={row._id}>
+                          <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{row._id}</td>
+                          <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{row.count}</td>
+                          <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(row.revenue || 0)}</td>
+                        </tr>
+                      ))}
+                      {(analytics.dailyOrders || []).length === 0 && (
+                        <tr><td colSpan={3} style={{ textAlign: 'center', padding: 24, color: 'var(--ink-4)' }}>No orders in last 14 days</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>No analytics data</div>
           )}
         </div>
       )}
