@@ -509,7 +509,7 @@ export default function TenantDetailPage() {
   const [loading, setLoading] = useState(true);
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
-  const [tab, setTab] = useState<'overview' | 'subscription' | 'notes' | 'orders' | 'customers' | 'deliveries' | 'flags' | 'analytics' | 'settings'>('overview');
+  const [tab, setTab] = useState<'overview' | 'subscription' | 'notes' | 'orders' | 'customers' | 'deliveries' | 'flags' | 'analytics' | 'settings' | 'team'>('overview');
   const [toastMsg, setToastMsg] = useState('');
   const [trialDays, setTrialDays] = useState(14);
   const [deliveries, setDeliveries] = useState<any[]>([]);
@@ -550,6 +550,9 @@ export default function TenantDetailPage() {
   // settings tab
   const [tenantSettings, setTenantSettings] = useState<any>(null);
   const [settingsLoading, setSettingsLoading] = useState(false);
+  // team tab
+  const [teamData, setTeamData] = useState<any>(null);
+  const [teamLoading, setTeamLoading] = useState(false);
   const { setTitle } = usePageTitle();
 
   useEffect(() => { load(); }, [tenantId]);
@@ -570,6 +573,8 @@ export default function TenantDetailPage() {
   useEffect(() => { if (tab === 'analytics') loadAnalytics(); }, [tab]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (tab === 'settings') loadTenantSettings(); }, [tab]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (tab === 'team') loadTeam(); }, [tab]);
 
   async function load() {
     setLoading(true);
@@ -731,6 +736,15 @@ export default function TenantDetailPage() {
       setTenantSettings(res.data);
     } catch { toast('Failed to load settings'); }
     setSettingsLoading(false);
+  }
+
+  async function loadTeam() {
+    setTeamLoading(true);
+    try {
+      const res = await api.get(`/admin/tenants/${tenantId}/users`);
+      setTeamData(res.data);
+    } catch { toast('Failed to load team'); }
+    setTeamLoading(false);
   }
 
   function timeAgo(d: string) {
@@ -969,7 +983,7 @@ export default function TenantDetailPage() {
 
       {/* Tabs */}
       <div className="tab-bar">
-        {(['overview', 'subscription', 'notes', 'orders', 'customers', 'deliveries', 'analytics', 'settings', ...(hasRole(admin, 'superadmin') ? ['flags'] : [])] as const).map((t: any) => (
+        {(['overview', 'subscription', 'notes', 'orders', 'customers', 'deliveries', 'analytics', 'settings', 'team', ...(hasRole(admin, 'superadmin') ? ['flags'] : [])] as const).map((t: any) => (
           <button key={t} onClick={() => setTab(t)} className={`tab-btn${tab === t ? ' active' : ''}`} style={{ textTransform: 'capitalize' }}>
             {t}
           </button>
@@ -1533,6 +1547,68 @@ export default function TenantDetailPage() {
             </div>
           ) : (
             <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>No settings data</div>
+          )}
+        </div>
+      )}
+
+      {tab === 'team' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {teamLoading ? (
+            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+          ) : teamData ? (
+            <>
+              <div className="admin-card">
+                <div className="card-header">
+                  <div className="card-title">Team Members</div>
+                  <span style={{ fontSize: 12, color: 'var(--ink-4)' }}>{(teamData.users || []).length} active</span>
+                </div>
+                <div className="table-shell">
+                  <table className="admin-table">
+                    <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Last Active</th><th>Joined</th></tr></thead>
+                    <tbody>
+                      {(teamData.users || []).map((u: any) => (
+                        <tr key={u._id}>
+                          <td className="cell-main">{u.name}</td>
+                          <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{u.email}</td>
+                          <td><span className="badge badge-blue" style={{ textTransform: 'capitalize' }}>{u.role}</span></td>
+                          <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{u.lastActive ? timeAgo(u.lastActive) : '—'}</td>
+                          <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{fmtDate(u.createdAt)}</td>
+                        </tr>
+                      ))}
+                      {(teamData.users || []).length === 0 && (
+                        <tr><td colSpan={5} style={{ textAlign: 'center', padding: 32, color: 'var(--ink-4)' }}>No active members</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div className="admin-card">
+                <div className="card-header">
+                  <div className="card-title">Pending Invites</div>
+                  <span style={{ fontSize: 12, color: 'var(--ink-4)' }}>{(teamData.invites || []).length} pending</span>
+                </div>
+                <div className="table-shell">
+                  <table className="admin-table">
+                    <thead><tr><th>Email</th><th>Role</th><th>Invited By</th><th>Expires</th></tr></thead>
+                    <tbody>
+                      {(teamData.invites || []).map((inv: any) => (
+                        <tr key={inv._id}>
+                          <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{inv.email}</td>
+                          <td><span className="badge badge-blue" style={{ textTransform: 'capitalize' }}>{inv.role}</span></td>
+                          <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{inv.invitedBy?.name || inv.invitedBy?.email || '—'}</td>
+                          <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{fmtDate(inv.expiresAt)}</td>
+                        </tr>
+                      ))}
+                      {(teamData.invites || []).length === 0 && (
+                        <tr><td colSpan={4} style={{ textAlign: 'center', padding: 24, color: 'var(--ink-4)' }}>No pending invites</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>No team data</div>
           )}
         </div>
       )}
