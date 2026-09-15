@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import api from '../../../lib/api';
 import { Sk, SkStatCard, SkRows } from '../../../components/ui/Skeleton';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const fmt = (n: number) => `₹${new Intl.NumberFormat('en-IN').format(n || 0)}`;
 const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '—';
@@ -24,7 +24,7 @@ function TrendTooltip({ active, payload, label }: { active?: boolean; payload?: 
     <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 8, padding: '10px 14px', fontSize: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
       <div style={{ fontWeight: 600, marginBottom: 6, color: 'var(--ink-3)' }}>{label ? fmtDate(label) : ''}</div>
       <div style={{ color: 'var(--accent)', marginBottom: 2 }}>MRR: {fmt(mrr)}</div>
-      <div style={{ color: 'var(--blue)', marginBottom: 4 }}>ARR: {fmt(arr)}</div>
+      <div style={{ color: 'var(--ink-3)', marginBottom: 4 }}>ARR: {fmt(arr)}</div>
       <div style={{ color: 'var(--ink-4)' }}>Active paid: {activeCount}</div>
     </div>
   );
@@ -198,14 +198,14 @@ export default function SalesPage() {
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={260}>
-              <LineChart data={trend} margin={{ top: 4, right: 16, bottom: 0, left: 10 }}>
+              <AreaChart data={trend} margin={{ top: 4, right: 16, bottom: 0, left: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" />
-                <XAxis dataKey="date" tickFormatter={fmtDate} tick={{ fontSize: 11, fill: 'var(--ink-4)' }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-                <YAxis tickFormatter={fmtL} tick={{ fontSize: 11, fill: 'var(--ink-4)' }} tickLine={false} axisLine={false} width={56} />
+                <XAxis dataKey="date" tickFormatter={fmtDate} tick={{ fontSize: 11, fill: 'var(--ink-4)', fontFamily: 'var(--font-mono)' }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+                <YAxis tickFormatter={fmtL} tick={{ fontSize: 11, fill: 'var(--ink-4)', fontFamily: 'var(--font-mono)' }} tickLine={false} axisLine={false} width={56} />
                 <Tooltip content={<TrendTooltip />} />
-                <Line type="monotone" dataKey="mrr" name="MRR" stroke="var(--accent)" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="arr" name="ARR" stroke="var(--blue)" strokeWidth={2} dot={false} strokeDasharray="4 2" />
-              </LineChart>
+                <Area type="monotone" dataKey="arr" name="ARR" stroke="var(--ink-3)" fill="var(--ink-3)" fillOpacity={0.08} strokeWidth={1.5} strokeDasharray="4 2" dot={false} />
+                <Area type="monotone" dataKey="mrr" name="MRR" stroke="var(--accent)" fill="var(--accent-soft)" fillOpacity={0.7} strokeWidth={2} dot={false} />
+              </AreaChart>
             </ResponsiveContainer>
           )}
 
@@ -214,7 +214,7 @@ export default function SalesPage() {
               <span style={{ width: 16, height: 2, background: 'var(--accent)', display: 'inline-block', borderRadius: 1 }} /> MRR
             </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--ink-4)' }}>
-              <span style={{ width: 16, height: 0, borderBottom: '2px dashed var(--blue)', display: 'inline-block' }} /> ARR
+              <span style={{ width: 16, height: 0, borderBottom: '2px dashed var(--ink-3)', display: 'inline-block' }} /> ARR
             </span>
           </div>
         </div>
