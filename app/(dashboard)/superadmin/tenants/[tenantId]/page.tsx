@@ -552,6 +552,12 @@ export default function TenantDetailPage() {
   const [settingsLoading, setSettingsLoading] = useState(false);
   const [settingsDraft, setSettingsDraft] = useState<any>(null);
   const [settingsSaving, setSettingsSaving] = useState(false);
+  // wa-agent card (inside settings tab)
+  const [waAgent, setWaAgent] = useState<any>(null);
+  const [waAgentLoading, setWaAgentLoading] = useState(false);
+  const [waAgentProvisionForm, setWaAgentProvisionForm] = useState<any>(null);
+  const [waAgentTemplatesDraft, setWaAgentTemplatesDraft] = useState<any>(null);
+  const [waAgentSaving, setWaAgentSaving] = useState(false);
   // team tab
   const [teamData, setTeamData] = useState<any>(null);
   const [teamLoading, setTeamLoading] = useState(false);
@@ -590,7 +596,7 @@ export default function TenantDetailPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (tab === 'analytics') loadAnalytics(); }, [tab]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (tab === 'settings') loadTenantSettings(); }, [tab]);
+  useEffect(() => { if (tab === 'settings') { loadTenantSettings(); loadWaAgent(); } }, [tab]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (tab === 'team') loadTeam(); }, [tab]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -787,6 +793,39 @@ export default function TenantDetailPage() {
       toast('Settings saved');
     } catch { toast('Failed to save settings'); }
     setSettingsSaving(false);
+  }
+
+  async function loadWaAgent() {
+    setWaAgentLoading(true);
+    try {
+      const res = await api.get(`/admin/tenants/${tenantId}/wa-agent`);
+      setWaAgent(res.data);
+    } catch { setWaAgent(null); }
+    setWaAgentLoading(false);
+  }
+
+  async function provisionWaAgent() {
+    if (!waAgentProvisionForm) return;
+    setWaAgentSaving(true);
+    try {
+      await api.post(`/admin/tenants/${tenantId}/wa-agent`, waAgentProvisionForm);
+      toast('WA Agent provisioned');
+      setWaAgentProvisionForm(null);
+      await loadWaAgent();
+    } catch (e: any) { toast(e?.response?.data?.error || 'Provisioning failed'); }
+    setWaAgentSaving(false);
+  }
+
+  async function saveWaTemplates() {
+    if (!waAgentTemplatesDraft) return;
+    setWaAgentSaving(true);
+    try {
+      await api.patch(`/admin/tenants/${tenantId}/wa-agent/templates`, waAgentTemplatesDraft);
+      setWaAgent((w: any) => ({ ...w, courierTemplates: waAgentTemplatesDraft }));
+      setWaAgentTemplatesDraft(null);
+      toast('Templates saved');
+    } catch (e: any) { toast(e?.response?.data?.error || 'Failed to save templates'); }
+    setWaAgentSaving(false);
   }
 
   async function loadTeam() {
@@ -1741,6 +1780,111 @@ export default function TenantDetailPage() {
                         </div>
                       ))}
                     </div>
+                  )}
+                </div>
+              </div>
+
+              {/* WA Agent (Meta) card */}
+              <div className="admin-card">
+                <div className="card-header">
+                  <div className="card-title">WA Agent (Meta)</div>
+                  {waAgent?.provisioned && !waAgentTemplatesDraft && canEdit && (
+                    <button className="btn btn-ghost btn-sm" onClick={() => setWaAgentTemplatesDraft({ ...waAgent.courierTemplates })}>
+                      Edit Templates
+                    </button>
+                  )}
+                  {waAgentTemplatesDraft && (
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button className="btn btn-ghost btn-sm" onClick={() => setWaAgentTemplatesDraft(null)} disabled={waAgentSaving}>Cancel</button>
+                      <button className="btn btn-primary btn-sm" onClick={saveWaTemplates} disabled={waAgentSaving}>
+                        {waAgentSaving ? <><span className="spinner" />Saving…</> : 'Save'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <div className="card-body">
+                  {waAgentLoading ? (
+                    <div style={{ fontSize: 13, color: 'var(--ink-4)' }}>Loading…</div>
+                  ) : !waAgent ? (
+                    <div style={{ fontSize: 13, color: 'var(--ink-4)' }}>Could not load WA Agent status</div>
+                  ) : !waAgent.provisioned ? (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, marginBottom: 14 }}>
+                        <span style={{ color: 'var(--ink-4)' }}>Status</span>
+                        <span className="badge badge-gray">Not provisioned</span>
+                      </div>
+                      {hasRole(admin, 'superadmin') && (
+                        waAgentProvisionForm ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                            <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-4)', marginBottom: 4 }}>Provision WA Agent</div>
+                            {([
+                              ['Phone Number ID', 'phoneNumberId', 'text', 'Meta phone_number_id'],
+                              ['WABA ID', 'whatsappBusinessAccountId', 'text', 'WhatsApp Business Account ID'],
+                              ['Meta Token', 'metaWhatsappToken', 'password', 'System user token'],
+                              ['Webhook Secret', 'metaWebhookSecret', 'password', 'Optional'],
+                              ['Display Name', 'businessDisplayName', 'text', 'Shown in WA Agent config'],
+                            ] as [string, string, string, string][]).map(([label, field, type, placeholder]) => (
+                              <div key={field} style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 8, alignItems: 'center' }}>
+                                <span style={{ fontSize: 12, color: 'var(--ink-4)' }}>{label}</span>
+                                <input
+                                  className="admin-input" type={type} style={{ fontSize: 12, padding: '4px 8px' }}
+                                  placeholder={placeholder}
+                                  value={waAgentProvisionForm[field] || ''}
+                                  onChange={e => setWaAgentProvisionForm((f: any) => ({ ...f, [field]: e.target.value }))}
+                                />
+                              </div>
+                            ))}
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
+                              <button className="btn btn-ghost btn-sm" onClick={() => setWaAgentProvisionForm(null)} disabled={waAgentSaving}>Cancel</button>
+                              <button className="btn btn-primary btn-sm" onClick={provisionWaAgent} disabled={waAgentSaving}>
+                                {waAgentSaving ? <><span className="spinner" />Provisioning…</> : 'Provision'}
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button className="btn btn-ghost btn-sm" onClick={() => setWaAgentProvisionForm({ phoneNumberId: '', whatsappBusinessAccountId: '', metaWhatsappToken: '', metaWebhookSecret: '', businessDisplayName: '' })}>
+                            Provision WA Agent
+                          </button>
+                        )
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 6 }}>
+                        <span style={{ color: 'var(--ink-4)' }}>Status</span>
+                        <span className="badge badge-green">Provisioned</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 14 }}>
+                        <span style={{ color: 'var(--ink-4)' }}>Agent ID</span>
+                        <span className="cell-main" style={{ fontFamily: 'var(--font-mono)', fontSize: 11 }}>{waAgent.waAgentTenantId}</span>
+                      </div>
+                      <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-4)', marginBottom: 8 }}>Courier Templates</div>
+                      {waAgentTemplatesDraft ? (
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+                          {(['default', 'delhivery', 'shiprocket', 'dtdc', 'ekart', 'bluedart'] as const).map(courier => (
+                            <div key={courier} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                              <span style={{ fontSize: 11, color: 'var(--ink-4)', textTransform: 'capitalize' }}>{courier}</span>
+                              <input className="admin-input" style={{ fontSize: 12, padding: '4px 8px' }}
+                                placeholder="template_name"
+                                value={waAgentTemplatesDraft[courier] || ''}
+                                onChange={e => setWaAgentTemplatesDraft((d: any) => ({ ...d, [courier]: e.target.value }))} />
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                          {(['default', 'delhivery', 'shiprocket', 'dtdc', 'ekart', 'bluedart'] as const).map(courier => {
+                            const name = waAgent.courierTemplates?.[courier];
+                            return (
+                              <div key={courier} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                                <span style={{ color: 'var(--ink-4)', textTransform: 'capitalize' }}>{courier}</span>
+                                <span className={`badge ${name ? 'badge-green' : 'badge-gray'}`}>{name ? 'Set' : 'Not set'}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
