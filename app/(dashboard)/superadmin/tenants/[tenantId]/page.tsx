@@ -509,7 +509,7 @@ export default function TenantDetailPage() {
   const [loading, setLoading] = useState(true);
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
-  const [tab, setTab] = useState<'overview' | 'subscription' | 'notes' | 'orders' | 'customers' | 'deliveries' | 'flags' | 'analytics' | 'settings' | 'team' | 'overdue' | 'products'>('overview');
+  const [tab, setTab] = useState<'overview' | 'subscription' | 'notes' | 'orders' | 'customers' | 'deliveries' | 'flags' | 'analytics' | 'settings' | 'team' | 'overdue' | 'products' | 'invoices'>('overview');
   const [toastMsg, setToastMsg] = useState('');
   const [trialDays, setTrialDays] = useState(14);
   const [deliveries, setDeliveries] = useState<any[]>([]);
@@ -564,6 +564,11 @@ export default function TenantDetailPage() {
   const [productsPage, setProductsPage] = useState(1);
   const [productsSearch, setProductsSearch] = useState('');
   const [productsLoading, setProductsLoading] = useState(false);
+  // invoices tab
+  const [invoices, setInvoices] = useState<any[]>([]);
+  const [invoicesTotal, setInvoicesTotal] = useState(0);
+  const [invoicesPage, setInvoicesPage] = useState(1);
+  const [invoicesLoading, setInvoicesLoading] = useState(false);
   const { setTitle } = usePageTitle();
 
   useEffect(() => { load(); }, [tenantId]);
@@ -590,6 +595,8 @@ export default function TenantDetailPage() {
   useEffect(() => { if (tab === 'overdue') loadOverdue(1); }, [tab]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (tab === 'products') loadProducts(1, ''); }, [tab]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (tab === 'invoices') loadInvoices(1); }, [tab]);
 
   async function load() {
     setLoading(true);
@@ -773,6 +780,17 @@ export default function TenantDetailPage() {
       setProductsTotal(res.data.total || 0);
     } catch { /**/ }
     setProductsLoading(false);
+  }
+
+  async function loadInvoices(page: number) {
+    setInvoicesLoading(true);
+    setInvoicesPage(page);
+    try {
+      const res = await api.get(`/admin/tenants/${tenantId}/invoices?page=${page}&limit=25`);
+      setInvoices(res.data.invoices || []);
+      setInvoicesTotal(res.data.total || 0);
+    } catch { /**/ }
+    setInvoicesLoading(false);
   }
 
   async function loadOverdue(page: number) {
@@ -1023,7 +1041,7 @@ export default function TenantDetailPage() {
 
       {/* Tabs */}
       <div className="tab-bar">
-        {(['overview', 'subscription', 'notes', 'orders', 'customers', 'deliveries', 'analytics', 'settings', 'team', 'overdue', 'products', ...(hasRole(admin, 'superadmin') ? ['flags'] : [])] as const).map((t: any) => (
+        {(['overview', 'subscription', 'notes', 'orders', 'customers', 'deliveries', 'analytics', 'settings', 'team', 'overdue', 'products', 'invoices', ...(hasRole(admin, 'superadmin') ? ['flags'] : [])] as const).map((t: any) => (
           <button key={t} onClick={() => setTab(t)} className={`tab-btn${tab === t ? ' active' : ''}`} style={{ textTransform: 'capitalize' }}>
             {t}
           </button>
@@ -1776,6 +1794,69 @@ export default function TenantDetailPage() {
                   <div className="pagination-controls">
                     <button className="btn btn-ghost btn-sm" disabled={productsPage === 1} onClick={() => loadProducts(productsPage - 1, productsSearch)}>← Prev</button>
                     <button className="btn btn-ghost btn-sm" disabled={productsPage * 50 >= productsTotal} onClick={() => loadProducts(productsPage + 1, productsSearch)}>Next →</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === 'invoices' && (
+        <div>
+          {invoicesLoading ? (
+            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+          ) : (
+            <div className="admin-card">
+              <div className="table-shell">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Invoice #</th><th>Customer</th><th>Order ID</th>
+                      <th style={{ textAlign: 'right' }}>Amount</th>
+                      <th>Payment</th><th>Date</th><th>PDF</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {invoices.map((inv: any) => (
+                      <tr key={inv._id}>
+                        <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{inv.invoiceNumber}</td>
+                        <td className="cell-main">{inv.customer?.name || '—'}</td>
+                        <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-4)' }}>
+                          {inv.orderId ? inv.orderId.toString().slice(-8) : '—'}
+                        </td>
+                        <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(inv.grandTotal || 0)}</td>
+                        <td>
+                          <span className={`badge ${inv.paymentStatus === 'paid' ? 'badge-green' : inv.paymentStatus ? 'badge-amber' : 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>
+                            {inv.paymentStatus || '—'}
+                          </span>
+                        </td>
+                        <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>
+                          {inv.invoiceDate ? fmtDate(inv.invoiceDate) : fmtDate(inv.createdAt)}
+                        </td>
+                        <td>
+                          {inv.invoiceUrl ? (
+                            <a href={inv.invoiceUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: 'var(--accent)' }}>
+                              View PDF
+                            </a>
+                          ) : (
+                            <span style={{ fontSize: 12, color: 'var(--ink-4)' }}>—</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                    {invoices.length === 0 && (
+                      <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>No invoices generated yet</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              {invoicesTotal > 25 && (
+                <div className="pagination">
+                  <span className="pagination-info">{(invoicesPage - 1) * 25 + 1}–{Math.min(invoicesPage * 25, invoicesTotal)} of {invoicesTotal}</span>
+                  <div className="pagination-controls">
+                    <button className="btn btn-ghost btn-sm" disabled={invoicesPage === 1} onClick={() => loadInvoices(invoicesPage - 1)}>← Prev</button>
+                    <button className="btn btn-ghost btn-sm" disabled={invoicesPage * 25 >= invoicesTotal} onClick={() => loadInvoices(invoicesPage + 1)}>Next →</button>
                   </div>
                 </div>
               )}
