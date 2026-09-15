@@ -196,9 +196,13 @@ export default function CommunicationsPage() {
                 <label className="form-label">Channel</label>
                 <select className="admin-input" value={broadcast.channel} onChange={e => setBroadcast(b => ({ ...b, channel: e.target.value }))}>
                   <option value="email">Email</option>
-                  <option value="whatsapp" disabled>WhatsApp (coming soon)</option>
-                  <option value="both" disabled>Email + WhatsApp (coming soon)</option>
+                  <option value="whatsapp">WhatsApp</option>
                 </select>
+                {broadcast.channel === 'whatsapp' && (
+                  <p style={{ margin: '6px 0 0', fontSize: 11, color: 'var(--ink-4)', lineHeight: 1.5 }}>
+                    Requires <code>AUTHKEY_SID_BROADCAST</code> — a pre-approved broadcast template from your Authkey Dashboard. Message body maps to template variable <code>{'{{1}}'}</code>.
+                  </p>
+                )}
               </div>
               <div>
                 <label className="form-label">Filter by Plan</label>
@@ -251,16 +255,20 @@ export default function CommunicationsPage() {
                 No recipients match this segment — adjust filters before sending.
               </p>
             )}
-            {bcResult && (
-              <div style={{ marginTop: 16, padding: '12px 16px', background: bcResult.failed > 0 && bcResult.emailSent === 0 ? 'rgba(239,68,68,0.08)' : 'rgba(52,211,153,0.1)', border: `1px solid ${bcResult.failed > 0 && bcResult.emailSent === 0 ? 'rgba(239,68,68,0.3)' : 'rgba(52,211,153,0.3)'}`, borderRadius: 8 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: bcResult.failed > 0 && bcResult.emailSent === 0 ? 'var(--red)' : 'var(--green)', marginBottom: bcResult.failed > 0 ? 4 : 0 }}>{bcResult.message}</div>
-                {bcResult.failed > 0 && (
-                  <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>
-                    {bcResult.failed} send{bcResult.failed !== 1 ? 's' : ''} failed — check server logs for details.
-                  </div>
-                )}
-              </div>
-            )}
+            {bcResult && (() => {
+              const sent = broadcast.channel === 'whatsapp' ? bcResult.waSent : bcResult.emailSent;
+              const isAllFailed = bcResult.failed > 0 && sent === 0;
+              return (
+                <div style={{ marginTop: 16, padding: '12px 16px', background: isAllFailed ? 'rgba(239,68,68,0.08)' : 'rgba(52,211,153,0.1)', border: `1px solid ${isAllFailed ? 'rgba(239,68,68,0.3)' : 'rgba(52,211,153,0.3)'}`, borderRadius: 8 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: isAllFailed ? 'var(--red)' : 'var(--green)', marginBottom: bcResult.failed > 0 ? 4 : 0 }}>{bcResult.message}</div>
+                  {bcResult.failed > 0 && (
+                    <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>
+                      {bcResult.failed} send{bcResult.failed !== 1 ? 's' : ''} failed — check server logs for details.
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
             </div>
           </div>
 
