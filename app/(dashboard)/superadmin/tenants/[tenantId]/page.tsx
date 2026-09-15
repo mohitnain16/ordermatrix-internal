@@ -1244,6 +1244,27 @@ export default function TenantDetailPage() {
                                         </div>
                                       ))}
                                     </div>
+                                    {['returned', 'rto', 'cancelled'].includes(selectedOrder.status) && (
+                                      <div style={{ borderTop: '1px solid var(--line)', paddingTop: 12, marginBottom: 12 }}>
+                                        <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-4)', marginBottom: 8 }}>Return / Refund</div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '8px 24px' }}>
+                                          {[
+                                            selectedOrder.rto?.reason       ? ['RTO Reason',      selectedOrder.rto.reason]       : null,
+                                            selectedOrder.rto?.resolution   ? ['RTO Resolution',  selectedOrder.rto.resolution]   : null,
+                                            selectedOrder.cancellation?.reason ? ['Cancel Reason', selectedOrder.cancellation.reason] : null,
+                                            selectedOrder.cancellation?.refundStatus && selectedOrder.cancellation.refundStatus !== 'not_applicable'
+                                              ? ['Refund Status', selectedOrder.cancellation.refundStatus] : null,
+                                            selectedOrder.refundRequest?.status ? ['Refund Request', selectedOrder.refundRequest.status] : null,
+                                            selectedOrder.refundRequest?.amount != null ? ['Refund Amount', fmt(selectedOrder.refundRequest.amount)] : null,
+                                          ].filter(Boolean).map(([k, v]) => (
+                                            <div key={k as string}>
+                                              <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-4)', marginBottom: 3 }}>{k}</div>
+                                              <div style={{ fontSize: 13, color: 'var(--ink)', textTransform: 'capitalize' }}>{v}</div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
                                     {canEdit && (
                                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, borderTop: '1px solid var(--line)', paddingTop: 12 }}>
                                         <button className="btn btn-ghost btn-sm" onClick={() => setStatusModal({ order: selectedOrder })}>
