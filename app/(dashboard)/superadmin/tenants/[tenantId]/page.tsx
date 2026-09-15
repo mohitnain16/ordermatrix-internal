@@ -509,7 +509,7 @@ export default function TenantDetailPage() {
   const [loading, setLoading] = useState(true);
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
-  const [tab, setTab] = useState<'overview' | 'subscription' | 'notes' | 'orders' | 'customers' | 'deliveries' | 'flags' | 'analytics' | 'settings' | 'team'>('overview');
+  const [tab, setTab] = useState<'overview' | 'subscription' | 'notes' | 'orders' | 'customers' | 'deliveries' | 'flags' | 'analytics' | 'settings' | 'team' | 'overdue'>('overview');
   const [toastMsg, setToastMsg] = useState('');
   const [trialDays, setTrialDays] = useState(14);
   const [deliveries, setDeliveries] = useState<any[]>([]);
@@ -553,6 +553,11 @@ export default function TenantDetailPage() {
   // team tab
   const [teamData, setTeamData] = useState<any>(null);
   const [teamLoading, setTeamLoading] = useState(false);
+  // overdue payments tab
+  const [overdueOrders, setOverdueOrders] = useState<any[]>([]);
+  const [overdueTotal, setOverdueTotal] = useState(0);
+  const [overduePage, setOverduePage] = useState(1);
+  const [overdueLoading, setOverdueLoading] = useState(false);
   const { setTitle } = usePageTitle();
 
   useEffect(() => { load(); }, [tenantId]);
@@ -575,6 +580,8 @@ export default function TenantDetailPage() {
   useEffect(() => { if (tab === 'settings') loadTenantSettings(); }, [tab]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (tab === 'team') loadTeam(); }, [tab]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (tab === 'overdue') loadOverdue(1); }, [tab]);
 
   async function load() {
     setLoading(true);
@@ -745,6 +752,18 @@ export default function TenantDetailPage() {
       setTeamData(res.data);
     } catch { toast('Failed to load team'); }
     setTeamLoading(false);
+  }
+
+  async function loadOverdue(page: number) {
+    setOverdueLoading(true);
+    setOverduePage(page);
+    try {
+      const params = new URLSearchParams({ page: String(page), limit: '25', hasBalance: 'true' });
+      const res = await api.get(`/admin/tenants/${tenantId}/orders?${params}`);
+      setOverdueOrders(res.data.orders || []);
+      setOverdueTotal(res.data.total || 0);
+    } catch { /**/ }
+    setOverdueLoading(false);
   }
 
   function timeAgo(d: string) {
@@ -983,7 +1002,7 @@ export default function TenantDetailPage() {
 
       {/* Tabs */}
       <div className="tab-bar">
-        {(['overview', 'subscription', 'notes', 'orders', 'customers', 'deliveries', 'analytics', 'settings', 'team', ...(hasRole(admin, 'superadmin') ? ['flags'] : [])] as const).map((t: any) => (
+        {(['overview', 'subscription', 'notes', 'orders', 'customers', 'deliveries', 'analytics', 'settings', 'team', 'overdue', ...(hasRole(admin, 'superadmin') ? ['flags'] : [])] as const).map((t: any) => (
           <button key={t} onClick={() => setTab(t)} className={`tab-btn${tab === t ? ' active' : ''}`} style={{ textTransform: 'capitalize' }}>
             {t}
           </button>
@@ -1609,6 +1628,62 @@ export default function TenantDetailPage() {
             </>
           ) : (
             <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>No team data</div>
+          )}
+        </div>
+      )}
+
+      {tab === 'overdue' && (
+        <div>
+          {overdueLoading ? (
+            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+          ) : (
+            <div className="admin-card">
+              <div className="card-header">
+                <div className="card-title">Orders with Outstanding Balance</div>
+                <span style={{ fontSize: 12, color: 'var(--ink-4)' }}>{overdueTotal} total</span>
+              </div>
+              <div className="table-shell">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Order ID</th><th>Customer</th><th>Status</th>
+                      <th style={{ textAlign: 'right' }}>Total</th>
+                      <th style={{ textAlign: 'right' }}>Paid</th>
+                      <th style={{ textAlign: 'right' }}>Balance</th>
+                      <th>Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {overdueOrders.map((o: any) => (
+                      <tr key={o._id}>
+                        <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{o.orderId || o._id?.toString().slice(-8)}</td>
+                        <td>
+                          <div className="cell-main">{o.customerName || o.customer?.name || '—'}</div>
+                          <div className="cell-sub">{o.customerPhone || o.customer?.phone || ''}</div>
+                        </td>
+                        <td><span className={`badge ${STATUS_COLOR[o.status] || 'badge-gray'}`}>{STATUS_LABEL[o.status] || o.status}</span></td>
+                        <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{o.totalAmount ? fmt(o.totalAmount) : '—'}</td>
+                        <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--green)' }}>{o.amountPaid ? fmt(o.amountPaid) : '—'}</td>
+                        <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--red, #E53E3E)', fontWeight: 600 }}>{o.balanceDue ? fmt(o.balanceDue) : '—'}</td>
+                        <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{fmtDate(o.createdAt)}</td>
+                      </tr>
+                    ))}
+                    {overdueOrders.length === 0 && (
+                      <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>No orders with outstanding balance</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              {overdueTotal > 25 && (
+                <div className="pagination">
+                  <span className="pagination-info">{(overduePage - 1) * 25 + 1}–{Math.min(overduePage * 25, overdueTotal)} of {overdueTotal}</span>
+                  <div className="pagination-controls">
+                    <button className="btn btn-ghost btn-sm" disabled={overduePage === 1} onClick={() => loadOverdue(overduePage - 1)}>← Prev</button>
+                    <button className="btn btn-ghost btn-sm" disabled={overduePage * 25 >= overdueTotal} onClick={() => loadOverdue(overduePage + 1)}>Next →</button>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </div>
       )}
