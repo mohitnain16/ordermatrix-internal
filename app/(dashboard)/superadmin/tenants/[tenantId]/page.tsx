@@ -112,6 +112,14 @@ export default function TenantDetailPage() {
   const [ordersStatus, setOrdersStatus] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [orderDetailLoading, setOrderDetailLoading] = useState(false);
+  // customers tab
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [customersTotal, setCustomersTotal] = useState(0);
+  const [customersPage, setCustomersPage] = useState(1);
+  const [customersLoading, setCustomersLoading] = useState(false);
+  const [customerSearch, setCustomerSearch] = useState('');
+  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+  const [customerDetailLoading, setCustomerDetailLoading] = useState(false);
   const { setTitle } = usePageTitle();
 
   useEffect(() => { load(); }, [tenantId]);
@@ -126,6 +134,8 @@ export default function TenantDetailPage() {
   useEffect(() => { if (tab === 'flags') loadFlags(); }, [tab]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (tab === 'orders') loadOrders(1, ordersStatus); }, [tab]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (tab === 'customers') loadCustomers(1, customerSearch); }, [tab]);
 
   async function load() {
     setLoading(true);
@@ -237,6 +247,29 @@ export default function TenantDetailPage() {
       setOrdersTotal(res.data.total || 0);
     } catch { /**/ }
     setOrdersLoading(false);
+  }
+
+  async function loadCustomers(page: number, search: string) {
+    setCustomersLoading(true);
+    setCustomersPage(page);
+    setSelectedCustomer(null);
+    try {
+      const params = new URLSearchParams({ page: String(page), limit: '25' });
+      if (search.trim()) params.set('search', search.trim());
+      const res = await api.get(`/admin/tenants/${tenantId}/customers?${params}`);
+      setCustomers(res.data.customers || []);
+      setCustomersTotal(res.data.total || 0);
+    } catch { /**/ }
+    setCustomersLoading(false);
+  }
+
+  async function loadCustomerDetail(cid: string) {
+    setCustomerDetailLoading(true);
+    try {
+      const res = await api.get(`/admin/tenants/${tenantId}/customers/${cid}`);
+      setSelectedCustomer(res.data);
+    } catch { toast('Failed to load customer'); }
+    setCustomerDetailLoading(false);
   }
 
   async function loadOrderDetail(oid: string) {
@@ -655,6 +688,115 @@ export default function TenantDetailPage() {
                 )}
               </div>
             </>
+          )}
+        </div>
+      )}
+
+      {tab === 'customers' && (
+        <div>
+          {/* Search bar */}
+          <div style={{ marginBottom: 14 }}>
+            <input
+              className="admin-input"
+              placeholder="Search by name, phone, or email…"
+              value={customerSearch}
+              onChange={e => setCustomerSearch(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && loadCustomers(1, customerSearch)}
+              style={{ maxWidth: 340 }}
+            />
+          </div>
+
+          {customersLoading ? (
+            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+          ) : selectedCustomer ? (
+            /* Customer detail panel */
+            <div>
+              <button className="btn btn-ghost btn-sm" style={{ marginBottom: 12 }} onClick={() => setSelectedCustomer(null)}>
+                ← Back to customers
+              </button>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div className="admin-card">
+                  <div className="card-header"><div className="card-title">Customer Profile</div></div>
+                  <div className="card-body">
+                    {[
+                      ['Name', selectedCustomer.customer?.name],
+                      ['Phone', selectedCustomer.customer?.phone],
+                      ['Email', selectedCustomer.customer?.email || '—'],
+                      ['Instagram', selectedCustomer.customer?.instagramHandle || '—'],
+                      ['Total Orders', selectedCustomer.customer?.totalOrders],
+                      ['Total Spent', selectedCustomer.customer?.totalSpent ? fmt(selectedCustomer.customer.totalSpent) : '—'],
+                      ['Last Order', selectedCustomer.customer?.lastOrderAt ? fmtDate(selectedCustomer.customer.lastOrderAt) : '—'],
+                      ['Tags', (selectedCustomer.customer?.tags || []).join(', ') || '—'],
+                      ['Notes', selectedCustomer.customer?.notes || '—'],
+                    ].map(([k, v]) => (
+                      <div key={k as string} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 10 }}>
+                        <span style={{ color: 'var(--ink-4)' }}>{k}</span>
+                        <span className="cell-main">{v?.toString() || '—'}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="admin-card">
+                  <div className="card-header"><div className="card-title">Recent Orders</div></div>
+                  {customerDetailLoading ? (
+                    <div className="card-body" style={{ textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+                  ) : (
+                    <div className="table-shell">
+                      <table className="admin-table">
+                        <thead><tr><th>ID</th><th>Status</th><th>Amount</th><th>Date</th></tr></thead>
+                        <tbody>
+                          {(selectedCustomer.orders || []).map((o: any) => (
+                            <tr key={o._id}>
+                              <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11 }}>{o.orderId || o._id?.toString().slice(-8)}</td>
+                              <td><span className={`badge ${STATUS_COLOR[o.status] || 'badge-gray'}`}>{STATUS_LABEL[o.status] || o.status}</span></td>
+                              <td style={{ fontVariantNumeric: 'tabular-nums', fontSize: 12 }}>{o.totalAmount || o.amount ? fmt(o.totalAmount || o.amount) : '—'}</td>
+                              <td style={{ fontSize: 11, color: 'var(--ink-4)' }}>{fmtDate(o.createdAt)}</td>
+                            </tr>
+                          ))}
+                          {(selectedCustomer.orders || []).length === 0 && (
+                            <tr><td colSpan={4} style={{ textAlign: 'center', padding: 24, color: 'var(--ink-4)' }}>No orders</td></tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="admin-card">
+              <div className="table-shell">
+                <table className="admin-table">
+                  <thead>
+                    <tr><th>Name</th><th>Phone</th><th>Email</th><th>Orders</th><th>Spent</th><th>Last Order</th></tr>
+                  </thead>
+                  <tbody>
+                    {customers.map((c: any) => (
+                      <tr key={c._id} style={{ cursor: 'pointer' }} onClick={() => loadCustomerDetail(c._id)}>
+                        <td className="cell-main">{c.name}</td>
+                        <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{c.phone}</td>
+                        <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{c.email || '—'}</td>
+                        <td style={{ fontVariantNumeric: 'tabular-nums' }}>{c.totalOrders || 0}</td>
+                        <td style={{ fontVariantNumeric: 'tabular-nums' }}>{c.totalSpent ? fmt(c.totalSpent) : '—'}</td>
+                        <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{c.lastOrderAt ? fmtDate(c.lastOrderAt) : '—'}</td>
+                      </tr>
+                    ))}
+                    {customers.length === 0 && (
+                      <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>No customers found</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              {customersTotal > 25 && (
+                <div className="pagination">
+                  <span className="pagination-info">{(customersPage - 1) * 25 + 1}–{Math.min(customersPage * 25, customersTotal)} of {customersTotal}</span>
+                  <div className="pagination-controls">
+                    <button className="btn btn-ghost btn-sm" disabled={customersPage === 1} onClick={() => loadCustomers(customersPage - 1, customerSearch)}>← Prev</button>
+                    <button className="btn btn-ghost btn-sm" disabled={customersPage * 25 >= customersTotal} onClick={() => loadCustomers(customersPage + 1, customerSearch)}>Next →</button>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </div>
       )}
