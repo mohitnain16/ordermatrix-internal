@@ -196,13 +196,7 @@ export default function CommunicationsPage() {
                 <label className="form-label">Channel</label>
                 <select className="admin-input" value={broadcast.channel} onChange={e => setBroadcast(b => ({ ...b, channel: e.target.value }))}>
                   <option value="email">Email</option>
-                  <option value="whatsapp">WhatsApp</option>
                 </select>
-                {broadcast.channel === 'whatsapp' && (
-                  <p style={{ margin: '6px 0 0', fontSize: 11, color: 'var(--ink-4)', lineHeight: 1.5 }}>
-                    Requires <code>AUTHKEY_SID_BROADCAST</code> — a pre-approved broadcast template from your Authkey Dashboard. Message body maps to template variable <code>{'{{1}}'}</code>.
-                  </p>
-                )}
               </div>
               <div>
                 <label className="form-label">Filter by Plan</label>
@@ -220,12 +214,10 @@ export default function CommunicationsPage() {
               </select>
             </div>
 
-            {broadcast.channel !== 'whatsapp' && (
-              <div style={{ marginBottom: 16 }}>
-                <label className="form-label">Subject</label>
-                <input className="admin-input" placeholder="Email subject line" value={broadcast.subject} onChange={e => setBroadcast(b => ({ ...b, subject: e.target.value }))} />
-              </div>
-            )}
+            <div style={{ marginBottom: 16 }}>
+              <label className="form-label">Subject</label>
+              <input className="admin-input" placeholder="Email subject line" value={broadcast.subject} onChange={e => setBroadcast(b => ({ ...b, subject: e.target.value }))} />
+            </div>
 
             <div style={{ marginBottom: 20 }}>
               <label className="form-label">Message</label>
@@ -256,7 +248,7 @@ export default function CommunicationsPage() {
               </p>
             )}
             {bcResult && (() => {
-              const sent = broadcast.channel === 'whatsapp' ? bcResult.waSent : bcResult.emailSent;
+              const sent = bcResult.emailSent;
               const isAllFailed = bcResult.failed > 0 && sent === 0;
               return (
                 <div style={{ marginTop: 16, padding: '12px 16px', background: isAllFailed ? 'rgba(239,68,68,0.08)' : 'rgba(52,211,153,0.1)', border: `1px solid ${isAllFailed ? 'rgba(239,68,68,0.3)' : 'rgba(52,211,153,0.3)'}`, borderRadius: 8 }}>

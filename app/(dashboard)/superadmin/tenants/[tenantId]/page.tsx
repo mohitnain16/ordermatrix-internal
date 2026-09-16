@@ -791,7 +791,6 @@ export default function TenantDetailPage() {
           upiId:     settingsDraft.invoiceConfig?.upiId,
           showUpiQr: settingsDraft.invoiceConfig?.showUpiQr,
         },
-        whatsappConfig: { templateSids: settingsDraft.whatsapp?.templateSids },
       });
       setTenantSettings(settingsDraft);
       setSettingsDraft(null);
@@ -1804,45 +1803,6 @@ export default function TenantDetailPage() {
                       ))
                     )}
                   </div>
-                </div>
-              </div>
-
-              {/* WhatsApp / Authkey card */}
-              <div className="admin-card">
-                <div className="card-header"><div className="card-title">WhatsApp / Authkey</div></div>
-                <div className="card-body">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 14 }}>
-                    <span style={{ color: 'var(--ink-4)' }}>API Key</span>
-                    <span className={`badge ${tenantSettings.whatsapp?.hasApiKey ? 'badge-green' : 'badge-red'}`}>
-                      {tenantSettings.whatsapp?.hasApiKey ? 'Configured' : 'Not configured'}
-                    </span>
-                  </div>
-                  <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-4)', marginBottom: 8 }}>Template SIDs</div>
-                  {settingsDraft ? (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
-                      {(['default', 'delhivery', 'shiprocket', 'dtdc', 'ekart', 'bluedart'] as const).map(courier => (
-                        <div key={courier} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                          <span style={{ fontSize: 11, color: 'var(--ink-4)', textTransform: 'capitalize' }}>{courier}</span>
-                          <input className="admin-input" style={{ fontSize: 12, padding: '4px 8px' }}
-                            placeholder="SID value"
-                            value={settingsDraft.whatsapp?.templateSids?.[courier] || ''}
-                            onChange={e => setSettingsDraft((d: any) => ({
-                              ...d,
-                              whatsapp: { ...d.whatsapp, templateSids: { ...d.whatsapp?.templateSids, [courier]: e.target.value } },
-                            }))} />
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-                      {Object.entries((tenantSettings.whatsapp?.templateSids || {}) as Record<string, string | null>).map(([courier, sid]) => (
-                        <div key={courier} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                          <span style={{ color: 'var(--ink-4)', textTransform: 'capitalize' }}>{courier}</span>
-                          <span className={`badge ${sid ? 'badge-green' : 'badge-gray'}`}>{sid ? 'Set' : 'Not set'}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </div>
 
