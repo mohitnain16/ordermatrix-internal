@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Calendar, UserCheck, ShieldOff } from 'lucide-react';
 import api from '../../../../../lib/api';
@@ -230,7 +230,7 @@ function OrderStatusModal({ order, tenantId, onClose, onSuccess, toast }: any) {
               </select>
             </div>
           )}
-          {err && <p style={{ fontSize: 12, color: 'var(--red, #E53E3E)', margin: 0 }}>{err}</p>}
+          {err && <p style={{ fontSize: 12, color: 'var(--red)', margin: 0 }}>{err}</p>}
         </div>
         <div className="modal-footer">
           <button className="btn btn-ghost btn-sm" onClick={onClose}>Cancel</button>
@@ -302,7 +302,7 @@ function RecordPaymentModal({ order, tenantId, onClose, onSuccess, toast }: any)
             <label className="input-label">Note</label>
             <input className="admin-input" value={form.note} onChange={e => setForm(f => ({ ...f, note: e.target.value }))} placeholder="Optional" />
           </div>
-          {err && <p style={{ fontSize: 12, color: 'var(--red, #E53E3E)', margin: 0 }}>{err}</p>}
+          {err && <p style={{ fontSize: 12, color: 'var(--red)', margin: 0 }}>{err}</p>}
         </div>
         <div className="modal-footer">
           <button className="btn btn-ghost btn-sm" onClick={onClose}>Cancel</button>
@@ -351,7 +351,7 @@ function AddCommentModal({ order, tenantId, onClose, onSuccess, toast }: any) {
             placeholder="Internal support note…"
             style={{ width: '100%', resize: 'vertical' }}
           />
-          {err && <p style={{ fontSize: 12, color: 'var(--red, #E53E3E)', margin: '6px 0 0' }}>{err}</p>}
+          {err && <p style={{ fontSize: 12, color: 'var(--red)', margin: '6px 0 0' }}>{err}</p>}
         </div>
         <div className="modal-footer">
           <button className="btn btn-ghost btn-sm" onClick={onClose}>Cancel</button>
@@ -418,7 +418,7 @@ function DispatchModal({ order, tenantId, onClose, onSuccess, toast }: any) {
             <label className="input-label">Dispatch Date</label>
             <input type="date" className="admin-input" value={form.dispatchDate} onChange={e => setForm(f => ({ ...f, dispatchDate: e.target.value }))} />
           </div>
-          {err && <p style={{ fontSize: 12, color: 'var(--red, #E53E3E)', margin: 0 }}>{err}</p>}
+          {err && <p style={{ fontSize: 12, color: 'var(--red)', margin: 0 }}>{err}</p>}
         </div>
         <div className="modal-footer">
           <button className="btn btn-ghost btn-sm" onClick={onClose}>Cancel</button>
@@ -487,7 +487,7 @@ function EditCustomerModal({ customer, tenantId, onClose, onSuccess, toast }: an
             <label className="input-label">Notes</label>
             <textarea className="admin-input" rows={2} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} style={{ resize: 'none' }} />
           </div>
-          {err && <p style={{ fontSize: 12, color: 'var(--red, #E53E3E)', margin: 0 }}>{err}</p>}
+          {err && <p style={{ fontSize: 12, color: 'var(--red)', margin: 0 }}>{err}</p>}
         </div>
         <div className="modal-footer">
           <button className="btn btn-ghost btn-sm" onClick={onClose}>Cancel</button>
@@ -509,7 +509,9 @@ export default function TenantDetailPage() {
   const [loading, setLoading] = useState(true);
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
-  const [tab, setTab] = useState<'overview' | 'subscription' | 'notes' | 'orders' | 'customers' | 'deliveries' | 'flags' | 'analytics' | 'settings' | 'team' | 'overdue' | 'products' | 'invoices'>('overview');
+  type TabId = 'overview' | 'subscription' | 'notes' | 'orders' | 'customers' | 'deliveries' | 'flags' | 'analytics' | 'settings' | 'team' | 'overdue' | 'products' | 'invoices';
+  const [tab, setTab] = useState<TabId>('overview');
+  const loadedTabsRef = useRef<Set<TabId>>(new Set<TabId>(['overview']));
   const [toastMsg, setToastMsg] = useState('');
   const [trialDays, setTrialDays] = useState(14);
   const [deliveries, setDeliveries] = useState<any[]>([]);
@@ -585,26 +587,29 @@ export default function TenantDetailPage() {
     if (name) setTitle(name);
     return () => setTitle(null);
   }, [data?.tenant?.businessName]);
+  function firstVisit(t: TabId, fn: () => void) {
+    if (!loadedTabsRef.current.has(t)) { loadedTabsRef.current.add(t); fn(); }
+  }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (tab === 'deliveries') loadDeliveries(1); }, [tab]);
+  useEffect(() => { if (tab === 'deliveries') firstVisit('deliveries', () => loadDeliveries(1)); }, [tab]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (tab === 'flags') loadFlags(); }, [tab]);
+  useEffect(() => { if (tab === 'flags') firstVisit('flags', loadFlags); }, [tab]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (tab === 'orders') loadOrders(1, ordersStatus); }, [tab]);
+  useEffect(() => { if (tab === 'orders') firstVisit('orders', () => loadOrders(1, ordersStatus)); }, [tab]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (tab === 'customers') loadCustomers(1, customerSearch); }, [tab]);
+  useEffect(() => { if (tab === 'customers') firstVisit('customers', () => loadCustomers(1, customerSearch)); }, [tab]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (tab === 'analytics') loadAnalytics(); }, [tab]);
+  useEffect(() => { if (tab === 'analytics') firstVisit('analytics', loadAnalytics); }, [tab]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (tab === 'settings') { loadTenantSettings(); loadWaAgent(); } }, [tab]);
+  useEffect(() => { if (tab === 'settings') firstVisit('settings', () => { loadTenantSettings(); loadWaAgent(); }); }, [tab]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (tab === 'team') loadTeam(); }, [tab]);
+  useEffect(() => { if (tab === 'team') firstVisit('team', loadTeam); }, [tab]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (tab === 'overdue') loadOverdue(1); }, [tab]);
+  useEffect(() => { if (tab === 'overdue') firstVisit('overdue', () => loadOverdue(1)); }, [tab]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (tab === 'products') loadProducts(1, ''); }, [tab]);
+  useEffect(() => { if (tab === 'products') firstVisit('products', () => loadProducts(1, '')); }, [tab]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (tab === 'invoices') loadInvoices(1); }, [tab]);
+  useEffect(() => { if (tab === 'invoices') firstVisit('invoices', () => loadInvoices(1)); }, [tab]);
 
   async function load() {
     setLoading(true);
@@ -786,7 +791,6 @@ export default function TenantDetailPage() {
           upiId:     settingsDraft.invoiceConfig?.upiId,
           showUpiQr: settingsDraft.invoiceConfig?.showUpiQr,
         },
-        whatsappConfig: { templateSids: settingsDraft.whatsapp?.templateSids },
       });
       setTenantSettings(settingsDraft);
       setSettingsDraft(null);
@@ -923,6 +927,42 @@ export default function TenantDetailPage() {
   const { tenant, subscription: sub, userCount, orderCount, notes, lastActiveAt, ordersByStatus } = data;
   const canEdit = hasRole(admin, 'superadmin', 'ops_admin');
 
+  const navGroups = useMemo(() => [
+    {
+      label: 'Overview',
+      items: [
+        { id: 'overview', label: 'Overview' },
+        { id: 'analytics', label: 'Analytics' },
+      ],
+    },
+    {
+      label: 'Commerce',
+      items: [
+        { id: 'orders', label: 'Orders' },
+        { id: 'customers', label: 'Customers' },
+        { id: 'products', label: 'Products' },
+        { id: 'invoices', label: 'Invoices' },
+        { id: 'overdue', label: 'Outstanding' },
+      ],
+    },
+    {
+      label: 'Account',
+      items: [
+        { id: 'subscription', label: 'Subscription' },
+        { id: 'team', label: 'Team' },
+        { id: 'settings', label: 'Settings' },
+      ],
+    },
+    {
+      label: 'Admin',
+      items: [
+        { id: 'notes', label: 'Notes' },
+        { id: 'deliveries', label: 'Deliveries' },
+        ...(hasRole(admin, 'superadmin') ? [{ id: 'flags', label: 'Flags' }] : []),
+      ],
+    },
+  ], [admin]);
+
   const ACTIONS = {
     extendTrial: {
       type: 'extendTrial',
@@ -1037,7 +1077,7 @@ export default function TenantDetailPage() {
         />
       )}
 
-      {/* Back link */}
+      {/* ── Back ──────────────────────────────────────────── */}
       <button
         onClick={() => router.back()}
         style={{ background: 'none', border: 'none', color: 'var(--ink-4)', fontSize: 13, cursor: 'pointer', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 4, padding: 0, fontFamily: 'inherit' }}
@@ -1045,50 +1085,45 @@ export default function TenantDetailPage() {
         ← Back to Tenants
       </button>
 
-      {/* A — Page header block */}
-      <div className="tenant-header">
-        <div className="tenant-name">{tenant.businessName}</div>
-        <div className="tenant-meta">
-          <span>{tenant.email}</span>
-          <span>·</span>
-          <span>{tenant.phone}</span>
-          <span>·</span>
-          <span>Joined {fmtDate(tenant.createdAt)}</span>
-          <span className={`badge ${tenant.isActive ? 'badge-green' : 'badge-red'}`}>
-            {tenant.isActive ? 'Active' : 'Inactive'}
-          </span>
+      {/* ── Header row: name + inline actions ─────────── */}
+      <div className="tenant-header-row">
+        <div className="tenant-header">
+          <div className="tenant-name">{tenant.businessName}</div>
+          <div className="tenant-meta">
+            <span>{tenant.email}</span>
+            <span>·</span>
+            <span>{tenant.phone}</span>
+            <span>·</span>
+            <span>Joined {fmtDate(tenant.createdAt)}</span>
+            <span className={`badge ${tenant.isActive ? 'badge-green' : 'badge-red'}`}>
+              {tenant.isActive ? 'Active' : 'Inactive'}
+            </span>
+          </div>
         </div>
+        {canEdit && (
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', flexShrink: 0 }}>
+            <button className="btn btn-ghost btn-sm" onClick={() => setConfirmAction(ACTIONS.extendTrial)}>
+              <Calendar size={14} style={{ marginRight: 5 }} />
+              Extend Trial
+            </button>
+            <button className="btn btn-outline btn-sm" onClick={() => setConfirmAction(ACTIONS.impersonate)}>
+              <UserCheck size={14} style={{ marginRight: 5 }} />
+              Impersonate
+            </button>
+            <button className="btn btn-ghost btn-sm" onClick={() => setOverrideOpen(true)}>Override Plan</button>
+            <button
+              className="btn btn-danger btn-sm"
+              onClick={() => setConfirmAction(tenant.isActive ? ACTIONS.deactivate : ACTIONS.reactivate)}
+            >
+              <ShieldOff size={14} style={{ marginRight: 5 }} />
+              {tenant.isActive ? 'Deactivate' : 'Reactivate'}
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* B — Action bar */}
-      {canEdit && (
-        <div className="action-bar">
-          <button className="btn btn-ghost btn-sm" onClick={() => setConfirmAction(ACTIONS.extendTrial)}>
-            <Calendar size={14} style={{ marginRight: 5 }} />
-            Extend Trial
-          </button>
-          <button className="btn btn-outline btn-sm" onClick={() => setConfirmAction(ACTIONS.impersonate)}>
-            <UserCheck size={14} style={{ marginRight: 5 }} />
-            Impersonate
-          </button>
-          <button
-            className="btn btn-ghost btn-sm"
-            onClick={() => setOverrideOpen(true)}
-          >
-            Override Plan
-          </button>
-          <button
-            className="btn btn-danger btn-sm"
-            onClick={() => setConfirmAction(tenant.isActive ? ACTIONS.deactivate : ACTIONS.reactivate)}
-          >
-            <ShieldOff size={14} style={{ marginRight: 5 }} />
-            {tenant.isActive ? 'Deactivate' : 'Reactivate'}
-          </button>
-        </div>
-      )}
-
-      {/* C — Stat cards row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginBottom: 20 }}>
+      {/* ── Stat cards ────────────────────────────────── */}
+      <div className="tenant-stats-grid">
         <div className="stat-card">
           <div className="stat-label">Plan</div>
           <div className="stat-value" style={{ textTransform: 'capitalize', fontSize: 18 }}>{tenant.planId}</div>
@@ -1107,15 +1142,41 @@ export default function TenantDetailPage() {
         ))}
       </div>
 
-      {/* Tabs */}
-      <div className="tab-bar">
-        {(['overview', 'subscription', 'notes', 'orders', 'customers', 'deliveries', 'analytics', 'settings', 'team', 'overdue', 'products', 'invoices', ...(hasRole(admin, 'superadmin') ? ['flags'] : [])] as const).map((t: any) => (
-          <button key={t} onClick={() => setTab(t)} className={`tab-btn${tab === t ? ' active' : ''}`} style={{ textTransform: 'capitalize' }}>
-            {t}
-          </button>
-        ))}
-      </div>
-
+      {/* ── Body: sidebar nav + tab content ─────────── */}
+      <div className="tenant-detail-body">
+        <div className="tenant-nav-mobile">
+          <select
+            className="admin-input"
+            value={tab}
+            onChange={e => setTab(e.target.value as TabId)}
+            style={{ maxWidth: 280 }}
+          >
+            {navGroups.map(group => (
+              <optgroup key={group.label} label={group.label}>
+                {group.items.map(item => (
+                  <option key={item.id} value={item.id}>{item.label}</option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </div>
+        <nav className="tenant-sidebar-nav">
+          {navGroups.map(group => (
+            <div key={group.label} className="tenant-nav-section">
+              <div className="tenant-nav-section-label">{group.label}</div>
+              {group.items.map(item => (
+                <button
+                  key={item.id}
+                  className={`tenant-nav-item${tab === item.id ? ' active' : ''}`}
+                  onClick={() => setTab(item.id as typeof tab)}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          ))}
+        </nav>
+        <div style={{ minWidth: 0 }}>
       {/* Tab content */}
       {tab === 'overview' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -1745,45 +1806,6 @@ export default function TenantDetailPage() {
                 </div>
               </div>
 
-              {/* WhatsApp / Authkey card */}
-              <div className="admin-card">
-                <div className="card-header"><div className="card-title">WhatsApp / Authkey</div></div>
-                <div className="card-body">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 14 }}>
-                    <span style={{ color: 'var(--ink-4)' }}>API Key</span>
-                    <span className={`badge ${tenantSettings.whatsapp?.hasApiKey ? 'badge-green' : 'badge-red'}`}>
-                      {tenantSettings.whatsapp?.hasApiKey ? 'Configured' : 'Not configured'}
-                    </span>
-                  </div>
-                  <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-4)', marginBottom: 8 }}>Template SIDs</div>
-                  {settingsDraft ? (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
-                      {(['default', 'delhivery', 'shiprocket', 'dtdc', 'ekart', 'bluedart'] as const).map(courier => (
-                        <div key={courier} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                          <span style={{ fontSize: 11, color: 'var(--ink-4)', textTransform: 'capitalize' }}>{courier}</span>
-                          <input className="admin-input" style={{ fontSize: 12, padding: '4px 8px' }}
-                            placeholder="SID value"
-                            value={settingsDraft.whatsapp?.templateSids?.[courier] || ''}
-                            onChange={e => setSettingsDraft((d: any) => ({
-                              ...d,
-                              whatsapp: { ...d.whatsapp, templateSids: { ...d.whatsapp?.templateSids, [courier]: e.target.value } },
-                            }))} />
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-                      {Object.entries((tenantSettings.whatsapp?.templateSids || {}) as Record<string, string | null>).map(([courier, sid]) => (
-                        <div key={courier} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                          <span style={{ color: 'var(--ink-4)', textTransform: 'capitalize' }}>{courier}</span>
-                          <span className={`badge ${sid ? 'badge-green' : 'badge-gray'}`}>{sid ? 'Set' : 'Not set'}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
               {/* WA Agent (Meta) card */}
               <div className="admin-card">
                 <div className="card-header">
@@ -1989,7 +2011,7 @@ export default function TenantDetailPage() {
                         <td><span className={`badge ${STATUS_COLOR[o.status] || 'badge-gray'}`}>{STATUS_LABEL[o.status] || o.status}</span></td>
                         <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{o.totalAmount ? fmt(o.totalAmount) : '—'}</td>
                         <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--green)' }}>{o.amountPaid ? fmt(o.amountPaid) : '—'}</td>
-                        <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--red, #E53E3E)', fontWeight: 600 }}>{o.balanceDue ? fmt(o.balanceDue) : '—'}</td>
+                        <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--red)', fontWeight: 600 }}>{o.balanceDue ? fmt(o.balanceDue) : '—'}</td>
                         <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{fmtDate(o.createdAt)}</td>
                       </tr>
                     ))}
@@ -2055,7 +2077,7 @@ export default function TenantDetailPage() {
                           {p.totalStock == null ? (
                             <span style={{ color: 'var(--ink-4)' }}>—</span>
                           ) : (
-                            <span style={{ color: p.lowStock ? 'var(--red, #E53E3E)' : undefined, fontWeight: p.lowStock ? 600 : undefined }}>
+                            <span style={{ color: p.lowStock ? 'var(--red)' : undefined, fontWeight: p.lowStock ? 600 : undefined }}>
                               {p.totalStock}
                               {p.lowStock && <span style={{ marginLeft: 6, fontSize: 10 }}>LOW</span>}
                             </span>
@@ -2184,6 +2206,8 @@ export default function TenantDetailPage() {
           )}
         </div>
       )}
+        </div>{/* /tab content wrapper */}
+      </div>{/* /tenant-detail-body */}
     </div>
   );
 }
