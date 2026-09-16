@@ -1145,7 +1145,22 @@ export default function TenantDetailPage() {
 
       {/* ── Body: sidebar nav + tab content ─────────── */}
       <div className="tenant-detail-body">
-        <div className="tenant-nav-mobile" />
+        <div className="tenant-nav-mobile">
+          <select
+            className="admin-input"
+            value={tab}
+            onChange={e => setTab(e.target.value as TabId)}
+            style={{ maxWidth: 280 }}
+          >
+            {navGroups.map(group => (
+              <optgroup key={group.label} label={group.label}>
+                {group.items.map(item => (
+                  <option key={item.id} value={item.id}>{item.label}</option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </div>
         <nav className="tenant-sidebar-nav">
           {navGroups.map(group => (
             <div key={group.label} className="tenant-nav-section">
