@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Calendar, UserCheck, ShieldOff } from 'lucide-react';
 import api from '../../../../../lib/api';
@@ -509,7 +509,9 @@ export default function TenantDetailPage() {
   const [loading, setLoading] = useState(true);
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
-  const [tab, setTab] = useState<'overview' | 'subscription' | 'notes' | 'orders' | 'customers' | 'deliveries' | 'flags' | 'analytics' | 'settings' | 'team' | 'overdue' | 'products' | 'invoices'>('overview');
+  type TabId = 'overview' | 'subscription' | 'notes' | 'orders' | 'customers' | 'deliveries' | 'flags' | 'analytics' | 'settings' | 'team' | 'overdue' | 'products' | 'invoices';
+  const [tab, setTab] = useState<TabId>('overview');
+  const loadedTabsRef = useRef<Set<TabId>>(new Set<TabId>(['overview']));
   const [toastMsg, setToastMsg] = useState('');
   const [trialDays, setTrialDays] = useState(14);
   const [deliveries, setDeliveries] = useState<any[]>([]);
@@ -585,26 +587,29 @@ export default function TenantDetailPage() {
     if (name) setTitle(name);
     return () => setTitle(null);
   }, [data?.tenant?.businessName]);
+  function firstVisit(t: TabId, fn: () => void) {
+    if (!loadedTabsRef.current.has(t)) { loadedTabsRef.current.add(t); fn(); }
+  }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (tab === 'deliveries') loadDeliveries(1); }, [tab]);
+  useEffect(() => { if (tab === 'deliveries') firstVisit('deliveries', () => loadDeliveries(1)); }, [tab]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (tab === 'flags') loadFlags(); }, [tab]);
+  useEffect(() => { if (tab === 'flags') firstVisit('flags', loadFlags); }, [tab]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (tab === 'orders') loadOrders(1, ordersStatus); }, [tab]);
+  useEffect(() => { if (tab === 'orders') firstVisit('orders', () => loadOrders(1, ordersStatus)); }, [tab]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (tab === 'customers') loadCustomers(1, customerSearch); }, [tab]);
+  useEffect(() => { if (tab === 'customers') firstVisit('customers', () => loadCustomers(1, customerSearch)); }, [tab]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (tab === 'analytics') loadAnalytics(); }, [tab]);
+  useEffect(() => { if (tab === 'analytics') firstVisit('analytics', loadAnalytics); }, [tab]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (tab === 'settings') { loadTenantSettings(); loadWaAgent(); } }, [tab]);
+  useEffect(() => { if (tab === 'settings') firstVisit('settings', () => { loadTenantSettings(); loadWaAgent(); }); }, [tab]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (tab === 'team') loadTeam(); }, [tab]);
+  useEffect(() => { if (tab === 'team') firstVisit('team', loadTeam); }, [tab]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (tab === 'overdue') loadOverdue(1); }, [tab]);
+  useEffect(() => { if (tab === 'overdue') firstVisit('overdue', () => loadOverdue(1)); }, [tab]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (tab === 'products') loadProducts(1, ''); }, [tab]);
+  useEffect(() => { if (tab === 'products') firstVisit('products', () => loadProducts(1, '')); }, [tab]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (tab === 'invoices') loadInvoices(1); }, [tab]);
+  useEffect(() => { if (tab === 'invoices') firstVisit('invoices', () => loadInvoices(1)); }, [tab]);
 
   async function load() {
     setLoading(true);
