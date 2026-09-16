@@ -230,7 +230,7 @@ function OrderStatusModal({ order, tenantId, onClose, onSuccess, toast }: any) {
               </select>
             </div>
           )}
-          {err && <p style={{ fontSize: 12, color: 'var(--red, #E53E3E)', margin: 0 }}>{err}</p>}
+          {err && <p style={{ fontSize: 12, color: 'var(--red)', margin: 0 }}>{err}</p>}
         </div>
         <div className="modal-footer">
           <button className="btn btn-ghost btn-sm" onClick={onClose}>Cancel</button>
@@ -302,7 +302,7 @@ function RecordPaymentModal({ order, tenantId, onClose, onSuccess, toast }: any)
             <label className="input-label">Note</label>
             <input className="admin-input" value={form.note} onChange={e => setForm(f => ({ ...f, note: e.target.value }))} placeholder="Optional" />
           </div>
-          {err && <p style={{ fontSize: 12, color: 'var(--red, #E53E3E)', margin: 0 }}>{err}</p>}
+          {err && <p style={{ fontSize: 12, color: 'var(--red)', margin: 0 }}>{err}</p>}
         </div>
         <div className="modal-footer">
           <button className="btn btn-ghost btn-sm" onClick={onClose}>Cancel</button>
@@ -351,7 +351,7 @@ function AddCommentModal({ order, tenantId, onClose, onSuccess, toast }: any) {
             placeholder="Internal support note…"
             style={{ width: '100%', resize: 'vertical' }}
           />
-          {err && <p style={{ fontSize: 12, color: 'var(--red, #E53E3E)', margin: '6px 0 0' }}>{err}</p>}
+          {err && <p style={{ fontSize: 12, color: 'var(--red)', margin: '6px 0 0' }}>{err}</p>}
         </div>
         <div className="modal-footer">
           <button className="btn btn-ghost btn-sm" onClick={onClose}>Cancel</button>
@@ -418,7 +418,7 @@ function DispatchModal({ order, tenantId, onClose, onSuccess, toast }: any) {
             <label className="input-label">Dispatch Date</label>
             <input type="date" className="admin-input" value={form.dispatchDate} onChange={e => setForm(f => ({ ...f, dispatchDate: e.target.value }))} />
           </div>
-          {err && <p style={{ fontSize: 12, color: 'var(--red, #E53E3E)', margin: 0 }}>{err}</p>}
+          {err && <p style={{ fontSize: 12, color: 'var(--red)', margin: 0 }}>{err}</p>}
         </div>
         <div className="modal-footer">
           <button className="btn btn-ghost btn-sm" onClick={onClose}>Cancel</button>
@@ -487,7 +487,7 @@ function EditCustomerModal({ customer, tenantId, onClose, onSuccess, toast }: an
             <label className="input-label">Notes</label>
             <textarea className="admin-input" rows={2} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} style={{ resize: 'none' }} />
           </div>
-          {err && <p style={{ fontSize: 12, color: 'var(--red, #E53E3E)', margin: 0 }}>{err}</p>}
+          {err && <p style={{ fontSize: 12, color: 'var(--red)', margin: 0 }}>{err}</p>}
         </div>
         <div className="modal-footer">
           <button className="btn btn-ghost btn-sm" onClick={onClose}>Cancel</button>
@@ -2051,7 +2051,7 @@ export default function TenantDetailPage() {
                         <td><span className={`badge ${STATUS_COLOR[o.status] || 'badge-gray'}`}>{STATUS_LABEL[o.status] || o.status}</span></td>
                         <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{o.totalAmount ? fmt(o.totalAmount) : '—'}</td>
                         <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--green)' }}>{o.amountPaid ? fmt(o.amountPaid) : '—'}</td>
-                        <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--red, #E53E3E)', fontWeight: 600 }}>{o.balanceDue ? fmt(o.balanceDue) : '—'}</td>
+                        <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--red)', fontWeight: 600 }}>{o.balanceDue ? fmt(o.balanceDue) : '—'}</td>
                         <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{fmtDate(o.createdAt)}</td>
                       </tr>
                     ))}
@@ -2117,7 +2117,7 @@ export default function TenantDetailPage() {
                           {p.totalStock == null ? (
                             <span style={{ color: 'var(--ink-4)' }}>—</span>
                           ) : (
-                            <span style={{ color: p.lowStock ? 'var(--red, #E53E3E)' : undefined, fontWeight: p.lowStock ? 600 : undefined }}>
+                            <span style={{ color: p.lowStock ? 'var(--red)' : undefined, fontWeight: p.lowStock ? 600 : undefined }}>
                               {p.totalStock}
                               {p.lowStock && <span style={{ marginLeft: 6, fontSize: 10 }}>LOW</span>}
                             </span>
