@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Calendar, UserCheck, ShieldOff } from 'lucide-react';
 import api from '../../../../../lib/api';
@@ -923,6 +923,42 @@ export default function TenantDetailPage() {
   const { tenant, subscription: sub, userCount, orderCount, notes, lastActiveAt, ordersByStatus } = data;
   const canEdit = hasRole(admin, 'superadmin', 'ops_admin');
 
+  const navGroups = useMemo(() => [
+    {
+      label: 'Overview',
+      items: [
+        { id: 'overview', label: 'Overview' },
+        { id: 'analytics', label: 'Analytics' },
+      ],
+    },
+    {
+      label: 'Commerce',
+      items: [
+        { id: 'orders', label: 'Orders' },
+        { id: 'customers', label: 'Customers' },
+        { id: 'products', label: 'Products' },
+        { id: 'invoices', label: 'Invoices' },
+        { id: 'overdue', label: 'Outstanding' },
+      ],
+    },
+    {
+      label: 'Account',
+      items: [
+        { id: 'subscription', label: 'Subscription' },
+        { id: 'team', label: 'Team' },
+        { id: 'settings', label: 'Settings' },
+      ],
+    },
+    {
+      label: 'Admin',
+      items: [
+        { id: 'notes', label: 'Notes' },
+        { id: 'deliveries', label: 'Deliveries' },
+        ...(hasRole(admin, 'superadmin') ? [{ id: 'flags', label: 'Flags' }] : []),
+      ],
+    },
+  ], [admin]);
+
   const ACTIONS = {
     extendTrial: {
       type: 'extendTrial',
@@ -1037,7 +1073,7 @@ export default function TenantDetailPage() {
         />
       )}
 
-      {/* Back link */}
+      {/* ── Back ──────────────────────────────────────────── */}
       <button
         onClick={() => router.back()}
         style={{ background: 'none', border: 'none', color: 'var(--ink-4)', fontSize: 13, cursor: 'pointer', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 4, padding: 0, fontFamily: 'inherit' }}
@@ -1045,50 +1081,45 @@ export default function TenantDetailPage() {
         ← Back to Tenants
       </button>
 
-      {/* A — Page header block */}
-      <div className="tenant-header">
-        <div className="tenant-name">{tenant.businessName}</div>
-        <div className="tenant-meta">
-          <span>{tenant.email}</span>
-          <span>·</span>
-          <span>{tenant.phone}</span>
-          <span>·</span>
-          <span>Joined {fmtDate(tenant.createdAt)}</span>
-          <span className={`badge ${tenant.isActive ? 'badge-green' : 'badge-red'}`}>
-            {tenant.isActive ? 'Active' : 'Inactive'}
-          </span>
+      {/* ── Header row: name + inline actions ─────────── */}
+      <div className="tenant-header-row">
+        <div className="tenant-header">
+          <div className="tenant-name">{tenant.businessName}</div>
+          <div className="tenant-meta">
+            <span>{tenant.email}</span>
+            <span>·</span>
+            <span>{tenant.phone}</span>
+            <span>·</span>
+            <span>Joined {fmtDate(tenant.createdAt)}</span>
+            <span className={`badge ${tenant.isActive ? 'badge-green' : 'badge-red'}`}>
+              {tenant.isActive ? 'Active' : 'Inactive'}
+            </span>
+          </div>
         </div>
+        {canEdit && (
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', flexShrink: 0 }}>
+            <button className="btn btn-ghost btn-sm" onClick={() => setConfirmAction(ACTIONS.extendTrial)}>
+              <Calendar size={14} style={{ marginRight: 5 }} />
+              Extend Trial
+            </button>
+            <button className="btn btn-outline btn-sm" onClick={() => setConfirmAction(ACTIONS.impersonate)}>
+              <UserCheck size={14} style={{ marginRight: 5 }} />
+              Impersonate
+            </button>
+            <button className="btn btn-ghost btn-sm" onClick={() => setOverrideOpen(true)}>Override Plan</button>
+            <button
+              className="btn btn-danger btn-sm"
+              onClick={() => setConfirmAction(tenant.isActive ? ACTIONS.deactivate : ACTIONS.reactivate)}
+            >
+              <ShieldOff size={14} style={{ marginRight: 5 }} />
+              {tenant.isActive ? 'Deactivate' : 'Reactivate'}
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* B — Action bar */}
-      {canEdit && (
-        <div className="action-bar">
-          <button className="btn btn-ghost btn-sm" onClick={() => setConfirmAction(ACTIONS.extendTrial)}>
-            <Calendar size={14} style={{ marginRight: 5 }} />
-            Extend Trial
-          </button>
-          <button className="btn btn-outline btn-sm" onClick={() => setConfirmAction(ACTIONS.impersonate)}>
-            <UserCheck size={14} style={{ marginRight: 5 }} />
-            Impersonate
-          </button>
-          <button
-            className="btn btn-ghost btn-sm"
-            onClick={() => setOverrideOpen(true)}
-          >
-            Override Plan
-          </button>
-          <button
-            className="btn btn-danger btn-sm"
-            onClick={() => setConfirmAction(tenant.isActive ? ACTIONS.deactivate : ACTIONS.reactivate)}
-          >
-            <ShieldOff size={14} style={{ marginRight: 5 }} />
-            {tenant.isActive ? 'Deactivate' : 'Reactivate'}
-          </button>
-        </div>
-      )}
-
-      {/* C — Stat cards row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginBottom: 20 }}>
+      {/* ── Stat cards ────────────────────────────────── */}
+      <div className="tenant-stats-grid">
         <div className="stat-card">
           <div className="stat-label">Plan</div>
           <div className="stat-value" style={{ textTransform: 'capitalize', fontSize: 18 }}>{tenant.planId}</div>
@@ -1107,15 +1138,26 @@ export default function TenantDetailPage() {
         ))}
       </div>
 
-      {/* Tabs */}
-      <div className="tab-bar">
-        {(['overview', 'subscription', 'notes', 'orders', 'customers', 'deliveries', 'analytics', 'settings', 'team', 'overdue', 'products', 'invoices', ...(hasRole(admin, 'superadmin') ? ['flags'] : [])] as const).map((t: any) => (
-          <button key={t} onClick={() => setTab(t)} className={`tab-btn${tab === t ? ' active' : ''}`} style={{ textTransform: 'capitalize' }}>
-            {t}
-          </button>
-        ))}
-      </div>
-
+      {/* ── Body: sidebar nav + tab content ─────────── */}
+      <div className="tenant-detail-body">
+        <div className="tenant-nav-mobile" />
+        <nav className="tenant-sidebar-nav">
+          {navGroups.map(group => (
+            <div key={group.label} className="tenant-nav-section">
+              <div className="tenant-nav-section-label">{group.label}</div>
+              {group.items.map(item => (
+                <button
+                  key={item.id}
+                  className={`tenant-nav-item${tab === item.id ? ' active' : ''}`}
+                  onClick={() => setTab(item.id as typeof tab)}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          ))}
+        </nav>
+        <div style={{ minWidth: 0 }}>
       {/* Tab content */}
       {tab === 'overview' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -2184,6 +2226,8 @@ export default function TenantDetailPage() {
           )}
         </div>
       )}
+        </div>{/* /tab content wrapper */}
+      </div>{/* /tenant-detail-body */}
     </div>
   );
 }
