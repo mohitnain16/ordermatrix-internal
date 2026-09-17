@@ -34,13 +34,24 @@ export default function CommunicationsPage() {
 
   // Broadcast state
   const [broadcast, setBroadcast] = useState({ channel: 'email', message: '', subject: '', filterPlan: 'all', filterTrial: '' });
-  const [preview, setPreview] = useState<{ count: number; tenants: any[] } | null>(null);
+  const [preview, setPreview] = useState<{ count: number } | null>(null);
   const [bcLoading, setBcLoading] = useState(false);
   const [bcResult, setBcResult] = useState<any>(null);
   const [confirmBC, setConfirmBC] = useState(false);
   const [confirmDelId, setConfirmDelId] = useState<string | null>(null);
+  // Segment state
+  const [segmentMode, setSegmentMode] = useState<'plan' | 'tenants'>('plan');
+  const [tenantSearch, setTenantSearch] = useState('');
+  const [tenantResults, setTenantResults] = useState<any[]>([]);
+  const [selectedTenants, setSelectedTenants] = useState<{ _id: string; businessName: string; email: string }[]>([]);
+  const [tenantSearchLoading, setTenantSearchLoading] = useState(false);
 
   useEffect(() => { loadAnnouncements(); }, []);
+  useEffect(() => { setPreview(null); }, [segmentMode, selectedTenants]);
+  useEffect(() => {
+    const t = setTimeout(() => { if (tenantSearch.trim()) searchTenants(tenantSearch); else setTenantResults([]); }, 300);
+    return () => clearTimeout(t);
+  }, [tenantSearch]);
 
   async function loadAnnouncements() {
     setAnnListLoading(true);
@@ -53,15 +64,42 @@ export default function CommunicationsPage() {
 
   async function previewBroadcast() {
     try {
-      const res = await api.get('/admin/communications/broadcast/preview', {
-        params: { filterPlan: broadcast.filterPlan, filterTrial: broadcast.filterTrial },
-      });
-      setPreview({ count: res.data.count, tenants: [] });
+      const params: any = segmentMode === 'tenants'
+        ? { tenantIds: selectedTenants.map(t => t._id).join(',') }
+        : { filterPlan: broadcast.filterPlan, filterTrial: broadcast.filterTrial };
+      const res = await api.get('/admin/communications/broadcast/preview', { params });
+      setPreview({ count: res.data.count });
     } catch { /**/ }
+  }
+
+  async function searchTenants(q: string) {
+    setTenantSearchLoading(true);
+    try {
+      const res = await api.get('/admin/tenants', { params: { search: q.trim(), limit: 10 } });
+      setTenantResults(res.data.tenants || []);
+    } catch { /**/ }
+    setTenantSearchLoading(false);
+  }
+
+  function addTenant(t: any) {
+    if (!selectedTenants.find(s => s._id === t._id)) {
+      setSelectedTenants(prev => [...prev, { _id: t._id, businessName: t.businessName, email: t.email }]);
+    }
+    setTenantSearch('');
+    setTenantResults([]);
+  }
+
+  function removeTenant(id: string) {
+    setSelectedTenants(prev => prev.filter(t => t._id !== id));
+  }
+
+  function insertTag(tag: string) {
+    setBroadcast(b => ({ ...b, message: b.message + tag }));
   }
 
   function sendBroadcast() {
     if (!broadcast.message) return;
+    if (segmentMode === 'tenants' && selectedTenants.length === 0) return;
     setConfirmBC(true);
   }
 
@@ -70,7 +108,9 @@ export default function CommunicationsPage() {
     setBcResult(null);
     setBcLoading(true);
     try {
-      const res = await api.post('/admin/communications/broadcast', broadcast);
+      const body: any = { ...broadcast };
+      if (segmentMode === 'tenants') body.tenantIds = selectedTenants.map(t => t._id);
+      const res = await api.post('/admin/communications/broadcast', body);
       setBcResult(res.data);
     } catch { /**/ }
     setBcLoading(false);
@@ -191,49 +231,118 @@ export default function CommunicationsPage() {
             </div>
             <div className="card-body">
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
-              <div>
-                <label className="form-label">Channel</label>
-                <select className="admin-input" value={broadcast.channel} onChange={e => setBroadcast(b => ({ ...b, channel: e.target.value }))}>
-                  <option value="email">Email</option>
-                </select>
-              </div>
-              <div>
-                <label className="form-label">Filter by Plan</label>
-                <select className="admin-input" value={broadcast.filterPlan} onChange={e => { setBroadcast(b => ({ ...b, filterPlan: e.target.value })); setPreview(null); }}>
-                  {PLANS.map(p => <option key={p} value={p} style={{ textTransform: 'capitalize' }}>{p === 'all' ? 'All Tenants' : p}</option>)}
-                </select>
+            {/* Segment toggle */}
+            <div style={{ marginBottom: 16 }}>
+              <label className="form-label">Segment</label>
+              <div style={{ display: 'flex', gap: 0, borderRadius: 6, overflow: 'hidden', border: '1px solid var(--line)', width: 'fit-content' }}>
+                {(['plan', 'tenants'] as const).map(mode => (
+                  <button key={mode} onClick={() => { setSegmentMode(mode); setPreview(null); }}
+                    style={{ padding: '5px 16px', fontSize: 12, fontWeight: 500, border: 'none', cursor: 'pointer',
+                      background: segmentMode === mode ? 'var(--accent)' : 'var(--surface)',
+                      color: segmentMode === mode ? '#fff' : 'var(--ink-2)' }}>
+                    {mode === 'plan' ? 'By Plan' : 'Specific Tenants'}
+                  </button>
+                ))}
               </div>
             </div>
 
-            <div style={{ marginBottom: 16 }}>
-              <label className="form-label">Filter by Trial</label>
-              <select className="admin-input" style={{ maxWidth: 260 }} value={broadcast.filterTrial} onChange={e => { setBroadcast(b => ({ ...b, filterTrial: e.target.value })); setPreview(null); }}>
-                <option value="">No filter</option>
-                <option value="expiring">Trials expiring this week</option>
-              </select>
-            </div>
+            {segmentMode === 'plan' && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+                <div>
+                  <label className="form-label">Filter by Plan</label>
+                  <select className="admin-input" value={broadcast.filterPlan} onChange={e => { setBroadcast(b => ({ ...b, filterPlan: e.target.value })); setPreview(null); }}>
+                    {PLANS.map(p => <option key={p} value={p} style={{ textTransform: 'capitalize' }}>{p === 'all' ? 'All Tenants' : p}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="form-label">Filter by Trial</label>
+                  <select className="admin-input" value={broadcast.filterTrial} onChange={e => { setBroadcast(b => ({ ...b, filterTrial: e.target.value })); setPreview(null); }}>
+                    <option value="">No filter</option>
+                    <option value="expiring">Trials expiring this week</option>
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {segmentMode === 'tenants' && (
+              <div style={{ marginBottom: 16 }}>
+                <label className="form-label">Add Tenants</label>
+                <div style={{ position: 'relative' }}>
+                  <input className="admin-input" placeholder="Search by name, email or phone…"
+                    value={tenantSearch} onChange={e => setTenantSearch(e.target.value)}
+                    style={{ paddingRight: tenantSearchLoading ? 32 : undefined }} />
+                  {tenantSearchLoading && <span className="spinner" style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)' }} />}
+                  {tenantResults.length > 0 && (
+                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10, background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 6, boxShadow: 'var(--shadow-md)', maxHeight: 220, overflowY: 'auto', marginTop: 2 }}>
+                      {tenantResults.map(t => (
+                        <button key={t._id} onClick={() => addTenant(t)}
+                          style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13 }}
+                          onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg)')}
+                          onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                          <div style={{ fontWeight: 500 }}>{t.businessName}</div>
+                          <div style={{ fontSize: 11, color: 'var(--ink-4)' }}>{t.email} · {t.planId}</div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {selectedTenants.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+                    {selectedTenants.map(t => (
+                      <span key={t._id} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'var(--bg)', border: '1px solid var(--line)', borderRadius: 20, padding: '2px 10px 2px 10px', fontSize: 12 }}>
+                        {t.businessName}
+                        <button onClick={() => removeTenant(t._id)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--ink-4)', fontSize: 14, lineHeight: 1, padding: 0 }}>×</button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div style={{ marginBottom: 16 }}>
               <label className="form-label">Subject</label>
-              <input className="admin-input" placeholder="Email subject line" value={broadcast.subject} onChange={e => setBroadcast(b => ({ ...b, subject: e.target.value }))} />
+              <input className="admin-input" placeholder="Email subject — supports {{name}}, {{planName}}" value={broadcast.subject} onChange={e => setBroadcast(b => ({ ...b, subject: e.target.value }))} />
             </div>
 
             <div style={{ marginBottom: 20 }}>
-              <label className="form-label">Message</label>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                <label className="form-label" style={{ margin: 0 }}>Message</label>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <span style={{ fontSize: 11, color: 'var(--ink-4)' }}>Insert merge tag:</span>
+                  {['{{name}}', '{{planName}}'].map(tag => (
+                    <button key={tag} onClick={() => insertTag(tag)}
+                      style={{ fontSize: 11, fontFamily: 'var(--font-mono)', padding: '1px 7px', borderRadius: 4, border: '1px solid var(--line)', background: 'var(--bg)', cursor: 'pointer', color: 'var(--accent)' }}>
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <textarea
-                rows={6}
+                rows={7}
                 className="admin-input"
-                placeholder="Write your message here…"
+                placeholder={"Hi {{name}},\n\nWrite your message here. HTML is supported.\n\n— Ordermatrix Team"}
                 value={broadcast.message}
                 onChange={e => setBroadcast(b => ({ ...b, message: e.target.value }))}
                 style={{ resize: 'vertical', fontFamily: 'inherit' }}
               />
+              {broadcast.message.includes('{{') && (
+                <div style={{ marginTop: 6, padding: '8px 12px', background: 'var(--bg)', borderRadius: 6, fontSize: 12, color: 'var(--ink-3)' }}>
+                  <strong style={{ color: 'var(--ink-2)' }}>Preview (sample):</strong>{' '}
+                  {broadcast.message
+                    .replace(/\{\{name\}\}/g, 'Riya\'s Boutique')
+                    .replace(/\{\{planName\}\}/g, 'Growth')
+                    .slice(0, 120)}{broadcast.message.length > 120 ? '…' : ''}
+                </div>
+              )}
             </div>
 
             <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-              <button className="btn btn-ghost btn-sm" onClick={previewBroadcast}>Preview Recipients</button>
-              <button className="btn btn-primary" onClick={sendBroadcast} disabled={bcLoading || !broadcast.message || preview === null || preview.count === 0}>
+              <button className="btn btn-ghost btn-sm" onClick={previewBroadcast}
+                disabled={segmentMode === 'tenants' && selectedTenants.length === 0}>
+                Preview Recipients
+              </button>
+              <button className="btn btn-primary" onClick={sendBroadcast}
+                disabled={bcLoading || !broadcast.message || preview === null || preview.count === 0 || (segmentMode === 'tenants' && selectedTenants.length === 0)}>
                 {bcLoading ? <><span className="spinner" />Sending…</> : 'Send Broadcast'}
               </button>
             </div>
@@ -275,28 +384,33 @@ export default function CommunicationsPage() {
                 ) : (
                   <div className="stat-value mono" style={{ color: 'var(--ink-4)', marginBottom: 4 }}>—</div>
                 )}
-                <div style={{ fontSize: 12, color: 'var(--ink-4)' }}>tenants match current filter</div>
-                <button className="btn btn-ghost btn-sm" style={{ marginTop: 12 }} onClick={previewBroadcast}>Recalculate</button>
+                <div style={{ fontSize: 12, color: 'var(--ink-4)' }}>tenants match current segment</div>
+                <button className="btn btn-ghost btn-sm" style={{ marginTop: 12 }} onClick={previewBroadcast}
+                  disabled={segmentMode === 'tenants' && selectedTenants.length === 0}>
+                  Recalculate
+                </button>
               </div>
             </div>
-            <div className="admin-card" style={{ marginTop: 12 }}>
-              <div className="card-header">
-                <h4 className="card-title">Quick Segments</h4>
+            {segmentMode === 'plan' && (
+              <div className="admin-card" style={{ marginTop: 12 }}>
+                <div className="card-header">
+                  <h4 className="card-title">Quick Segments</h4>
+                </div>
+                <div className="card-body">
+                  {[
+                    { label: 'All Trials Expiring This Week', plan: 'all', trial: 'expiring' },
+                    { label: 'All Paid Tenants', plan: 'all', trial: '' },
+                    { label: 'Starter Plan', plan: 'starter', trial: '' },
+                    { label: 'Growth Plan', plan: 'growth', trial: '' },
+                  ].map(seg => (
+                    <button key={seg.label} className="btn btn-ghost btn-sm" style={{ display: 'block', width: '100%', textAlign: 'left', marginBottom: 6 }}
+                      onClick={() => { setBroadcast(b => ({ ...b, filterPlan: seg.plan, filterTrial: seg.trial })); setPreview(null); }}>
+                      {seg.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div className="card-body">
-                {[
-                  { label: 'All Trials Expiring This Week', plan: 'all', trial: 'expiring' },
-                  { label: 'All Paid Tenants', plan: 'all', trial: '' },
-                  { label: 'Starter Plan', plan: 'starter', trial: '' },
-                  { label: 'Growth Plan', plan: 'growth', trial: '' },
-                ].map(seg => (
-                  <button key={seg.label} className="btn btn-ghost btn-sm" style={{ display: 'block', width: '100%', textAlign: 'left', marginBottom: 6 }}
-                    onClick={() => { setBroadcast(b => ({ ...b, filterPlan: seg.plan, filterTrial: seg.trial })); setPreview(null); }}>
-                    {seg.label}
-                  </button>
-                ))}
-              </div>
-            </div>
+            )}
           </div>
         </div>
       )}
