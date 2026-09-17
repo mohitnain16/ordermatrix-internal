@@ -701,6 +701,7 @@ export default function TenantDetailPage() {
         case 'impersonate':            await impersonate(); break;
         case 'deactivate':
         case 'reactivate':             await toggleActive(); break;
+        case 'featureOff':             await patchFeature(confirmAction._featureKey, false); break;
       }
     } finally {
       setActionLoading(false);
@@ -747,6 +748,41 @@ export default function TenantDetailPage() {
       setFeatureRows(res.data.features || []);
     } catch { /**/ }
     setFeaturesLoading(false);
+  }
+
+  async function patchFeature(featureKey: string, enabled: boolean | null) {
+    const prev = featureRows.slice();
+    setFeatureRows(rows =>
+      rows.map(r => {
+        if (r.key !== featureKey) return r;
+        const override = enabled === null ? null : { ...r.override, enabled };
+        const effective = enabled === null ? r.planDefault : enabled;
+        return { ...r, override, effective };
+      }),
+    );
+    try {
+      await api.patch(`/admin/tenants/${tenantId}/features`, { featureKey, enabled });
+    } catch {
+      setFeatureRows(prev);
+      toast('Failed to update feature override');
+    }
+  }
+
+  function handleOverrideChange(f: any, val: 'on' | 'off' | 'plan') {
+    if (val === 'off') {
+      setConfirmAction({
+        type: 'featureOff',
+        level: 'danger',
+        title: 'Revoke feature override',
+        message: `This will force-disable "${f.label}" for this tenant, overriding their plan default.`,
+        confirmLabel: 'Revoke',
+        confirmClass: 'btn-danger',
+        verifyText: f.label,
+        _featureKey: f.key,
+      });
+    } else {
+      patchFeature(f.key, val === 'on' ? true : null);
+    }
   }
 
   async function toggleFlag(flag: string, enabled: boolean) {
@@ -2228,11 +2264,25 @@ export default function TenantDetailPage() {
                           <span className="badge badge-gray">{f.planDefault ? 'On' : 'Off'}</span>
                         </td>
                         <td>
-                          <span className={`badge ${f.effective ? 'badge-green' : 'badge-gray'}`}>
-                            {f.effective ? 'On' : 'Off'}
-                          </span>
-                          {f.override !== null && (
-                            <span style={{ marginLeft: 6, fontSize: 10, color: 'var(--accent)', fontWeight: 600 }}>overridden</span>
+                          {hasRole(admin, 'superadmin', 'ops_admin') ? (
+                            <select
+                              value={f.override === null ? 'plan' : f.override.enabled ? 'on' : 'off'}
+                              onChange={e => handleOverrideChange(f, e.target.value as 'on' | 'off' | 'plan')}
+                              style={{ fontSize: 12, padding: '2px 6px', borderRadius: 4, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink-1)', cursor: 'pointer' }}
+                            >
+                              <option value="plan">Plan default</option>
+                              <option value="on">On</option>
+                              <option value="off">Off</option>
+                            </select>
+                          ) : (
+                            <>
+                              <span className={`badge ${f.effective ? 'badge-green' : 'badge-gray'}`}>
+                                {f.effective ? 'On' : 'Off'}
+                              </span>
+                              {f.override !== null && (
+                                <span style={{ marginLeft: 6, fontSize: 10, color: 'var(--accent)', fontWeight: 600 }}>overridden</span>
+                              )}
+                            </>
                           )}
                         </td>
                         <td>
