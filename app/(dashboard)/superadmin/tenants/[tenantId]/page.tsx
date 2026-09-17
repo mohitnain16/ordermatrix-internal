@@ -979,7 +979,7 @@ export default function TenantDetailPage() {
     if (!waConvAgentConnectForm) return;
     setWaConvAgentConnectSaving(true);
     try {
-      await api.patch(`/admin/tenants/${tenantId}/wa-conv-agent`, waConvAgentConnectForm);
+      await api.patch(`/admin/tenants/${tenantId}/wa-conv-agent/connect`, waConvAgentConnectForm);
       toast('Connected');
       setWaConvAgentConnectForm(null);
       await loadWaConvAgent();
