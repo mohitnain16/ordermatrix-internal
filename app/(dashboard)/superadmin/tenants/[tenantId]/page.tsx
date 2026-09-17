@@ -951,7 +951,7 @@ export default function TenantDetailPage() {
 
   async function suspendWaConvAgent() {
     try {
-      await api.post(`/admin/tenants/${tenantId}/wa-conv-agent/suspend`);
+      await api.patch(`/admin/tenants/${tenantId}/wa-conv-agent/suspend`);
       toast('Agent suspended');
       await loadWaConvAgent();
     } catch (e: any) { toast(e?.response?.data?.error || 'Suspend failed'); }
@@ -959,7 +959,7 @@ export default function TenantDetailPage() {
 
   async function unsuspendWaConvAgent() {
     try {
-      await api.post(`/admin/tenants/${tenantId}/wa-conv-agent/unsuspend`);
+      await api.patch(`/admin/tenants/${tenantId}/wa-conv-agent/unsuspend`);
       toast('Agent reactivated');
       await loadWaConvAgent();
     } catch (e: any) { toast(e?.response?.data?.error || 'Failed to unsuspend'); }
