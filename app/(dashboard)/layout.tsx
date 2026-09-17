@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Sidebar from '../../components/layout/Sidebar';
 import Topbar from '../../components/layout/Topbar';
+import CommandPalette from '../../components/ui/CommandPalette';
 import { isLoggedIn, getAdmin } from '../../lib/auth';
 import { PageTitleProvider } from '../../lib/page-title-context';
 import { getAllowedRoles, ROLE_DEFAULT_REDIRECT } from '../../lib/routeRoles';
@@ -10,12 +11,12 @@ import { getAllowedRoles, ROLE_DEFAULT_REDIRECT } from '../../lib/routeRoles';
 const MOBILE_BP = 768;
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
+  const router   = useRouter();
   const pathname = usePathname();
 
-  const [expanded, setExpanded] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  // Ref so the pathname effect reads the current value without adding isMobile to its deps
+  const [expanded, setExpanded]       = useState(false);
+  const [isMobile, setIsMobile]       = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
   const isMobileRef = useRef(false);
   isMobileRef.current = isMobile;
 
@@ -54,7 +55,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return () => { window.removeEventListener('resize', onResize); clearTimeout(timer); };
   }, []);
 
-  // Single source of truth for body classes — replaces the two-class approach
+  // Single source of truth for body classes
   useEffect(() => {
     if (expanded && isMobile) {
       document.body.classList.add('mobile-sidebar-open');
@@ -67,13 +68,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [expanded, isMobile]);
 
-  // Close mobile drawer on route change (desktop expansion is intentionally preserved)
+  // Close mobile drawer on route change (desktop expansion preserved)
   useEffect(() => {
     if (isMobileRef.current) setExpanded(false);
   }, [pathname]);
 
-  const toggle = useCallback(() => setExpanded(prev => !prev), []);
-  const close  = useCallback(() => setExpanded(false), []);
+  // Global ⌘K / Ctrl+K shortcut opens CommandPalette
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setPaletteOpen(true);
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  const toggle       = useCallback(() => setExpanded(prev => !prev), []);
+  const close        = useCallback(() => setExpanded(false), []);
+  const openPalette  = useCallback(() => setPaletteOpen(true), []);
+  const closePalette = useCallback(() => setPaletteOpen(false), []);
 
   return (
     <div className="page-shell">
@@ -81,9 +96,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {expanded && isMobile && (
         <div className="mobile-sidebar-backdrop" onClick={close} />
       )}
+      <CommandPalette open={paletteOpen} onClose={closePalette} />
       <PageTitleProvider>
         <div className="page-content">
-          <Topbar onToggle={toggle} />
+          <Topbar onToggle={toggle} onOpenPalette={openPalette} />
           <main className="page-inner">
             {children}
           </main>
