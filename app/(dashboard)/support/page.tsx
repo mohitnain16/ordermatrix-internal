@@ -60,11 +60,6 @@ export default function SupportPage() {
         <p className="page-sub">Tenant lookup, active issues, and notes</p>
       </div>
 
-      <div className="tab-bar">
-        <span className="tab-btn active">Tenant Lookup</span>
-        <Link href="/support/issues" className="tab-btn">Issues</Link>
-      </div>
-
       <>
         <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
             <input

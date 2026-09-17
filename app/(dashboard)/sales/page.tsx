@@ -13,6 +13,10 @@ const fmtL = (n: number) => {
   return `₹${n}`;
 };
 
+type SortKey = 'orderCount' | 'daysLeft' | 'activityScore';
+const STATUS_OPTIONS = ['all', 'watching', 'contacted', 'converted', 'churned'] as const;
+type StatusFilter = typeof STATUS_OPTIONS[number];
+
 type TrendPoint = { date: string; mrr: number; arr: number; activeCount: number };
 
 function TrendTooltip({ active, payload, label }: { active?: boolean; payload?: any[]; label?: string }) {
@@ -35,7 +39,7 @@ export default function SalesPage() {
   const [pipeline, setPipeline] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'pipeline' | 'revenue' | 'leads'>('pipeline');
-  const [noteModal, setNoteModal] = useState<{ tenantId: string; name: string } | null>(null);
+  const [noteModal, setNoteModal] = useState<{ tenantId: string; name: string; current: string } | null>(null);
   const [noteText, setNoteText] = useState('');
 
   const [trend, setTrend] = useState<TrendPoint[]>([]);
@@ -44,6 +48,10 @@ export default function SalesPage() {
   const [leads, setLeads] = useState<any[]>([]);
   const [leadsLoading, setLeadsLoading] = useState(false);
   const [scoringId, setScoringId] = useState<string | null>(null);
+
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [sortKey, setSortKey]   = useState<SortKey>('orderCount');
+  const [sortAsc, setSortAsc]   = useState(false);
 
   useEffect(() => { load(); }, []);
   useEffect(() => { loadTrend(trendPeriod); }, [trendPeriod]);
@@ -77,6 +85,16 @@ export default function SalesPage() {
     return 'var(--red)';
   }
 
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) setSortAsc(a => !a);
+    else { setSortKey(key); setSortAsc(false); }
+  }
+
+  function sortArrow(key: SortKey) {
+    if (sortKey !== key) return <span style={{ color: 'var(--ink-4)', marginLeft: 2 }}>↕</span>;
+    return <span style={{ color: 'var(--accent)', marginLeft: 2 }}>{sortAsc ? '↑' : '↓'}</span>;
+  }
+
   async function loadLeads() {
     setLeadsLoading(true);
     try {
@@ -102,10 +120,23 @@ export default function SalesPage() {
     if (!noteText.trim()) return;
     try {
       await api.patch(`/admin/sales/leads/${tenantId}/note`, { followUpNote: noteText, status: 'contacted' });
+      setPipeline(prev => prev.map(t =>
+        t._id === tenantId
+          ? { ...t, lead: { ...(t.lead || {}), followUpNote: noteText, status: 'contacted' } }
+          : t
+      ));
       setNoteModal(null);
       setNoteText('');
     } catch { /**/ }
   }
+
+  const displayedPipeline = pipeline
+    .filter(t => statusFilter === 'all' || (t.lead?.status || 'watching') === statusFilter)
+    .sort((a, b) => {
+      const va = sortKey === 'activityScore' ? (a.lead?.activityScore || 0) : (a[sortKey] || 0);
+      const vb = sortKey === 'activityScore' ? (b.lead?.activityScore || 0) : (b[sortKey] || 0);
+      return sortAsc ? va - vb : vb - va;
+    });
 
   if (loading) return (
     <div className="animate-fade-in">
@@ -122,8 +153,8 @@ export default function SalesPage() {
       </div>
       <div className="admin-card">
         <table className="admin-table">
-          <thead><tr><th>Business</th><th>Email</th><th>Orders</th><th>Days Left</th><th>Lead Status</th><th>Action</th></tr></thead>
-          <tbody><SkRows rows={8} cols={6} /></tbody>
+          <thead><tr><th>Business</th><th>Orders</th><th>Days Left</th><th>Score</th><th>Status</th><th>Follow-up Note</th><th></th></tr></thead>
+          <tbody><SkRows rows={8} cols={7} /></tbody>
         </table>
       </div>
     </div>
@@ -135,15 +166,20 @@ export default function SalesPage() {
         <div className="modal-backdrop" onClick={() => { setNoteModal(null); setNoteText(''); }}>
           <div className="modal-box" onClick={e => e.stopPropagation()} style={{ width: 400 }}>
             <div className="modal-header">
-              <h3 className="modal-title">Add Follow-up Note</h3>
+              <h3 className="modal-title">Follow-up Note</h3>
               <p className="modal-sub">{noteModal.name}</p>
             </div>
             <div className="modal-body">
+              {noteModal.current && (
+                <div style={{ marginBottom: 12, padding: '8px 12px', background: 'var(--surface-3)', borderRadius: 7, fontSize: 12, color: 'var(--ink-3)' }}>
+                  Current: {noteModal.current}
+                </div>
+              )}
               <textarea rows={4} value={noteText} onChange={e => setNoteText(e.target.value)} placeholder="Note…" style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--line)', borderRadius: 8, fontSize: 13, resize: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }} />
             </div>
             <div className="modal-footer">
               <button className="btn btn-ghost btn-sm" onClick={() => { setNoteModal(null); setNoteText(''); }}>Cancel</button>
-              <button className="btn btn-primary btn-sm" onClick={() => saveNote(noteModal.tenantId)}>Save Note</button>
+              <button className="btn btn-primary btn-sm" onClick={() => saveNote(noteModal.tenantId)} disabled={!noteText.trim()}>Save Note</button>
             </div>
           </div>
         </div>
@@ -234,45 +270,92 @@ export default function SalesPage() {
       </div>
 
       {tab === 'pipeline' && (
-        <div className="admin-card">
-          <div className="table-shell">
-            <table className="admin-table">
-              <thead><tr><th>Business</th><th>Email</th><th>Orders</th><th>Days Left</th><th>Lead Status</th><th>Action</th></tr></thead>
-              <tbody>
-                {pipeline.map(t => (
-                  <tr key={t._id}>
-                    <td>
-                      <Link href={`/superadmin/tenants/${t._id}`} style={{ fontWeight: 500, color: 'var(--accent)', textDecoration: 'none' }}>{t.businessName}</Link>
-                      <div className="cell-sub">{fmtDate(t.createdAt)}</div>
-                    </td>
-                    <td className="cell-sub">{t.email}</td>
-                    <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: t.orderCount > 10 ? 'var(--green)' : 'var(--ink)' }}>{t.orderCount}</td>
-                    <td>
-                      <span className={`badge ${t.daysLeft <= 3 ? 'badge-red' : t.daysLeft <= 7 ? 'badge-gold' : 'badge-green'}`}>
-                        {t.daysLeft}d
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`badge ${t.lead?.status === 'contacted' ? 'badge-blue' : t.lead?.status === 'converted' ? 'badge-green' : 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>
-                        {t.lead?.status || 'watching'}
-                      </span>
-                    </td>
-                    <td>
-                      <button className="btn btn-ghost btn-sm" onClick={() => setNoteModal({ tenantId: t._id, name: t.businessName })}>+ Note</button>
-                    </td>
-                  </tr>
-                ))}
-                {pipeline.length === 0 && (
-                  <tr><td colSpan={6}>
-                    <div className="empty-state">
-                      <div className="empty-title">No trial tenants</div>
-                    </div>
-                  </td></tr>
-                )}
-              </tbody>
-            </table>
+        <>
+          <div className="table-filter-bar">
+            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-4)', marginRight: 4 }}>Status:</span>
+            {STATUS_OPTIONS.map(s => (
+              <button
+                key={s}
+                className={`btn btn-sm ${statusFilter === s ? 'btn-primary' : 'btn-ghost'}`}
+                style={{ textTransform: 'capitalize' }}
+                onClick={() => setStatusFilter(s)}
+              >
+                {s === 'all'
+                  ? `All (${pipeline.length})`
+                  : `${s} (${pipeline.filter(t => (t.lead?.status || 'watching') === s).length})`}
+              </button>
+            ))}
           </div>
-        </div>
+          <div className="admin-card">
+            <div className="table-shell">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Business</th>
+                    <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => toggleSort('orderCount')}>
+                      Orders {sortArrow('orderCount')}
+                    </th>
+                    <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => toggleSort('daysLeft')}>
+                      Days Left {sortArrow('daysLeft')}
+                    </th>
+                    <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => toggleSort('activityScore')}>
+                      Score {sortArrow('activityScore')}
+                    </th>
+                    <th>Status</th>
+                    <th>Follow-up Note</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {displayedPipeline.map(t => (
+                    <tr key={t._id}>
+                      <td>
+                        <Link href={`/superadmin/tenants/${t._id}`} style={{ fontWeight: 500, color: 'var(--accent)', textDecoration: 'none' }}>{t.businessName}</Link>
+                        <div className="cell-sub">{t.email}</div>
+                        <div style={{ fontSize: 10, color: 'var(--ink-4)' }}>Joined {fmtDate(t.createdAt)}</div>
+                      </td>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: t.orderCount > 10 ? 'var(--green)' : 'var(--ink)' }}>
+                        {t.orderCount}
+                      </td>
+                      <td>
+                        <span className={`badge ${t.daysLeft <= 3 ? 'badge-red' : t.daysLeft <= 7 ? 'badge-gold' : 'badge-green'}`}>
+                          {t.daysLeft}d
+                        </span>
+                      </td>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: scoreColor(t.lead?.activityScore || 0) }}>
+                        {t.lead?.activityScore ?? '—'}
+                      </td>
+                      <td>
+                        <span className={`badge ${t.lead?.status === 'contacted' ? 'badge-blue' : t.lead?.status === 'converted' ? 'badge-green' : t.lead?.status === 'churned' ? 'badge-red' : 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>
+                          {t.lead?.status || 'watching'}
+                        </span>
+                      </td>
+                      <td style={{ maxWidth: 200 }}>
+                        {t.lead?.followUpNote
+                          ? <span style={{ fontSize: 12, color: 'var(--ink-3)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{t.lead.followUpNote}</span>
+                          : <span style={{ color: 'var(--ink-4)', fontSize: 12 }}>—</span>}
+                      </td>
+                      <td>
+                        <button className="btn btn-ghost btn-sm" onClick={() => { setNoteModal({ tenantId: t._id, name: t.businessName, current: t.lead?.followUpNote || '' }); setNoteText(''); }}>
+                          + Note
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {displayedPipeline.length === 0 && (
+                    <tr><td colSpan={7}>
+                      <div className="empty-state">
+                        <div className="empty-title">
+                          {pipeline.length === 0 ? 'No trial tenants in pipeline' : `No tenants with status "${statusFilter}"`}
+                        </div>
+                      </div>
+                    </td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
       )}
 
       {tab === 'leads' && (
