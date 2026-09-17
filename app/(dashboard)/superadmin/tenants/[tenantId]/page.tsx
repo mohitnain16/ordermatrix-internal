@@ -611,6 +611,42 @@ export default function TenantDetailPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (tab === 'invoices') firstVisit('invoices', () => loadInvoices(1)); }, [tab]);
 
+  const navGroups = useMemo(() => [
+    {
+      label: 'Overview',
+      items: [
+        { id: 'overview', label: 'Overview' },
+        { id: 'analytics', label: 'Analytics' },
+      ],
+    },
+    {
+      label: 'Commerce',
+      items: [
+        { id: 'orders', label: 'Orders' },
+        { id: 'customers', label: 'Customers' },
+        { id: 'products', label: 'Products' },
+        { id: 'invoices', label: 'Invoices' },
+        { id: 'overdue', label: 'Outstanding' },
+      ],
+    },
+    {
+      label: 'Account',
+      items: [
+        { id: 'subscription', label: 'Subscription' },
+        { id: 'team', label: 'Team' },
+        { id: 'settings', label: 'Settings' },
+      ],
+    },
+    {
+      label: 'Admin',
+      items: [
+        { id: 'notes', label: 'Notes' },
+        { id: 'deliveries', label: 'Deliveries' },
+        ...(hasRole(admin, 'superadmin') ? [{ id: 'flags', label: 'Flags' }] : []),
+      ],
+    },
+  ], [admin]);
+
   async function load() {
     setLoading(true);
     try {
@@ -926,42 +962,6 @@ export default function TenantDetailPage() {
 
   const { tenant, subscription: sub, userCount, orderCount, notes, lastActiveAt, ordersByStatus } = data;
   const canEdit = hasRole(admin, 'superadmin', 'ops_admin');
-
-  const navGroups = useMemo(() => [
-    {
-      label: 'Overview',
-      items: [
-        { id: 'overview', label: 'Overview' },
-        { id: 'analytics', label: 'Analytics' },
-      ],
-    },
-    {
-      label: 'Commerce',
-      items: [
-        { id: 'orders', label: 'Orders' },
-        { id: 'customers', label: 'Customers' },
-        { id: 'products', label: 'Products' },
-        { id: 'invoices', label: 'Invoices' },
-        { id: 'overdue', label: 'Outstanding' },
-      ],
-    },
-    {
-      label: 'Account',
-      items: [
-        { id: 'subscription', label: 'Subscription' },
-        { id: 'team', label: 'Team' },
-        { id: 'settings', label: 'Settings' },
-      ],
-    },
-    {
-      label: 'Admin',
-      items: [
-        { id: 'notes', label: 'Notes' },
-        { id: 'deliveries', label: 'Deliveries' },
-        ...(hasRole(admin, 'superadmin') ? [{ id: 'flags', label: 'Flags' }] : []),
-      ],
-    },
-  ], [admin]);
 
   const ACTIONS = {
     extendTrial: {
