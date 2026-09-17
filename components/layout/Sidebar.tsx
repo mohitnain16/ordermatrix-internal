@@ -9,84 +9,13 @@ import {
   ROLE_LABEL,
   type AdminRole,
 } from "../../lib/auth";
+import { NAV } from "../../lib/nav";
 import {
-  LayoutDashboard,
-  Building2,
-  CreditCard,
-  Users,
-  FileText,
-  TrendingUp,
-  Headphones,
   LogOut,
   ChevronRight,
-  Activity,
-  AlertTriangle,
-  Megaphone,
-  Mail,
-  ShieldCheck,
-  Tag,
-  UserPlus,
   PanelLeftOpen,
   PanelLeftClose,
-  MessageCircle,
-  AlertCircle,
 } from "lucide-react";
-
-const NAV = [
-  {
-    section: "Super Admin",
-    roles: ["superadmin", "ops_admin"],
-    items: [
-      { href: "/superadmin", label: "Platform Pulse", icon: LayoutDashboard },
-      { href: "/superadmin/tenants", label: "Tenants", icon: Building2 },
-      {
-        href: "/superadmin/subscriptions",
-        label: "Subscriptions",
-        icon: CreditCard,
-      },
-      { href: "/superadmin/users", label: "All Users", icon: Users },
-      { href: "/superadmin/audit-log", label: "Audit Log", icon: FileText },
-      { href: "/superadmin/coupons", label: "Coupons", icon: Tag },
-      {
-        href: "/superadmin/team",
-        label: "Team",
-        icon: ShieldCheck,
-        roles: ["superadmin"] as const,
-      },
-      {
-        href: "/superadmin/wa-agent",
-        label: "WA Agent",
-        icon: MessageCircle,
-        roles: ["superadmin"] as const,
-      },
-      {
-        href: "/superadmin/enquiries",
-        label: "Enquiries",
-        icon: Mail,
-        roles: ["superadmin", "ops_admin", "support"] as const,
-      },
-    ],
-  },
-  {
-    section: "Growth",
-    roles: ["superadmin", "ops_admin", "sales"],
-    items: [
-      { href: "/sales", label: "Sales", icon: TrendingUp },
-      { href: "/sales/leads", label: "Lead Captures", icon: UserPlus },
-      { href: "/lifecycle", label: "Lifecycle", icon: Activity },
-      { href: "/billing", label: "Billing Ops", icon: AlertTriangle },
-      { href: "/communications", label: "Comms", icon: Megaphone },
-    ],
-  },
-  {
-    section: "Support",
-    roles: ["superadmin", "ops_admin", "support"],
-    items: [
-      { href: "/support", label: "Support", icon: Headphones },
-      { href: "/support/issues", label: "Issues", icon: AlertCircle },
-    ],
-  },
-];
 
 const ROLE_COLOR: Record<string, string> = {
   superadmin: "var(--purple-text)",
