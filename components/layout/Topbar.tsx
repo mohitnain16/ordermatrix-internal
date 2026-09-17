@@ -5,16 +5,7 @@ import { Bell, Sun, Moon, AlignLeft, Search, LogOut, ChevronDown } from 'lucide-
 import { getAdmin, clearAuth } from '../../lib/auth';
 import { usePageTitle } from '../../lib/page-title-context';
 import { useTheme } from '../../hooks/useTheme';
-
-const SECTION_MAP: Record<string, string> = {
-  '/superadmin/tenants': 'Tenants',
-  '/superadmin':         'Admin',
-  '/sales':              'Growth',
-  '/lifecycle':          'Growth',
-  '/billing':            'Growth',
-  '/communications':     'Growth',
-  '/support':            'Support',
-};
+import { resolveNavSection } from '../../lib/nav';
 
 const PAGE_TITLES: Record<string, string> = {
   '/superadmin':                'Platform Pulse',
@@ -31,7 +22,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/lifecycle':                 'Lifecycle',
   '/billing':                   'Billing Ops',
   '/communications':            'Comms',
-  '/support':                   'Support Lookup',
+  '/support':                   'Tenant Lookup',
   '/support/issues':            'Active Issues',
 };
 
@@ -48,14 +39,6 @@ const ROLE_COLOR: Record<string, string> = {
   sales:      'var(--green-text)',
   support:    'var(--amber-text)',
 };
-
-function resolveSection(pathname: string): string {
-  const sorted = Object.keys(SECTION_MAP).sort((a, b) => b.length - a.length);
-  for (const key of sorted) {
-    if (pathname.startsWith(key)) return SECTION_MAP[key];
-  }
-  return 'Admin';
-}
 
 function resolveTitle(pathname: string): string {
   if (PAGE_TITLES[pathname]) return PAGE_TITLES[pathname];
@@ -101,7 +84,7 @@ export default function Topbar({ onToggle, onOpenPalette }: TopbarProps) {
     router.push('/login');
   }
 
-  const section        = resolveSection(pathname);
+  const section        = resolveNavSection(pathname);
   const pageTitle      = contextTitle || resolveTitle(pathname);
   const showBreadcrumb = !!pageTitle && section !== pageTitle;
   const initials       = admin?.name?.charAt(0).toUpperCase() || '?';

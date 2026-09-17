@@ -1,31 +1,19 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  LayoutDashboard, Building2, CreditCard, Users, FileText,
-  TrendingUp, Headphones, Activity, AlertTriangle, Megaphone, Mail,
-  ShieldCheck, Tag, UserPlus, MessageCircle, AlertCircle, Search, X,
-} from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { getAdmin, hasRole, type AdminRole } from '../../lib/auth';
+import { NAV } from '../../lib/nav';
 
-const PALETTE_ITEMS = [
-  { href: '/superadmin',              label: 'Platform Pulse', section: 'Super Admin', icon: LayoutDashboard, roles: ['superadmin', 'ops_admin'] as const },
-  { href: '/superadmin/tenants',       label: 'Tenants',        section: 'Super Admin', icon: Building2,       roles: ['superadmin', 'ops_admin'] as const },
-  { href: '/superadmin/subscriptions', label: 'Subscriptions',  section: 'Super Admin', icon: CreditCard,      roles: ['superadmin', 'ops_admin'] as const },
-  { href: '/superadmin/users',         label: 'All Users',      section: 'Super Admin', icon: Users,           roles: ['superadmin', 'ops_admin'] as const },
-  { href: '/superadmin/audit-log',     label: 'Audit Log',      section: 'Super Admin', icon: FileText,        roles: ['superadmin', 'ops_admin'] as const },
-  { href: '/superadmin/coupons',       label: 'Coupons',        section: 'Super Admin', icon: Tag,             roles: ['superadmin', 'ops_admin'] as const },
-  { href: '/superadmin/team',          label: 'Team',           section: 'Super Admin', icon: ShieldCheck,     roles: ['superadmin'] as const },
-  { href: '/superadmin/wa-agent',      label: 'WA Agent',       section: 'Super Admin', icon: MessageCircle,   roles: ['superadmin'] as const },
-  { href: '/superadmin/enquiries',     label: 'Enquiries',      section: 'Super Admin', icon: Mail,            roles: ['superadmin', 'ops_admin', 'support'] as const },
-  { href: '/sales',                    label: 'Sales',          section: 'Growth',      icon: TrendingUp,      roles: ['superadmin', 'ops_admin', 'sales'] as const },
-  { href: '/sales/leads',              label: 'Lead Captures',  section: 'Growth',      icon: UserPlus,        roles: ['superadmin', 'ops_admin', 'sales'] as const },
-  { href: '/lifecycle',                label: 'Lifecycle',      section: 'Growth',      icon: Activity,        roles: ['superadmin', 'ops_admin', 'sales'] as const },
-  { href: '/billing',                  label: 'Billing Ops',    section: 'Growth',      icon: AlertTriangle,   roles: ['superadmin', 'ops_admin', 'sales'] as const },
-  { href: '/communications',           label: 'Comms',          section: 'Growth',      icon: Megaphone,       roles: ['superadmin', 'ops_admin', 'sales'] as const },
-  { href: '/support',                  label: 'Support',        section: 'Support',     icon: Headphones,      roles: ['superadmin', 'ops_admin', 'support'] as const },
-  { href: '/support/issues',           label: 'Issues',         section: 'Support',     icon: AlertCircle,     roles: ['superadmin', 'ops_admin', 'support'] as const },
-];
+const PALETTE_ITEMS = NAV.flatMap(group =>
+  group.items.map(item => ({
+    href: item.href,
+    label: item.label,
+    section: group.section,
+    icon: item.icon,
+    roles: (item.roles ?? group.roles) as readonly AdminRole[],
+  }))
+);
 
 interface CommandPaletteProps {
   open: boolean;
