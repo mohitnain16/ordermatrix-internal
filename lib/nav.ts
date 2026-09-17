@@ -15,6 +15,7 @@ import {
   UserPlus,
   MessageCircle,
   AlertCircle,
+  Radio,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { AdminRole } from './auth';
@@ -37,7 +38,9 @@ export const NAV: NavGroup[] = [
     section: 'Overview',
     roles: ['superadmin', 'ops_admin'],
     items: [
-      { href: '/superadmin', label: 'Platform Pulse', icon: LayoutDashboard },
+      { href: '/superadmin',               label: 'Platform Pulse', icon: LayoutDashboard },
+      { href: '/superadmin/live-activity', label: 'Live Activity',  icon: Radio,
+        roles: ['superadmin', 'ops_admin', 'support'] as const },
     ],
   },
   {

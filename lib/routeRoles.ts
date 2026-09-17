@@ -5,10 +5,12 @@ import type { AdminRole } from './auth';
 // More-specific prefixes are listed first; getAllowedRoles sorts by length so order here is advisory only.
 export const ROUTE_ROLES: { prefix: string; roles: readonly AdminRole[] }[] = [
   // Item-level superadmin-only overrides (narrower than their section)
-  { prefix: '/superadmin/team',      roles: ['superadmin'] },
-  { prefix: '/superadmin/wa-agent',  roles: ['superadmin'] },
+  { prefix: '/superadmin/team',          roles: ['superadmin'] },
+  { prefix: '/superadmin/wa-agent',      roles: ['superadmin'] },
+  // Wider-than-section overrides (support also allowed)
+  { prefix: '/superadmin/live-activity', roles: ['superadmin', 'ops_admin', 'support'] },
   // Enquiries lives under /superadmin but is in the SUPPORT section → support allowed
-  { prefix: '/superadmin/enquiries', roles: ['superadmin', 'ops_admin', 'support'] },
+  { prefix: '/superadmin/enquiries',     roles: ['superadmin', 'ops_admin', 'support'] },
   // Remaining superadmin/* (Tenants, Subscriptions, Users, Audit Log, Coupons, Platform Pulse)
   { prefix: '/superadmin',           roles: ['superadmin', 'ops_admin'] },
   // GROWTH section

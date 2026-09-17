@@ -6,7 +6,6 @@ import {
   getAdmin,
   clearAuth,
   hasRole,
-  ROLE_LABEL,
   type AdminRole,
 } from "../../lib/auth";
 import { NAV } from "../../lib/nav";
@@ -377,14 +376,10 @@ export default function Sidebar({ expanded, onToggle }: SidebarProps) {
                       overflow: "hidden",
                       textOverflow: "ellipsis",
                       whiteSpace: "nowrap",
-                      marginBottom: 4,
                     }}
                   >
                     {admin.name}
                   </div>
-                  <span className="badge badge-neutral">
-                    {ROLE_LABEL[admin.role]}
-                  </span>
                 </div>
               )}
               <button
