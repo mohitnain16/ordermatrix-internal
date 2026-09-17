@@ -57,12 +57,11 @@ function resolveTitle(pathname: string): string {
   return '';
 }
 
-function toggleMobileSidebar() {
-  const isOpen = document.body.classList.toggle('mobile-sidebar-open');
-  return isOpen;
+interface TopbarProps {
+  onToggle: () => void;
 }
 
-export default function Topbar() {
+export default function Topbar({ onToggle }: TopbarProps) {
   const pathname = usePathname();
   const [admin, setAdmin] = useState<{ name: string; role: string } | null>(null);
   const { title: contextTitle } = usePageTitle();
@@ -83,7 +82,7 @@ export default function Topbar() {
       {/* Mobile hamburger — CSS hides this on desktop */}
       <button
         className="mobile-nav-trigger"
-        onClick={toggleMobileSidebar}
+        onClick={onToggle}
         aria-label="Toggle navigation"
         title="Toggle navigation"
       >
