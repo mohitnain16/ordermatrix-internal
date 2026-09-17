@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Building2, CreditCard, Users, FileText,
   TrendingUp, Headphones, LogOut, ChevronRight,
   Activity, AlertTriangle, Megaphone, Mail, ShieldCheck, Tag, UserPlus,
-  PanelLeftOpen, PanelLeftClose, MessageCircle, GitPullRequest, AlertCircle,
+  PanelLeftOpen, PanelLeftClose, MessageCircle, AlertCircle,
 } from 'lucide-react';
 
 const NAV = [
@@ -19,9 +19,10 @@ const NAV = [
       { href: '/superadmin/subscriptions',  label: 'Subscriptions',  icon: CreditCard },
       { href: '/superadmin/users',          label: 'All Users',      icon: Users },
       { href: '/superadmin/audit-log',      label: 'Audit Log',      icon: FileText },
-      { href: '/superadmin/coupons',        label: 'Coupons',        icon: Tag,         roles: ['superadmin', 'ops_admin'] as const },
+      { href: '/superadmin/coupons',        label: 'Coupons',        icon: Tag },
       { href: '/superadmin/team',           label: 'Team',           icon: ShieldCheck, roles: ['superadmin'] as const },
       { href: '/superadmin/wa-agent',       label: 'WA Agent',       icon: MessageCircle, roles: ['superadmin'] as const },
+      { href: '/superadmin/enquiries',      label: 'Enquiries',      icon: Mail,        roles: ['superadmin', 'ops_admin', 'support'] as const },
     ],
   },
   {
@@ -29,7 +30,6 @@ const NAV = [
     roles: ['superadmin', 'ops_admin', 'sales'],
     items: [
       { href: '/sales',           label: 'Sales',         icon: TrendingUp },
-      { href: '/sales/pipeline',  label: 'Pipeline',      icon: GitPullRequest },
       { href: '/sales/leads',     label: 'Lead Captures', icon: UserPlus },
       { href: '/lifecycle',       label: 'Lifecycle',     icon: Activity },
       { href: '/billing',         label: 'Billing Ops',   icon: AlertTriangle },
@@ -40,9 +40,8 @@ const NAV = [
     section: 'SUPPORT',
     roles: ['superadmin', 'ops_admin', 'support'],
     items: [
-      { href: '/support',              label: 'Support',   icon: Headphones },
-      { href: '/support/issues',       label: 'Issues',    icon: AlertCircle },
-      { href: '/superadmin/enquiries', label: 'Enquiries', icon: Mail },
+      { href: '/support',        label: 'Support', icon: Headphones },
+      { href: '/support/issues', label: 'Issues',  icon: AlertCircle },
     ],
   },
 ];
@@ -97,14 +96,16 @@ export default function Sidebar({ expanded, onToggle }: SidebarProps) {
         borderRight: '1px solid var(--sidebar-border)',
       }}>
         {/* Logo mark */}
-        <div style={{
-          width: 36, height: 36, borderRadius: 10, background: 'var(--accent)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontWeight: 600, fontSize: 14, color: '#fff', letterSpacing: '-0.03em',
-          flexShrink: 0, fontFamily: 'var(--font-mono)',
-        }}>
-          OM
-        </div>
+        <Link href="/superadmin" style={{ textDecoration: 'none', flexShrink: 0 }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: 10, background: 'var(--accent)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontWeight: 600, fontSize: 14, color: '#fff', letterSpacing: '-0.03em',
+            fontFamily: 'var(--font-mono)',
+          }}>
+            OM
+          </div>
+        </Link>
 
         {/* Collapse toggle */}
         <button
