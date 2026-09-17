@@ -509,7 +509,7 @@ export default function TenantDetailPage() {
   const [loading, setLoading] = useState(true);
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
-  type TabId = 'overview' | 'subscription' | 'notes' | 'orders' | 'customers' | 'deliveries' | 'flags' | 'analytics' | 'settings' | 'team' | 'overdue' | 'products' | 'invoices' | 'features';
+  type TabId = 'overview' | 'subscription' | 'notes' | 'orders' | 'customers' | 'deliveries' | 'flags' | 'analytics' | 'settings' | 'team' | 'overdue' | 'products' | 'invoices' | 'features' | 'wa-conv-agent';
   const [tab, setTab] = useState<TabId>('overview');
   const loadedTabsRef = useRef<Set<TabId>>(new Set<TabId>(['overview']));
   const [toastMsg, setToastMsg] = useState('');
@@ -582,6 +582,11 @@ export default function TenantDetailPage() {
   // features tab
   const [featureRows, setFeatureRows] = useState<any[]>([]);
   const [featuresLoading, setFeaturesLoading] = useState(false);
+  // wa-conv-agent tab
+  const [waConvAgent, setWaConvAgent] = useState<any>(null);
+  const [waConvAgentLoading, setWaConvAgentLoading] = useState(false);
+  const [waConvAgentConvs, setWaConvAgentConvs] = useState<any[]>([]);
+  const [waConvAgentConvsLoading, setWaConvAgentConvsLoading] = useState(false);
   const { setTitle } = usePageTitle();
 
   useEffect(() => { load(); }, [tenantId]);
@@ -615,6 +620,8 @@ export default function TenantDetailPage() {
   useEffect(() => { if (tab === 'invoices') firstVisit('invoices', () => loadInvoices(1)); }, [tab]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (tab === 'features') firstVisit('features', loadFeatures); }, [tab]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (tab === 'wa-conv-agent') firstVisit('wa-conv-agent', loadWaConvAgent); }, [tab]);
 
   const navGroups = useMemo(() => [
     {
@@ -649,6 +656,7 @@ export default function TenantDetailPage() {
         { id: 'deliveries', label: 'Deliveries' },
         ...(hasRole(admin, 'superadmin') ? [{ id: 'flags', label: 'Flags' }] : []),
         ...(hasRole(admin, 'superadmin', 'ops_admin', 'support') ? [{ id: 'features', label: 'Features' }] : []),
+        ...(hasRole(admin, 'superadmin', 'ops_admin', 'support') ? [{ id: 'wa-conv-agent', label: 'WA Conv Agent' }] : []),
       ],
     },
   ], [admin]);
@@ -917,6 +925,25 @@ export default function TenantDetailPage() {
       toast('Templates saved');
     } catch (e: any) { toast(e?.response?.data?.error || 'Failed to save templates'); }
     setWaAgentSaving(false);
+  }
+
+  async function loadWaConvAgent() {
+    setWaConvAgentLoading(true);
+    try {
+      const res = await api.get(`/admin/tenants/${tenantId}/wa-conv-agent`);
+      setWaConvAgent(res.data);
+      if (res.data?.status === 'active') loadWaConvAgentConvs();
+    } catch { setWaConvAgent(null); }
+    setWaConvAgentLoading(false);
+  }
+
+  async function loadWaConvAgentConvs() {
+    setWaConvAgentConvsLoading(true);
+    try {
+      const res = await api.get(`/admin/tenants/${tenantId}/wa-conv-agent/conversations`);
+      setWaConvAgentConvs(res.data?.conversations || []);
+    } catch { setWaConvAgentConvs([]); }
+    setWaConvAgentConvsLoading(false);
   }
 
   async function loadTeam() {
@@ -2343,6 +2370,81 @@ export default function TenantDetailPage() {
           )}
         </div>
       )}
+      {tab === 'wa-conv-agent' && hasRole(admin, 'superadmin', 'ops_admin', 'support') && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {waConvAgentLoading ? (
+            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+          ) : (
+            <div className="admin-card">
+              <div className="card-header">
+                <div className="card-title">WA Conversational Agent</div>
+              </div>
+              <div className="card-body">
+                {!waConvAgent ? (
+                  <div style={{ fontSize: 13, color: 'var(--ink-4)' }}>Could not load status</div>
+                ) : (
+                  <>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 10 }}>
+                      <span style={{ color: 'var(--ink-4)' }}>Status</span>
+                      <span className={`badge ${waConvAgent.status === 'active' ? 'badge-green' : waConvAgent.status === 'suspended' ? 'badge-amber' : waConvAgent.status === 'provisioning' ? 'badge-blue' : 'badge-gray'}`}>
+                        {waConvAgent.status || 'not_configured'}
+                      </span>
+                    </div>
+                    {waConvAgent.status === 'active' && (
+                      <>
+                        {([
+                          ['Phone Number ID', waConvAgent.phoneNumberId],
+                          ['WABA ID', waConvAgent.wabaId],
+                          ['Connected', waConvAgent.connectedAt ? fmtDate(waConvAgent.connectedAt) : '—'],
+                          ['Messages (30d)', waConvAgent.messageCount30d ?? '—'],
+                        ] as [string, string | number][]).map(([k, v]) => (
+                          <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 10 }}>
+                            <span style={{ color: 'var(--ink-4)' }}>{k}</span>
+                            <span className="cell-main">{v?.toString() || '—'}</span>
+                          </div>
+                        ))}
+                      </>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
+          {waConvAgent?.status === 'active' && (
+            <div className="admin-card">
+              <div className="card-header">
+                <div className="card-title">Conversations</div>
+              </div>
+              {waConvAgentConvsLoading ? (
+                <div className="card-body" style={{ textAlign: 'center', color: 'var(--ink-4)', fontSize: 13 }}>Loading…</div>
+              ) : (
+                <div className="table-shell">
+                  <table className="admin-table">
+                    <thead>
+                      <tr><th>Contact</th><th>Last Message</th><th>Messages</th><th>Updated</th></tr>
+                    </thead>
+                    <tbody>
+                      {waConvAgentConvs.map((c: any) => (
+                        <tr key={c._id || c.id}>
+                          <td className="cell-main">{maskRecipient(c.contact || c.phone || '')}</td>
+                          <td style={{ fontSize: 12, color: 'var(--ink-4)', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.lastMessage || '—'}</td>
+                          <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{c.messageCount ?? '—'}</td>
+                          <td style={{ fontSize: 12, color: 'var(--ink-4)' }}>{c.updatedAt ? timeAgo(c.updatedAt) : '—'}</td>
+                        </tr>
+                      ))}
+                      {waConvAgentConvs.length === 0 && (
+                        <tr><td colSpan={4} style={{ textAlign: 'center', padding: 32, color: 'var(--ink-4)' }}>No conversations yet</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
         </div>{/* /tab content wrapper */}
       </div>{/* /tenant-detail-body */}
     </div>
