@@ -31,11 +31,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [router, pathname]);
 
-  // Detect initial breakpoint; default-open panel on desktop (≥900px)
+  // Detect initial breakpoint — sidebar stays collapsed until user opens it
   useEffect(() => {
-    const mobile = window.innerWidth < MOBILE_BP;
-    setIsMobile(mobile);
-    if (!mobile) setExpanded(window.innerWidth >= 900);
+    setIsMobile(window.innerWidth < MOBILE_BP);
   }, []);
 
   // Debounced resize listener — updates isMobile; closes sidebar on breakpoint cross
