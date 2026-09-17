@@ -968,7 +968,7 @@ export default function TenantDetailPage() {
   async function provisionWaConvAgent() {
     setWaConvAgentConnectSaving(true);
     try {
-      await api.post(`/admin/tenants/${tenantId}/wa-conv-agent`);
+      await api.post(`/admin/tenants/${tenantId}/wa-conv-agent/provision`);
       toast('Provisioned — connect credentials to activate');
       await loadWaConvAgent();
     } catch (e: any) { toast(e?.response?.data?.error || 'Provisioning failed'); }
