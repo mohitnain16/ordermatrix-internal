@@ -509,7 +509,7 @@ export default function TenantDetailPage() {
   const [loading, setLoading] = useState(true);
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
-  type TabId = 'overview' | 'subscription' | 'notes' | 'orders' | 'customers' | 'deliveries' | 'flags' | 'analytics' | 'settings' | 'team' | 'overdue' | 'products' | 'invoices';
+  type TabId = 'overview' | 'subscription' | 'notes' | 'orders' | 'customers' | 'deliveries' | 'flags' | 'analytics' | 'settings' | 'team' | 'overdue' | 'products' | 'invoices' | 'features';
   const [tab, setTab] = useState<TabId>('overview');
   const loadedTabsRef = useRef<Set<TabId>>(new Set<TabId>(['overview']));
   const [toastMsg, setToastMsg] = useState('');
@@ -579,6 +579,9 @@ export default function TenantDetailPage() {
   const [invoicesTotal, setInvoicesTotal] = useState(0);
   const [invoicesPage, setInvoicesPage] = useState(1);
   const [invoicesLoading, setInvoicesLoading] = useState(false);
+  // features tab
+  const [featureRows, setFeatureRows] = useState<any[]>([]);
+  const [featuresLoading, setFeaturesLoading] = useState(false);
   const { setTitle } = usePageTitle();
 
   useEffect(() => { load(); }, [tenantId]);
@@ -610,6 +613,8 @@ export default function TenantDetailPage() {
   useEffect(() => { if (tab === 'products') firstVisit('products', () => loadProducts(1, '')); }, [tab]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (tab === 'invoices') firstVisit('invoices', () => loadInvoices(1)); }, [tab]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (tab === 'features') firstVisit('features', loadFeatures); }, [tab]);
 
   const navGroups = useMemo(() => [
     {
@@ -643,6 +648,7 @@ export default function TenantDetailPage() {
         { id: 'notes', label: 'Notes' },
         { id: 'deliveries', label: 'Deliveries' },
         ...(hasRole(admin, 'superadmin') ? [{ id: 'flags', label: 'Flags' }] : []),
+        ...(hasRole(admin, 'superadmin', 'ops_admin', 'support') ? [{ id: 'features', label: 'Features' }] : []),
       ],
     },
   ], [admin]);
@@ -732,6 +738,15 @@ export default function TenantDetailPage() {
       setFlags(res.data.flags || {});
     } catch { /**/ }
     setFlagsLoading(false);
+  }
+
+  async function loadFeatures() {
+    setFeaturesLoading(true);
+    try {
+      const res = await api.get(`/admin/tenants/${tenantId}/features`);
+      setFeatureRows(res.data.features || []);
+    } catch { /**/ }
+    setFeaturesLoading(false);
   }
 
   async function toggleFlag(flag: string, enabled: boolean) {
@@ -2168,6 +2183,78 @@ export default function TenantDetailPage() {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === 'features' && hasRole(admin, 'superadmin', 'ops_admin', 'support') && (
+        <div>
+          {featuresLoading ? (
+            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+          ) : (
+            <div className="admin-card">
+              <div className="card-header">
+                <div className="card-title">Feature Overrides</div>
+                <span style={{ fontSize: 12, color: 'var(--ink-4)' }}>
+                  {featureRows.filter(f => f.override !== null).length} active override{featureRows.filter(f => f.override !== null).length !== 1 ? 's' : ''}
+                </span>
+              </div>
+              <div className="table-shell">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Feature</th>
+                      <th>Plan default</th>
+                      <th>Override</th>
+                      <th>Set by / when</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {featureRows.map((f) => (
+                      <tr key={f.key}>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            {f.override !== null && (
+                              <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', flexShrink: 0, display: 'inline-block' }} />
+                            )}
+                            <div>
+                              <div className="cell-main">{f.label}</div>
+                              <div className="cell-sub" style={{ fontFamily: 'var(--font-mono)', fontSize: 11 }}>{f.key}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <span className="badge badge-gray">{f.planDefault ? 'On' : 'Off'}</span>
+                        </td>
+                        <td>
+                          <span className={`badge ${f.effective ? 'badge-green' : 'badge-gray'}`}>
+                            {f.effective ? 'On' : 'Off'}
+                          </span>
+                          {f.override !== null && (
+                            <span style={{ marginLeft: 6, fontSize: 10, color: 'var(--accent)', fontWeight: 600 }}>overridden</span>
+                          )}
+                        </td>
+                        <td>
+                          {f.override ? (
+                            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-4)', lineHeight: 1.6 }}>
+                              <div>{f.override.setBy ? String(f.override.setBy).slice(-8) : '—'}</div>
+                              <div>{f.override.setAt ? fmtDate(f.override.setAt) : '—'}</div>
+                            </div>
+                          ) : (
+                            <span style={{ color: 'var(--ink-4)', fontSize: 12 }}>—</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                    {featureRows.length === 0 && (
+                      <tr>
+                        <td colSpan={4} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>No feature data</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>
