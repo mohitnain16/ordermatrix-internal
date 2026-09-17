@@ -712,6 +712,7 @@ export default function TenantDetailPage() {
         case 'deactivate':
         case 'reactivate':             await toggleActive(); break;
         case 'featureOff':             await patchFeature(confirmAction._featureKey, false); break;
+        case 'suspendWaConvAgent':     await suspendWaConvAgent(); break;
       }
     } finally {
       setActionLoading(false);
@@ -948,6 +949,22 @@ export default function TenantDetailPage() {
     setWaConvAgentConvsLoading(false);
   }
 
+  async function suspendWaConvAgent() {
+    try {
+      await api.post(`/admin/tenants/${tenantId}/wa-conv-agent/suspend`);
+      toast('Agent suspended');
+      await loadWaConvAgent();
+    } catch (e: any) { toast(e?.response?.data?.error || 'Suspend failed'); }
+  }
+
+  async function unsuspendWaConvAgent() {
+    try {
+      await api.post(`/admin/tenants/${tenantId}/wa-conv-agent/unsuspend`);
+      toast('Agent reactivated');
+      await loadWaConvAgent();
+    } catch (e: any) { toast(e?.response?.data?.error || 'Failed to unsuspend'); }
+  }
+
   async function provisionWaConvAgent() {
     setWaConvAgentConnectSaving(true);
     try {
@@ -1105,6 +1122,16 @@ export default function TenantDetailPage() {
       verifyText: null,
       confirmLabel: 'Reactivate',
       confirmClass: 'btn-primary',
+    },
+    suspendWaConvAgent: {
+      type: 'suspendWaConvAgent',
+      title: 'Suspend WA Conversational Agent',
+      message: `Suspend the WhatsApp Conversational Agent for ${tenant.businessName}?`,
+      detail: 'The agent will stop responding to all conversations until unsuspended.',
+      level: 'danger',
+      verifyText: tenant.businessName,
+      confirmLabel: 'Suspend',
+      confirmClass: 'btn-danger',
     },
   };
 
@@ -2402,6 +2429,16 @@ export default function TenantDetailPage() {
             <div className="admin-card">
               <div className="card-header">
                 <div className="card-title">WA Conversational Agent</div>
+                {canEdit && waConvAgent?.status === 'active' && (
+                  <button className="btn btn-danger btn-sm" onClick={() => setConfirmAction(ACTIONS.suspendWaConvAgent)}>
+                    Suspend
+                  </button>
+                )}
+                {canEdit && waConvAgent?.status === 'suspended' && (
+                  <button className="btn btn-ghost btn-sm" onClick={unsuspendWaConvAgent}>
+                    Unsuspend
+                  </button>
+                )}
               </div>
               <div className="card-body">
                 {!waConvAgent ? (
