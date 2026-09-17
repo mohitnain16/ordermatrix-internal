@@ -25,8 +25,8 @@ const PAGE_TITLES: Record<string, string> = {
   '/superadmin/enquiries':      'Enquiries',
   '/superadmin/coupons':        'Coupons',
   '/superadmin/team':           'Team',
+  '/superadmin/wa-agent':       'WA Agent',
   '/sales':                     'Sales Overview',
-  '/sales/pipeline':            'Trial Pipeline',
   '/sales/leads':               'Lead Captures',
   '/lifecycle':                 'Lifecycle',
   '/billing':                   'Billing Ops',
@@ -40,6 +40,13 @@ const ROLE_LABEL: Record<string, string> = {
   ops_admin:  'Ops Admin',
   sales:      'Sales',
   support:    'Support',
+};
+
+const ROLE_COLOR: Record<string, string> = {
+  superadmin: 'var(--purple-text)',
+  ops_admin:  'var(--blue-text)',
+  sales:      'var(--green-text)',
+  support:    'var(--amber-text)',
 };
 
 function resolveSection(pathname: string): string {
@@ -75,7 +82,8 @@ export default function Topbar({ onToggle }: TopbarProps) {
   const section = resolveSection(pathname);
   const pageTitle = contextTitle || resolveTitle(pathname);
   const showBreadcrumb = !!pageTitle && section !== pageTitle;
-  const initials = admin?.name?.charAt(0).toUpperCase() || '?';
+  const initials   = admin?.name?.charAt(0).toUpperCase() || '?';
+  const roleColor  = ROLE_COLOR[admin?.role || ''] || 'var(--accent)';
 
   return (
     <header className="topbar">
@@ -138,7 +146,7 @@ export default function Topbar({ onToggle }: TopbarProps) {
         {admin && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{
-              width: 32, height: 32, borderRadius: '50%', background: 'var(--accent)',
+              width: 32, height: 32, borderRadius: '50%', background: roleColor,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 12, fontWeight: 600, color: '#fff', flexShrink: 0,
             }}>
