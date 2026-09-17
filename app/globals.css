@@ -1200,10 +1200,11 @@ select.admin-input { cursor: pointer; }
   }
 }
 
-/* ─── Topbar name/role — hidden on mobile ────── */
+/* ─── Topbar name/role/search — hidden on mobile ────── */
 @media (max-width: 767px) {
   .topbar-name,
-  .topbar-role { display: none !important; }
+  .topbar-role,
+  .topbar-search { display: none !important; }
 }
 
 /* ─── Hamburger — hidden on desktop ─────────── */
