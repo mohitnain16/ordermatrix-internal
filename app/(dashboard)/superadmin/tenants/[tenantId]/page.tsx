@@ -587,6 +587,8 @@ export default function TenantDetailPage() {
   const [waConvAgentLoading, setWaConvAgentLoading] = useState(false);
   const [waConvAgentConvs, setWaConvAgentConvs] = useState<any[]>([]);
   const [waConvAgentConvsLoading, setWaConvAgentConvsLoading] = useState(false);
+  const [waConvAgentConnectForm, setWaConvAgentConnectForm] = useState<any>(null);
+  const [waConvAgentConnectSaving, setWaConvAgentConnectSaving] = useState(false);
   const { setTitle } = usePageTitle();
 
   useEffect(() => { load(); }, [tenantId]);
@@ -944,6 +946,28 @@ export default function TenantDetailPage() {
       setWaConvAgentConvs(res.data?.conversations || []);
     } catch { setWaConvAgentConvs([]); }
     setWaConvAgentConvsLoading(false);
+  }
+
+  async function provisionWaConvAgent() {
+    setWaConvAgentConnectSaving(true);
+    try {
+      await api.post(`/admin/tenants/${tenantId}/wa-conv-agent`);
+      toast('Provisioned — connect credentials to activate');
+      await loadWaConvAgent();
+    } catch (e: any) { toast(e?.response?.data?.error || 'Provisioning failed'); }
+    setWaConvAgentConnectSaving(false);
+  }
+
+  async function connectWaConvAgent() {
+    if (!waConvAgentConnectForm) return;
+    setWaConvAgentConnectSaving(true);
+    try {
+      await api.patch(`/admin/tenants/${tenantId}/wa-conv-agent`, waConvAgentConnectForm);
+      toast('Connected');
+      setWaConvAgentConnectForm(null);
+      await loadWaConvAgent();
+    } catch (e: any) { toast(e?.response?.data?.error || 'Connection failed'); }
+    setWaConvAgentConnectSaving(false);
   }
 
   async function loadTeam() {
@@ -2404,6 +2428,49 @@ export default function TenantDetailPage() {
                           </div>
                         ))}
                       </>
+                    )}
+                    {/* Provision — not_configured */}
+                    {(!waConvAgent.status || waConvAgent.status === 'not_configured') && canEdit && (
+                      <div style={{ marginTop: 8 }}>
+                        <button className="btn btn-ghost btn-sm" onClick={provisionWaConvAgent} disabled={waConvAgentConnectSaving}>
+                          {waConvAgentConnectSaving ? <><span className="spinner" />Provisioning…</> : 'Provision Agent'}
+                        </button>
+                      </div>
+                    )}
+                    {/* Connect form — provisioning */}
+                    {waConvAgent.status === 'provisioning' && canEdit && (
+                      waConvAgentConnectForm ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 12 }}>
+                          <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-4)', marginBottom: 4 }}>Connect credentials</div>
+                          {([
+                            ['Phone Number ID', 'phoneNumberId', 'text', 'Meta phone_number_id'],
+                            ['WABA ID', 'wabaId', 'text', 'WhatsApp Business Account ID'],
+                            ['Access Token', 'accessToken', 'password', 'System user access token'],
+                          ] as [string, string, string, string][]).map(([label, field, type, placeholder]) => (
+                            <div key={field} style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 8, alignItems: 'center' }}>
+                              <span style={{ fontSize: 12, color: 'var(--ink-4)' }}>{label}</span>
+                              <input
+                                className="admin-input" type={type} style={{ fontSize: 12, padding: '4px 8px' }}
+                                placeholder={placeholder}
+                                value={waConvAgentConnectForm[field] || ''}
+                                onChange={e => setWaConvAgentConnectForm((f: any) => ({ ...f, [field]: e.target.value }))}
+                              />
+                            </div>
+                          ))}
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
+                            <button className="btn btn-ghost btn-sm" onClick={() => setWaConvAgentConnectForm(null)} disabled={waConvAgentConnectSaving}>Cancel</button>
+                            <button className="btn btn-primary btn-sm" onClick={connectWaConvAgent} disabled={waConvAgentConnectSaving}>
+                              {waConvAgentConnectSaving ? <><span className="spinner" />Connecting…</> : 'Connect'}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div style={{ marginTop: 8 }}>
+                          <button className="btn btn-ghost btn-sm" onClick={() => setWaConvAgentConnectForm({ phoneNumberId: '', wabaId: '', accessToken: '' })}>
+                            Connect Credentials
+                          </button>
+                        </div>
+                      )
                     )}
                   </>
                 )}
