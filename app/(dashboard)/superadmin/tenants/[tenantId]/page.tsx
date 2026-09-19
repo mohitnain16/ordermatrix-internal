@@ -2440,7 +2440,7 @@ export default function TenantDetailPage() {
                 <div className="card-title">WA Conversational Agent</div>
                 {canEdit && waConvAgent?.status === 'active' && (
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <button className="btn btn-outline btn-sm" onClick={() => setWaConvAgentConnectForm(f => f ? null : { phoneNumberId: '', wabaId: '', accessToken: '' })}>
+                    <button className="btn btn-outline btn-sm" onClick={() => setWaConvAgentConnectForm((f: any) => f ? null : { phoneNumberId: '', wabaId: '', accessToken: '' })}>
                       Update Token
                     </button>
                     <button className="btn btn-danger btn-sm" onClick={() => setConfirmAction(ACTIONS.suspendWaConvAgent)}>
