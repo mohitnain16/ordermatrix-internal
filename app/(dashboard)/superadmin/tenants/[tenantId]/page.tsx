@@ -934,8 +934,17 @@ export default function TenantDetailPage() {
     setWaConvAgentLoading(true);
     try {
       const res = await api.get(`/admin/tenants/${tenantId}/wa-conv-agent`);
-      setWaConvAgent(res.data);
-      if (res.data?.status === 'active') loadWaConvAgentConvs();
+      const d = res.data;
+      // API returns waAgent-prefixed field names; normalise to the shorter names the JSX expects.
+      const normalised = {
+        ...d,
+        status:        d.waAgentStatus        || 'not_configured',
+        phoneNumberId: d.waAgentPhoneNumberId || null,
+        wabaId:        d.waAgentWabaId        || null,
+        connectedAt:   d.waAgentConnectedAt   || null,
+      };
+      setWaConvAgent(normalised);
+      if (normalised.status === 'active') loadWaConvAgentConvs();
     } catch { setWaConvAgent(null); }
     setWaConvAgentLoading(false);
   }
