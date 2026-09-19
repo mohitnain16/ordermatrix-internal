@@ -2439,9 +2439,14 @@ export default function TenantDetailPage() {
               <div className="card-header">
                 <div className="card-title">WA Conversational Agent</div>
                 {canEdit && waConvAgent?.status === 'active' && (
-                  <button className="btn btn-danger btn-sm" onClick={() => setConfirmAction(ACTIONS.suspendWaConvAgent)}>
-                    Suspend
-                  </button>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button className="btn btn-outline btn-sm" onClick={() => setWaConvAgentConnectForm((f: any) => f ? null : { phoneNumberId: '', wabaId: '', accessToken: '' })}>
+                      Update Token
+                    </button>
+                    <button className="btn btn-danger btn-sm" onClick={() => setConfirmAction(ACTIONS.suspendWaConvAgent)}>
+                      Suspend
+                    </button>
+                  </div>
                 )}
                 {canEdit && waConvAgent?.status === 'suspended' && (
                   <button className="btn btn-ghost btn-sm" onClick={unsuspendWaConvAgent}>
@@ -2474,6 +2479,33 @@ export default function TenantDetailPage() {
                           </div>
                         ))}
                       </>
+                    )}
+                    {/* Update credentials form — active */}
+                    {waConvAgent.status === 'active' && waConvAgentConnectForm && canEdit && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--line)' }}>
+                        <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-4)', marginBottom: 4 }}>Update credentials</div>
+                        {([
+                          ['Phone Number ID', 'phoneNumberId', 'text', 'Meta phone_number_id'],
+                          ['WABA ID', 'wabaId', 'text', 'WhatsApp Business Account ID'],
+                          ['Access Token', 'accessToken', 'password', 'System user access token'],
+                        ] as [string, string, string, string][]).map(([label, field, type, placeholder]) => (
+                          <div key={field} style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 8, alignItems: 'center' }}>
+                            <span style={{ fontSize: 12, color: 'var(--ink-4)' }}>{label}</span>
+                            <input
+                              className="admin-input" type={type} style={{ fontSize: 12, padding: '4px 8px' }}
+                              placeholder={placeholder}
+                              value={waConvAgentConnectForm[field] || ''}
+                              onChange={e => setWaConvAgentConnectForm((f: any) => ({ ...f, [field]: e.target.value }))}
+                            />
+                          </div>
+                        ))}
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
+                          <button className="btn btn-ghost btn-sm" onClick={() => setWaConvAgentConnectForm(null)} disabled={waConvAgentConnectSaving}>Cancel</button>
+                          <button className="btn btn-primary btn-sm" onClick={connectWaConvAgent} disabled={waConvAgentConnectSaving}>
+                            {waConvAgentConnectSaving ? <><span className="spinner" />Saving…</> : 'Save'}
+                          </button>
+                        </div>
+                      </div>
                     )}
                     {/* Provision — not_configured */}
                     {(!waConvAgent.status || waConvAgent.status === 'not_configured') && canEdit && (
