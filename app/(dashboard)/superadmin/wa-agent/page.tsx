@@ -15,6 +15,13 @@ interface OmTenant {
   createdAt: string;
 }
 
+interface AgentSummary {
+  tenantId: string;       // waAgentTenantId
+  status: string;
+  lastWebhookAt: string | null;
+  portalUserCount: number;
+}
+
 interface ProvisionForm {
   name: string;
   phoneNumberId: string;
@@ -76,8 +83,12 @@ const BULK_SCHEMA_HINT = `[
 
 type BulkStep = 'idle' | 'editing' | 'reviewing' | 'done';
 
+const fmtDate = (d: string | null) =>
+  d ? new Date(d).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
+
 export default function WaAgentPage() {
   const [tenants, setTenants] = useState<OmTenant[]>([]);
+  const [agentMap, setAgentMap] = useState<Record<string, AgentSummary>>({});
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState<OmTenant | null>(null);
   const [form, setForm] = useState<ProvisionForm>(EMPTY_FORM);
@@ -94,8 +105,15 @@ export default function WaAgentPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get('/admin/wa-agent/tenants');
-      setTenants(res.data.tenants);
+      const [omRes, agentRes] = await Promise.allSettled([
+        api.get('/admin/wa-agent/tenants'),
+        api.get('/admin/wa-agent/agent-summary'),
+      ]);
+      if (omRes.status === 'fulfilled') setTenants(omRes.value.data.tenants);
+      if (agentRes.status === 'fulfilled') {
+        const list: AgentSummary[] = agentRes.value.data.tenants || agentRes.value.data || [];
+        setAgentMap(Object.fromEntries(list.map(a => [a.tenantId, a])));
+      }
     } catch { /**/ }
     setLoading(false);
   }, []);
@@ -205,7 +223,6 @@ export default function WaAgentPage() {
 
       {bulkStep !== 'idle' && (
         <div className="animate-fade-in">
-
           {bulkStep === 'editing' && (
             <div className="admin-card">
               <div className="card-header">
@@ -345,34 +362,48 @@ export default function WaAgentPage() {
               <thead>
                 <tr>
                   <th>Business</th>
-                  <th>Email</th>
                   <th>Plan</th>
-                  <th>WA Agent Status</th>
+                  <th>Agent Status</th>
+                  <th>Last Webhook</th>
+                  <th>Portal Users</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody>
-                {loading ? <SkRows rows={8} cols={5} /> : (
+                {loading ? <SkRows rows={8} cols={6} /> : (
                   <>
-                    {tenants.map(t => (
-                      <tr key={t._id}>
-                        <td data-label="Business"><span className="cell-main">{t.businessName}</span></td>
-                        <td data-label="Email" style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{t.email}</td>
-                        <td data-label="Plan"><span className="badge badge-gray" style={{ textTransform: 'capitalize' }}>{t.planId}</span></td>
-                        <td data-label="WA Status">
-                          {t.waAgentTenantId
-                            ? <span className="badge badge-green">Connected</span>
-                            : <span className="badge badge-gray">Not Provisioned</span>}
-                        </td>
-                        <td>
-                          {t.waAgentTenantId
-                            ? <Link href={`/superadmin/wa-agent/${t._id}`} className="btn btn-ghost btn-sm">Stats →</Link>
-                            : <button className="btn btn-ghost btn-sm" onClick={() => openProvision(t)}>Provision</button>}
-                        </td>
-                      </tr>
-                    ))}
+                    {tenants.map(t => {
+                      const agent = t.waAgentTenantId ? agentMap[t.waAgentTenantId] : undefined;
+                      return (
+                        <tr key={t._id}>
+                          <td data-label="Business">
+                            <span className="cell-main">{t.businessName}</span>
+                            <span className="cell-sub" style={{ fontFamily: 'var(--font-mono)', fontSize: 11 }}>{t.email}</span>
+                          </td>
+                          <td data-label="Plan"><span className="badge badge-gray" style={{ textTransform: 'capitalize' }}>{t.planId}</span></td>
+                          <td data-label="Agent Status">
+                            {!t.waAgentTenantId
+                              ? <span className="badge badge-gray">Not Provisioned</span>
+                              : agent
+                              ? <span className={`badge ${agent.status === 'active' ? 'badge-green' : 'badge-amber'}`} style={{ textTransform: 'capitalize' }}>{agent.status}</span>
+                              : <span className="badge badge-green">Provisioned</span>}
+                          </td>
+                          <td data-label="Last Webhook" style={{ fontSize: 12, color: 'var(--ink-4)' }}>
+                            {agent ? fmtDate(agent.lastWebhookAt) : '—'}
+                          </td>
+                          <td data-label="Portal Users" style={{ fontSize: 12, fontFamily: 'var(--font-mono)' }}>
+                            {agent ? agent.portalUserCount ?? '—' : '—'}
+                          </td>
+                          <td>
+                            {t.waAgentTenantId
+                              ? <Link href={`/superadmin/wa-agent/${t._id}`} className="btn btn-ghost btn-sm">Manage →</Link>
+                              : <button className="btn btn-ghost btn-sm" onClick={() => openProvision(t)}>Provision</button>}
+                          </td>
+                        </tr>
+                      );
+                    })}
                     {tenants.length === 0 && (
-                      <tr><td colSpan={5}>
+                      <tr><td colSpan={6}>
                         <div className="empty-state">
                           <div className="empty-state-icon">💬</div>
                           <div className="empty-state-title">No tenants found</div>

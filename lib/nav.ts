@@ -47,10 +47,12 @@ export const NAV: NavGroup[] = [
     section: 'Tenants',
     roles: ['superadmin', 'ops_admin'],
     items: [
-      { href: '/superadmin/tenants',       label: 'Tenants',       icon: Building2   },
-      { href: '/superadmin/subscriptions', label: 'Subscriptions', icon: CreditCard  },
-      { href: '/superadmin/users',         label: 'All Users',     icon: Users       },
-      { href: '/superadmin/coupons',       label: 'Coupons',       icon: Tag         },
+      { href: '/superadmin/tenants',       label: 'Tenants',          icon: Building2   },
+      { href: '/superadmin/subscriptions', label: 'Subscriptions',    icon: CreditCard  },
+      { href: '/superadmin/users',         label: 'All Users',        icon: Users       },
+      { href: '/superadmin/coupons',       label: 'Coupons',          icon: Tag         },
+      { href: '/superadmin/wa-agent',      label: 'WhatsApp Agent',   icon: MessageCircle,
+        roles: ['superadmin', 'ops_admin', 'support'] as const },
     ],
   },
   {
@@ -78,9 +80,8 @@ export const NAV: NavGroup[] = [
     section: 'System',
     roles: ['superadmin', 'ops_admin'],
     items: [
-      { href: '/superadmin/audit-log', label: 'Audit Log', icon: FileText                                      },
-      { href: '/superadmin/team',      label: 'Team',      icon: ShieldCheck,   roles: ['superadmin'] as const },
-      { href: '/superadmin/wa-agent',  label: 'WA Agent',  icon: MessageCircle, roles: ['superadmin'] as const },
+      { href: '/superadmin/audit-log', label: 'Audit Log', icon: FileText                                     },
+      { href: '/superadmin/team',      label: 'Team',      icon: ShieldCheck, roles: ['superadmin'] as const },
     ],
   },
 ];
