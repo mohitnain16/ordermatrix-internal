@@ -11,6 +11,9 @@ export const ROUTE_ROLES: { prefix: string; roles: readonly AdminRole[] }[] = [
   { prefix: '/superadmin/live-activity', roles: ['superadmin', 'ops_admin', 'support'] },
   // Enquiries lives under /superadmin but is in the SUPPORT section → support allowed
   { prefix: '/superadmin/enquiries',     roles: ['superadmin', 'ops_admin', 'support'] },
+  // Growth tools under /superadmin/* accessible to sales too
+  { prefix: '/superadmin/hot-leads', roles: ['superadmin', 'ops_admin', 'sales'] },
+  { prefix: '/superadmin/funnel',    roles: ['superadmin', 'ops_admin', 'sales'] },
   // Remaining superadmin/* (Tenants, Subscriptions, Users, Audit Log, Coupons, Platform Pulse)
   { prefix: '/superadmin',           roles: ['superadmin', 'ops_admin'] },
   // GROWTH section
