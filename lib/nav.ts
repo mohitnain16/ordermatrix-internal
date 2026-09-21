@@ -16,6 +16,8 @@ import {
   MessageCircle,
   AlertCircle,
   Radio,
+  Flame,
+  BarChart3,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { AdminRole } from './auth';
@@ -59,11 +61,13 @@ export const NAV: NavGroup[] = [
     section: 'Growth',
     roles: ['superadmin', 'ops_admin', 'sales'],
     items: [
-      { href: '/sales',          label: 'Sales',         icon: TrendingUp    },
-      { href: '/sales/leads',    label: 'Lead Captures', icon: UserPlus      },
-      { href: '/lifecycle',      label: 'Lifecycle',     icon: Activity      },
-      { href: '/billing',        label: 'Billing Ops',   icon: AlertTriangle },
-      { href: '/communications', label: 'Comms',         icon: Megaphone     },
+      { href: '/sales',                      label: 'Sales',         icon: TrendingUp    },
+      { href: '/sales/leads',               label: 'Lead Captures', icon: UserPlus      },
+      { href: '/superadmin/hot-leads',      label: 'Hot Leads',     icon: Flame         },
+      { href: '/superadmin/funnel',         label: 'Funnel',        icon: BarChart3     },
+      { href: '/lifecycle',                 label: 'Lifecycle',     icon: Activity      },
+      { href: '/billing',                   label: 'Billing Ops',   icon: AlertTriangle },
+      { href: '/communications',            label: 'Comms',         icon: Megaphone     },
     ],
   },
   {
