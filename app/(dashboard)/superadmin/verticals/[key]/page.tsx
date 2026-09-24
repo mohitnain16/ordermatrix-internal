@@ -42,6 +42,7 @@ type FormState = {
   isActive: boolean;
   defaultFeatureFlags: string[];
   fieldSchema: FieldRow[];
+  categories: string[];
   statusFlowRaw: string;
 };
 
@@ -52,7 +53,7 @@ const EMPTY_FIELD_ROW: FieldRow = {
 function emptyForm(): FormState {
   return {
     key: '', label: '', icon: '', isActive: true,
-    defaultFeatureFlags: [], fieldSchema: [], statusFlowRaw: '',
+    defaultFeatureFlags: [], fieldSchema: [], categories: [], statusFlowRaw: '',
   };
 }
 
@@ -113,6 +114,7 @@ export default function VerticalFormPage({ params }: { params: Promise<{ key: st
           options:  (f.options || []).join(', '),
           showIn:   f.showIn || [],
         })),
+        categories: v.categories || [],
         statusFlowRaw: v.workflowOverrides?.statusFlow
           ? JSON.stringify(v.workflowOverrides.statusFlow, null, 2)
           : '',
@@ -163,6 +165,7 @@ export default function VerticalFormPage({ params }: { params: Promise<{ key: st
           options:  f.type === 'select' ? f.options.split(',').map(s => s.trim()).filter(Boolean) : [],
           showIn:   f.showIn,
         })),
+      categories:        form.categories.map(c => c.trim()).filter(Boolean),
       workflowOverrides: statusFlow ? { statusFlow } : {},
     };
   }
@@ -224,6 +227,18 @@ export default function VerticalFormPage({ params }: { params: Promise<{ key: st
         return { ...row, showIn: next };
       }),
     }));
+  }
+
+  function addCategory() {
+    setForm(f => ({ ...f, categories: [...f.categories, ''] }));
+  }
+
+  function removeCategory(i: number) {
+    setForm(f => ({ ...f, categories: f.categories.filter((_, idx) => idx !== i) }));
+  }
+
+  function updateCategory(i: number, val: string) {
+    setForm(f => ({ ...f, categories: f.categories.map((c, idx) => idx === i ? val : c) }));
   }
 
   function toggleFlag(flag: string) {
@@ -490,7 +505,38 @@ export default function VerticalFormPage({ params }: { params: Promise<{ key: st
         </div>
       </div>
 
-      {/* ── Section 4: Status Flow (v1 — JSON textarea) ───────────────────────── */}
+      {/* ── Section 4: Categories ────────────────────────────────────────────── */}
+      <div className="admin-card" style={{ marginBottom: 20 }}>
+        <div className="card-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ fontWeight: 600, fontSize: 13 }}>Categories</div>
+          <button className="btn btn-ghost btn-sm" onClick={addCategory} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Plus size={12} /> Add category
+          </button>
+        </div>
+        <div className="card-body">
+          {form.categories.length === 0 && (
+            <div className="empty-state" style={{ padding: '16px 0' }}>
+              <div className="empty-state-title">No categories — click "Add category" to define product categories for this vertical</div>
+            </div>
+          )}
+          {form.categories.map((cat, i) => (
+            <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
+              <input
+                className="admin-input"
+                value={cat}
+                onChange={e => updateCategory(i, e.target.value)}
+                placeholder="e.g. Tops, Bottoms, Accessories"
+                style={{ flex: 1 }}
+              />
+              <button onClick={() => removeCategory(i)} className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--red)', flexShrink: 0 }}>
+                <Trash2 size={13} />
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Section 5: Status Flow (v1 — JSON textarea) ───────────────────────── */}
       <div className="admin-card" style={{ marginBottom: 20 }}>
         <div className="card-header">
           <div style={{ fontWeight: 600, fontSize: 13 }}>
