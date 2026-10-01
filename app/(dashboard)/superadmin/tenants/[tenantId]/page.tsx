@@ -509,7 +509,7 @@ export default function TenantDetailPage() {
   const [loading, setLoading] = useState(true);
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
-  type TabId = 'overview' | 'subscription' | 'notes' | 'orders' | 'customers' | 'deliveries' | 'flags' | 'analytics' | 'settings' | 'team' | 'overdue' | 'products' | 'invoices' | 'features' | 'wa-conv-agent';
+  type TabId = 'overview' | 'subscription' | 'signup' | 'notes' | 'orders' | 'customers' | 'deliveries' | 'flags' | 'analytics' | 'settings' | 'team' | 'overdue' | 'products' | 'invoices' | 'features' | 'wa-conv-agent';
   const [tab, setTab] = useState<TabId>('overview');
   const loadedTabsRef = useRef<Set<TabId>>(new Set<TabId>(['overview']));
   const [toastMsg, setToastMsg] = useState('');
@@ -647,6 +647,7 @@ export default function TenantDetailPage() {
       label: 'Account',
       items: [
         { id: 'subscription', label: 'Subscription' },
+        { id: 'signup', label: 'Signup & Verify' },
         { id: 'team', label: 'Team' },
         { id: 'settings', label: 'Settings' },
       ],
@@ -1409,6 +1410,88 @@ export default function TenantDetailPage() {
           )}
         </div>
       )}
+
+      {tab === 'signup' && (() => {
+        const sd = data.signupDetails || {};
+        const FUNNEL_ORDER = [
+          'signup_started', 'otp_sent', 'otp_verified',
+          'vertical_selected', 'first_product', 'first_order', 'orders_5',
+          'app_first_load', 'order_form_opened', 'order_form_abandoned',
+        ];
+        const FUNNEL_LABELS: Record<string, string> = {
+          signup_started:         'Signup Started',
+          otp_sent:               'OTP Sent',
+          otp_verified:           'OTP Verified (WhatsApp/Phone)',
+          vertical_selected:      'Vertical Selected',
+          first_product:          'First Product Added',
+          first_order:            'First Order',
+          orders_5:               '5 Orders',
+          app_first_load:         'App First Load',
+          order_form_opened:      'Order Form Opened',
+          order_form_abandoned:   'Order Form Abandoned',
+        };
+        const timeline = sd.activationTimeline || {};
+        const timelineEntries = FUNNEL_ORDER
+          .map(k => ({ key: k, label: FUNNEL_LABELS[k] || k, at: timeline[k] ?? null }));
+
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div className="admin-card">
+                <div className="card-header"><div className="card-title">Signup Details</div></div>
+                <div className="card-body">
+                  {([
+                    ['Signed Up', fmtDate(tenant.createdAt)],
+                    ['Signup Method', sd.signupMethod === 'google' ? 'Google OAuth'
+                      : sd.signupMethod === 'google+password' ? 'Google + Password'
+                      : 'Email / Password'],
+                    ['Signup Source', <span style={{ color: 'var(--ink-4)', fontStyle: 'italic' }}>Not tracked</span>],
+                    ['Vertical', sd.verticalKey || '—'],
+                  ] as [string, React.ReactNode][]).map(([k, v]) => (
+                    <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 10, borderBottom: '1px solid var(--line)', paddingBottom: 10 }}>
+                      <span style={{ color: 'var(--ink-4)' }}>{k}</span>
+                      <span style={{ color: 'var(--ink)', fontWeight: 500 }}>{v}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="admin-card">
+                <div className="card-header"><div className="card-title">Verification Status</div></div>
+                <div className="card-body">
+                  {([
+                    ['Email Verified', sd.emailVerified === true ? '✓ Verified' : sd.emailVerified === false ? '✗ Not Verified' : '—', sd.emailVerified === true ? 'badge-green' : 'badge-red'],
+                    ['WhatsApp / Phone', sd.phoneVerified === true ? '✓ Verified' : sd.phoneVerified === false ? '✗ Not Verified' : '—', sd.phoneVerified === true ? 'badge-green' : 'badge-red'],
+                  ] as [string, string, string][]).map(([k, v, cls]) => (
+                    <div key={k} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, marginBottom: 12 }}>
+                      <span style={{ color: 'var(--ink-4)' }}>{k}</span>
+                      <span className={`badge ${cls}`}>{v}</span>
+                    </div>
+                  ))}
+                  {timeline['otp_verified'] && (
+                    <div style={{ fontSize: 12, color: 'var(--ink-4)', marginTop: 4 }}>
+                      OTP verified at {fmtDate(timeline['otp_verified'])}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="admin-card">
+              <div className="card-header"><div className="card-title">Activation Funnel Timeline</div></div>
+              <div className="card-body" style={{ padding: 0 }}>
+                {timelineEntries.map(({ key, label, at }, i) => (
+                  <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '10px 18px', borderBottom: i < timelineEntries.length - 1 ? '1px solid var(--line)' : undefined }}>
+                    <span style={{ width: 10, height: 10, borderRadius: '50%', background: at ? 'var(--green, #22c55e)' : 'var(--line)', flexShrink: 0, display: 'inline-block' }} />
+                    <span style={{ flex: 1, fontSize: 13, color: at ? 'var(--ink)' : 'var(--ink-4)', fontWeight: at ? 500 : 400 }}>{label}</span>
+                    <span style={{ fontSize: 12, color: 'var(--ink-4)', fontFamily: 'var(--font-mono)' }}>{at ? fmtDate(String(at)) : '—'}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {tab === 'notes' && (
         <div>
