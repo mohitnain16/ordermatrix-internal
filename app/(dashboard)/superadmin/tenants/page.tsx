@@ -10,7 +10,7 @@ const PLAN_BADGE: Record<string, string> = {
   trial: 'badge-gray', free: 'badge-gray', starter: 'badge-gray', growth: 'badge-green', pro: 'badge-gold',
 };
 
-interface Tenant { _id: string; businessName: string; email: string; phone: string; planId: string; isActive: boolean; ordersThisMonth: number; createdAt: string; category: string; }
+interface Tenant { _id: string; businessName: string; email: string; phone: string; planId: string; isActive: boolean; ordersThisMonth: number; createdAt: string; category: string; emailVerified: boolean | null; phoneVerified: boolean | null; }
 
 export default function TenantsPage() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -66,11 +66,11 @@ export default function TenantsPage() {
           <thead>
             <tr>
               <th>Business</th><th>Email</th><th>Phone</th><th>Plan</th>
-              <th>Orders/mo</th><th>Status</th><th>Joined</th><th></th>
+              <th>Orders/mo</th><th>Status</th><th title="Email verified">✉</th><th title="WhatsApp/phone verified">📱</th><th>Joined</th><th></th>
             </tr>
           </thead>
           <tbody>
-            {loading ? <SkRows rows={10} cols={8} /> : (
+            {loading ? <SkRows rows={10} cols={10} /> : (
               <>
                 {tenants.map(t => (
                   <tr key={t._id}>
@@ -80,12 +80,22 @@ export default function TenantsPage() {
                     <td data-label="Plan"><span className={`badge ${PLAN_BADGE[t.planId] || 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>{t.planId}</span></td>
                     <td data-label="Orders/mo" style={{ fontFamily: 'var(--font-mono)' }}>{t.ordersThisMonth}</td>
                     <td data-label="Status"><span className={`badge ${t.isActive ? 'badge-green' : 'badge-red'}`}>{t.isActive ? 'Active' : 'Inactive'}</span></td>
+                    <td data-label="Email ✓" style={{ textAlign: 'center' }}>
+                      {t.emailVerified === true ? <span className="badge badge-green" style={{ fontSize: 10 }}>✓</span>
+                        : t.emailVerified === false ? <span className="badge badge-red" style={{ fontSize: 10 }}>✗</span>
+                        : <span style={{ color: 'var(--ink-4)' }}>—</span>}
+                    </td>
+                    <td data-label="WA ✓" style={{ textAlign: 'center' }}>
+                      {t.phoneVerified === true ? <span className="badge badge-green" style={{ fontSize: 10 }}>✓</span>
+                        : t.phoneVerified === false ? <span className="badge badge-red" style={{ fontSize: 10 }}>✗</span>
+                        : <span style={{ color: 'var(--ink-4)' }}>—</span>}
+                    </td>
                     <td data-label="Joined" className="cell-sub">{fmtDate(t.createdAt)}</td>
                     <td><Link href={`/superadmin/tenants/${t._id}`} className="btn btn-ghost btn-sm">View →</Link></td>
                   </tr>
                 ))}
                 {tenants.length === 0 && (
-                  <tr><td colSpan={8}>
+                  <tr><td colSpan={10}>
                     <div className="empty-state">
                       <div className="empty-state-icon">🏢</div>
                       <div className="empty-state-title">No tenants found</div>
