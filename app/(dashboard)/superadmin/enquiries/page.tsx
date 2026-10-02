@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import api from '../../../../lib/api';
 import { Sk, SkRows } from '../../../../components/ui/Skeleton';
+import { OrderMatrixSpinner } from '../../../../components/ui/OrderMatrixLoader';
 
 const fmtDate = (d: string) =>
   d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
@@ -368,7 +369,7 @@ export default function EnquiriesPage() {
                   />
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button className="btn btn-sm btn-primary" disabled={sending || !replyMsg.trim()} onClick={sendReply}>
-                      {sending ? <><span className="spinner" />Sending…</> : 'Send Email'}
+                      {sending ? <><OrderMatrixSpinner size={20} />Sending…</> : 'Send Email'}
                     </button>
                     <button className="btn btn-sm btn-ghost" onClick={() => { setShowReply(false); setReplyMsg(''); }}>
                       Cancel
@@ -410,7 +411,7 @@ export default function EnquiriesPage() {
                   onClick={addNote}
                   style={{ alignSelf: 'flex-end', minWidth: 60 }}
                 >
-                  {addingNote ? <span className="spinner spinner-dark" /> : 'Add'}
+                  {addingNote ? <OrderMatrixSpinner size={20} /> : 'Add'}
                 </button>
               </div>
             </div>

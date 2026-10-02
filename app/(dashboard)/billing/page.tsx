@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import api from '../../../lib/api';
 import { SkRows } from '../../../components/ui/Skeleton';
+import { OrderMatrixSpinner } from '../../../components/ui/OrderMatrixLoader';
 
 const fmt = (n: number) => `₹${new Intl.NumberFormat('en-IN').format(n || 0)}`;
 const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' }) : '—';
@@ -277,7 +278,7 @@ export default function BillingOpsPage() {
                     onKeyDown={e => e.key === 'Enter' && searchTenants()}
                   />
                   <button className="btn btn-primary btn-sm" onClick={searchTenants} disabled={invSearching}>
-                    {invSearching ? <><span className="spinner" />…</> : 'Search'}
+                    {invSearching ? <><OrderMatrixSpinner size={20} />…</> : 'Search'}
                   </button>
                 </div>
                 {invResults.length > 0 && (

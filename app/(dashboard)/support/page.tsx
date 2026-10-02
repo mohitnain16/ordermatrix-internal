@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import api from '../../../lib/api';
+import { OrderMatrixSpinner } from '../../../components/ui/OrderMatrixLoader';
 
 const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '—';
 
@@ -71,7 +72,7 @@ export default function SupportPage() {
               onKeyDown={e => e.key === 'Enter' && search()}
             />
             <button className="btn btn-primary" onClick={search} disabled={searching}>
-              {searching ? <><span className="spinner" />Searching…</> : 'Search'}
+              {searching ? <><OrderMatrixSpinner size={20} />Searching…</> : 'Search'}
             </button>
           </div>
 

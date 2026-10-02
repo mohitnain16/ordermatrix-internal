@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Copy, Check } from 'lucide-react';
 import api from '../../../../../lib/api';
 import { getAdmin, hasRole } from '../../../../../lib/auth';
+import { OrderMatrixSpinner } from '../../../../../components/ui/OrderMatrixLoader';
 
 type TabId = 'connection' | 'settings' | 'products' | 'portal-users' | 'payment-rules';
 
@@ -76,7 +77,7 @@ function ConfirmModal({ state, onCancel }: { state: ConfirmState; onCancel: () =
             onClick={run}
             disabled={loading || (state.verifyText ? verify !== state.verifyText : false)}
           >
-            {loading ? <span className="spinner" /> : state.confirmLabel}
+            {loading ? <OrderMatrixSpinner size={20} /> : state.confirmLabel}
           </button>
         </div>
       </div>
@@ -443,7 +444,7 @@ export default function WaAgentDetailPage() {
                     })}
                     disabled={tokenSaving || !tokenForm.metaWhatsappToken}
                   >
-                    {tokenSaving ? <><span className="spinner" />Saving…</> : 'Apply'}
+                    {tokenSaving ? <><OrderMatrixSpinner size={20} />Saving…</> : 'Apply'}
                   </button>
                 </div>
               </div>
@@ -500,7 +501,7 @@ export default function WaAgentDetailPage() {
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
                   <button className="btn btn-ghost btn-sm" onClick={() => setSettingsDraft(null)} disabled={settingsSaving}>Cancel</button>
                   <button className="btn btn-primary btn-sm" onClick={saveSettings} disabled={settingsSaving}>
-                    {settingsSaving ? <><span className="spinner" />Saving…</> : 'Save'}
+                    {settingsSaving ? <><OrderMatrixSpinner size={20} />Saving…</> : 'Save'}
                   </button>
                 </div>
               </div>
@@ -543,7 +544,7 @@ export default function WaAgentDetailPage() {
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
                   <button className="btn btn-ghost btn-sm" onClick={() => setProductForm(null)} disabled={productSaving}>Cancel</button>
                   <button className="btn btn-primary btn-sm" onClick={saveProduct} disabled={productSaving || !productForm.name?.trim()}>
-                    {productSaving ? <><span className="spinner" />Saving…</> : 'Save'}
+                    {productSaving ? <><OrderMatrixSpinner size={20} />Saving…</> : 'Save'}
                   </button>
                 </div>
               </div>
@@ -621,7 +622,7 @@ export default function WaAgentDetailPage() {
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
                   <button className="btn btn-ghost btn-sm" onClick={() => setNewUserForm(null)} disabled={newUserSaving}>Cancel</button>
                   <button className="btn btn-primary btn-sm" onClick={createPortalUser} disabled={newUserSaving || !newUserForm.name?.trim() || !newUserForm.email?.trim()}>
-                    {newUserSaving ? <><span className="spinner" />Creating…</> : 'Create'}
+                    {newUserSaving ? <><OrderMatrixSpinner size={20} />Creating…</> : 'Create'}
                   </button>
                 </div>
               </div>
@@ -714,7 +715,7 @@ export default function WaAgentDetailPage() {
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
                   <button className="btn btn-ghost btn-sm" onClick={() => setPaymentRulesDraft(null)} disabled={paymentRulesSaving}>Cancel</button>
                   <button className="btn btn-primary btn-sm" onClick={savePaymentRules} disabled={paymentRulesSaving}>
-                    {paymentRulesSaving ? <><span className="spinner" />Saving…</> : 'Save'}
+                    {paymentRulesSaving ? <><OrderMatrixSpinner size={20} />Saving…</> : 'Save'}
                   </button>
                 </div>
               </div>

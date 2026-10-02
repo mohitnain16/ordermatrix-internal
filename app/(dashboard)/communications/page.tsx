@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import api from '../../../lib/api';
 import { SkRows } from '../../../components/ui/Skeleton';
+import { OrderMatrixSpinner } from '../../../components/ui/OrderMatrixLoader';
 
 type Announcement = {
   _id: string;
@@ -181,7 +182,7 @@ export default function CommunicationsPage() {
             <div className="modal-footer">
               <button className="btn btn-ghost btn-sm" onClick={() => setConfirmBC(false)}>Cancel</button>
               <button className="btn btn-danger btn-sm" onClick={doSendBroadcast} disabled={bcLoading}>
-                {bcLoading ? <><span className="spinner" />Sending…</> : 'Send'}
+                {bcLoading ? <><OrderMatrixSpinner size={20} />Sending…</> : 'Send'}
               </button>
             </div>
           </div>
@@ -271,7 +272,7 @@ export default function CommunicationsPage() {
                   <input className="admin-input" placeholder="Search by name, email or phone…"
                     value={tenantSearch} onChange={e => setTenantSearch(e.target.value)}
                     style={{ paddingRight: tenantSearchLoading ? 32 : undefined }} />
-                  {tenantSearchLoading && <span className="spinner" style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)' }} />}
+                  {tenantSearchLoading && <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)' }}><OrderMatrixSpinner size={20} /></span>}
                   {tenantResults.length > 0 && (
                     <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10, background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 6, boxShadow: 'var(--shadow-md)', maxHeight: 220, overflowY: 'auto', marginTop: 2 }}>
                       {tenantResults.map(t => (
@@ -343,7 +344,7 @@ export default function CommunicationsPage() {
               </button>
               <button className="btn btn-primary" onClick={sendBroadcast}
                 disabled={bcLoading || !broadcast.message || preview === null || preview.count === 0 || (segmentMode === 'tenants' && selectedTenants.length === 0)}>
-                {bcLoading ? <><span className="spinner" />Sending…</> : 'Send Broadcast'}
+                {bcLoading ? <><OrderMatrixSpinner size={20} />Sending…</> : 'Send Broadcast'}
               </button>
             </div>
             {preview === null && (
@@ -473,7 +474,7 @@ export default function CommunicationsPage() {
               <div className="card-footer">
                 <button className="btn btn-ghost btn-sm" onClick={() => { setShowAnnForm(false); setEditingId(null); }}>Cancel</button>
                 <button className="btn btn-primary btn-sm" onClick={saveAnnouncement} disabled={annLoading || !annForm.title || !annForm.message}>
-                  {annLoading ? <><span className="spinner" />{editingId ? 'Saving…' : 'Publishing…'}</> : editingId ? 'Update' : 'Publish'}
+                  {annLoading ? <><OrderMatrixSpinner size={20} />{editingId ? 'Saving…' : 'Publishing…'}</> : editingId ? 'Update' : 'Publish'}
                 </button>
               </div>
             </div>

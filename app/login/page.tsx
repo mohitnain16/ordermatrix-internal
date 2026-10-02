@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import api from "../../lib/api";
 import { setAuth, isLoggedIn } from "../../lib/auth";
+import { OrderMatrixSpinner } from "../../components/ui/OrderMatrixLoader";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -220,7 +221,7 @@ export default function LoginPage() {
               >
                 {loading ? (
                   <>
-                    <span className="spinner" />
+                    <OrderMatrixSpinner size={20} />
                     Signing in…
                   </>
                 ) : (
