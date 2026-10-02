@@ -252,7 +252,6 @@ export default function VerticalFormPage({ params }: { params: Promise<{ key: st
   }
 
   if (loading) return <OrderMatrixLoader label="Loading vertical…" />;
-  }
 
   return (
     <div className="animate-fade-in" style={{ maxWidth: 840, paddingBottom: 48 }}>
