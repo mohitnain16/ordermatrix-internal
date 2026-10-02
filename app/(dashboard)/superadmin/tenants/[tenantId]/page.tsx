@@ -1526,7 +1526,7 @@ export default function TenantDetailPage() {
           </div>
 
           {ordersLoading ? (
-            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
           ) : (
             <>
               <div className="admin-card">
@@ -1556,7 +1556,7 @@ export default function TenantDetailPage() {
                             <tr key={`${o._id}-detail`}>
                               <td colSpan={5} style={{ padding: 0 }}>
                                 {orderDetailLoading ? (
-                                  <div style={{ padding: '20px 18px', color: 'var(--ink-4)', fontSize: 13 }}>Loading…</div>
+                                  <div style={{ padding: '20px 18px', display: 'flex', justifyContent: 'center' }}><OrderMatrixSpinner size={20} /></div>
                                 ) : selectedOrder && (
                                   <div style={{ padding: '16px 18px', background: 'var(--surface-soft, var(--surface))', borderTop: '1px solid var(--line)' }}>
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '8px 24px', marginBottom: 14 }}>
@@ -1656,7 +1656,7 @@ export default function TenantDetailPage() {
           </div>
 
           {customersLoading ? (
-            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
           ) : selectedCustomer ? (
             /* Customer detail panel */
             <div>
@@ -1698,7 +1698,7 @@ export default function TenantDetailPage() {
                 <div className="admin-card">
                   <div className="card-header"><div className="card-title">Recent Orders</div></div>
                   {customerDetailLoading ? (
-                    <div className="card-body" style={{ textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+                    <div className="card-body" style={{ display: 'flex', justifyContent: 'center' }}><OrderMatrixSpinner /></div>
                   ) : (
                     <div className="table-shell">
                       <table className="admin-table">
@@ -1763,7 +1763,7 @@ export default function TenantDetailPage() {
       {tab === 'deliveries' && (
         <div>
           {dlLoading ? (
-            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
           ) : (
             <div className="admin-card">
               <div className="table-shell">
@@ -1808,7 +1808,7 @@ export default function TenantDetailPage() {
       {tab === 'analytics' && (
         <div>
           {analyticsLoading ? (
-            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
           ) : analytics ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
@@ -1892,7 +1892,7 @@ export default function TenantDetailPage() {
       {tab === 'settings' && (
         <div>
           {settingsLoading ? (
-            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
           ) : tenantSettings ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
@@ -2029,7 +2029,7 @@ export default function TenantDetailPage() {
                 </div>
                 <div className="card-body">
                   {waAgentLoading ? (
-                    <div style={{ fontSize: 13, color: 'var(--ink-4)' }}>Loading…</div>
+                    <OrderMatrixSpinner size={20} />
                   ) : !waAgent ? (
                     <div style={{ fontSize: 13, color: 'var(--ink-4)' }}>Could not load WA Agent status</div>
                   ) : !waAgent.provisioned ? (
@@ -2123,7 +2123,7 @@ export default function TenantDetailPage() {
       {tab === 'team' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {teamLoading ? (
-            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
           ) : teamData ? (
             <>
               <div className="admin-card">
@@ -2185,7 +2185,7 @@ export default function TenantDetailPage() {
       {tab === 'overdue' && (
         <div>
           {overdueLoading ? (
-            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
           ) : (
             <div className="admin-card">
               <div className="card-header">
@@ -2251,7 +2251,7 @@ export default function TenantDetailPage() {
             />
           </div>
           {productsLoading ? (
-            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
           ) : (
             <div className="admin-card">
               <div className="table-shell">
@@ -2316,7 +2316,7 @@ export default function TenantDetailPage() {
       {tab === 'invoices' && (
         <div>
           {invoicesLoading ? (
-            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
           ) : (
             <div className="admin-card">
               <div className="table-shell">
@@ -2379,7 +2379,7 @@ export default function TenantDetailPage() {
       {tab === 'features' && hasRole(admin, 'superadmin', 'ops_admin', 'support') && (
         <div>
           {featuresLoading ? (
-            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
           ) : (
             <div className="admin-card">
               <div className="card-header">
@@ -2465,7 +2465,7 @@ export default function TenantDetailPage() {
       {tab === 'flags' && hasRole(admin, 'superadmin') && (
         <div>
           {flagsLoading ? (
-            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
           ) : (
             <div className="admin-card">
               <div className="card-header">
@@ -2498,7 +2498,7 @@ export default function TenantDetailPage() {
       {tab === 'wa-conv-agent' && hasRole(admin, 'superadmin', 'ops_admin', 'support') && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {waConvAgentLoading ? (
-            <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
           ) : (
             <div className="admin-card">
               <div className="card-header">
@@ -2627,7 +2627,7 @@ export default function TenantDetailPage() {
                 <div className="card-title">Conversations</div>
               </div>
               {waConvAgentConvsLoading ? (
-                <div className="card-body" style={{ textAlign: 'center', color: 'var(--ink-4)', fontSize: 13 }}>Loading…</div>
+                <div className="card-body" style={{ display: 'flex', justifyContent: 'center' }}><OrderMatrixSpinner size={20} /></div>
               ) : (
                 <div className="table-shell">
                   <table className="admin-table">

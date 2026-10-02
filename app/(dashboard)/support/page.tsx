@@ -114,7 +114,7 @@ export default function SupportPage() {
                 <button className="btn btn-ghost btn-sm" onClick={() => setNotesTenantId(null)}>✕</button>
               </div>
               {notesLoading ? (
-                <div style={{ padding: 24, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+                <div style={{ display: 'flex', justifyContent: 'center', padding: 24 }}><OrderMatrixSpinner size={20} /></div>
               ) : tenantNotes.length === 0 ? (
                 <div style={{ padding: 24, textAlign: 'center', color: 'var(--ink-4)', fontSize: 13 }}>No notes for this tenant</div>
               ) : (
