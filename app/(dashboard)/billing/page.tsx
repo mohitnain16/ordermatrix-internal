@@ -314,7 +314,7 @@ export default function BillingOpsPage() {
                   <button className="btn btn-ghost btn-sm" style={{ marginLeft: 'auto' }} onClick={() => { setInvTenant(null); setInvoices([]); }}>← Change tenant</button>
                 </div>
                 {invLoading ? (
-                  <div className="admin-card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+                  <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
                 ) : (
                   <div className="admin-card">
                     <table className="admin-table">

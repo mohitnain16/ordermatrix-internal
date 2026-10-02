@@ -298,7 +298,7 @@ export default function WaAgentDetailPage() {
   }
 
   if (detailLoading) return (
-    <div className="animate-fade-in" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-4)' }}>Loading…</div>
+    <div className="animate-fade-in" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
   );
 
   if (!detail) return (
@@ -463,7 +463,7 @@ export default function WaAgentDetailPage() {
             )}
           </div>
           <div className="card-body">
-            {settingsLoading && <div style={{ color: 'var(--ink-4)', fontSize: 13 }}>Loading…</div>}
+            {settingsLoading && <OrderMatrixSpinner size={20} />}
             {!settingsLoading && !settings && <div style={{ color: 'var(--ink-4)', fontSize: 13 }}>No settings found</div>}
             {!settingsLoading && settings && !settingsDraft && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -553,7 +553,7 @@ export default function WaAgentDetailPage() {
 
           <div className="admin-card">
             {productsLoading ? (
-              <div className="card-body" style={{ textAlign: 'center', color: 'var(--ink-4)', fontSize: 13 }}>Loading…</div>
+              <div className="card-body" style={{ display: 'flex', justifyContent: 'center', padding: 16 }}><OrderMatrixSpinner size={20} /></div>
             ) : (
               <div className="table-shell">
                 <table className="admin-table">
@@ -631,7 +631,7 @@ export default function WaAgentDetailPage() {
 
           <div className="admin-card">
             {portalUsersLoading ? (
-              <div className="card-body" style={{ textAlign: 'center', color: 'var(--ink-4)', fontSize: 13 }}>Loading…</div>
+              <div className="card-body" style={{ display: 'flex', justifyContent: 'center', padding: 16 }}><OrderMatrixSpinner size={20} /></div>
             ) : (
               <div className="table-shell">
                 <table className="admin-table">
@@ -676,7 +676,7 @@ export default function WaAgentDetailPage() {
             )}
           </div>
           <div className="card-body">
-            {paymentRulesLoading && <div style={{ color: 'var(--ink-4)', fontSize: 13 }}>Loading…</div>}
+            {paymentRulesLoading && <OrderMatrixSpinner size={20} />}
             {!paymentRulesLoading && !paymentRules && <div style={{ color: 'var(--ink-4)', fontSize: 13 }}>No payment rules found</div>}
             {!paymentRulesLoading && paymentRules && !paymentRulesDraft && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
