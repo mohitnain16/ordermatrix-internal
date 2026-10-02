@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Plus, Trash2, GripVertical, Lock } from 'lucide-react';
 import api from '../../../../../lib/api';
+import { OrderMatrixSpinner } from '../../../../../components/ui/OrderMatrixLoader';
 
 // ── Feature flags grouped for the multi-select UI ─────────────────────────────
 // Keys mirror FEATURE_MATRIX in ordermatrix-api/src/config/pricing.js
@@ -285,7 +286,7 @@ export default function VerticalFormPage({ params }: { params: Promise<{ key: st
             <div className="modal-footer">
               <button className="btn btn-ghost btn-sm" onClick={() => setConfirmOpen(false)}>Cancel</button>
               <button className="btn btn-danger btn-sm" onClick={doSave} disabled={saving}>
-                {saving ? <><span className="spinner" />Saving…</> : 'Save anyway'}
+                {saving ? <><OrderMatrixSpinner size={20} />Saving…</> : 'Save anyway'}
               </button>
             </div>
           </div>
@@ -303,7 +304,7 @@ export default function VerticalFormPage({ params }: { params: Promise<{ key: st
         <div style={{ display: 'flex', gap: 8 }}>
           <Link href="/superadmin/verticals" className="btn btn-ghost btn-sm">Cancel</Link>
           <button className="btn btn-primary btn-sm" onClick={handleSave} disabled={saving}>
-            {saving ? <><span className="spinner" />Saving…</> : isNew ? 'Create Vertical' : 'Save Changes'}
+            {saving ? <><OrderMatrixSpinner size={20} />Saving…</> : isNew ? 'Create Vertical' : 'Save Changes'}
           </button>
         </div>
       </div>
@@ -578,7 +579,7 @@ export default function VerticalFormPage({ params }: { params: Promise<{ key: st
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, paddingTop: 8 }}>
         <Link href="/superadmin/verticals" className="btn btn-ghost btn-sm">Cancel</Link>
         <button className="btn btn-primary btn-sm" onClick={handleSave} disabled={saving}>
-          {saving ? <><span className="spinner" />Saving…</> : isNew ? 'Create Vertical' : 'Save Changes'}
+          {saving ? <><OrderMatrixSpinner size={20} />Saving…</> : isNew ? 'Create Vertical' : 'Save Changes'}
         </button>
       </div>
     </div>

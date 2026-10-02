@@ -4,6 +4,7 @@ import Link from 'next/link';
 import api from '../../../../lib/api';
 import { getAdmin, hasRole } from '../../../../lib/auth';
 import { SkRows } from '../../../../components/ui/Skeleton';
+import { OrderMatrixSpinner } from '../../../../components/ui/OrderMatrixLoader';
 
 const fmt = (n: number) => `₹${new Intl.NumberFormat('en-IN').format(n || 0)}`;
 const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
@@ -226,7 +227,7 @@ export default function SubscriptionsPage() {
             <div className="modal-footer">
               <button className="btn btn-ghost btn-sm" onClick={() => setOverrideSub(null)}>Cancel</button>
               <button className="btn btn-primary btn-sm" onClick={handleOverride} disabled={overriding}>
-                {overriding ? <><span className="spinner" />Applying…</> : 'Apply Override'}
+                {overriding ? <><OrderMatrixSpinner size={20} />Applying…</> : 'Apply Override'}
               </button>
             </div>
           </div>

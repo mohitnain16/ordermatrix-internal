@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import api from '../../../../lib/api';
 import { Sk, SkRows } from '../../../../components/ui/Skeleton';
+import { OrderMatrixSpinner } from '../../../../components/ui/OrderMatrixLoader';
 
 const fmt = (n: number) => `₹${new Intl.NumberFormat('en-IN').format(n || 0)}`;
 const fmtDate = (d: string | null) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
@@ -172,7 +173,7 @@ export default function CouponsPage() {
             <div className="modal-footer">
               <button className="btn btn-ghost btn-sm" onClick={() => { setShowCreate(false); setForm(EMPTY_FORM); }}>Cancel</button>
               <button className="btn btn-primary btn-sm" onClick={create} disabled={saving}>
-                {saving ? <><span className="spinner" />Creating…</> : 'Create Coupon'}
+                {saving ? <><OrderMatrixSpinner size={20} />Creating…</> : 'Create Coupon'}
               </button>
             </div>
           </div>

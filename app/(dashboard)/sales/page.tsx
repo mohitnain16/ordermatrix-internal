@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import api from '../../../lib/api';
 import { Sk, SkStatCard, SkRows } from '../../../components/ui/Skeleton';
+import OrderMatrixLoader from '../../../components/ui/OrderMatrixLoader';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const fmt = (n: number) => `₹${new Intl.NumberFormat('en-IN').format(n || 0)}`;
@@ -139,24 +140,8 @@ export default function SalesPage() {
     });
 
   if (loading) return (
-    <div className="animate-fade-in">
-      <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div><Sk w={60} h={22} mb={6} /><Sk w={280} h={13} /></div>
-        <Sk w={70} h={30} r={7} />
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginBottom: 24 }}>
-        {[0,1,2,3,4].map(i => <SkStatCard key={i} />)}
-      </div>
-      <div style={{ display: 'flex', borderBottom: '1px solid var(--line)', marginBottom: 20 }}>
-        <div style={{ padding: '9px 18px' }}><Sk w={100} h={13} /></div>
-        <div style={{ padding: '9px 18px' }}><Sk w={110} h={13} /></div>
-      </div>
-      <div className="admin-card">
-        <table className="admin-table">
-          <thead><tr><th>Business</th><th>Orders</th><th>Days Left</th><th>Score</th><th>Status</th><th>Follow-up Note</th><th></th></tr></thead>
-          <tbody><SkRows rows={8} cols={7} /></tbody>
-        </table>
-      </div>
+    <div className="flex-center animate-fade-in" style={{ minHeight: '60vh' }}>
+      <OrderMatrixLoader label="Loading sales data…" />
     </div>
   );
 

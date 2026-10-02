@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import api from '../../../../lib/api';
 import { ROLE_COLOR } from '../../../../lib/auth';
 import { SkRows } from '../../../../components/ui/Skeleton';
+import { OrderMatrixSpinner } from '../../../../components/ui/OrderMatrixLoader';
 
 const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
@@ -187,7 +188,7 @@ export default function TeamPage() {
                 onClick={doToggle}
                 disabled={toggling}
               >
-                {toggling ? <span className="spinner" /> : confirmMember.isActive ? 'Deactivate' : 'Reactivate'}
+                {toggling ? <OrderMatrixSpinner size={20} /> : confirmMember.isActive ? 'Deactivate' : 'Reactivate'}
               </button>
             </div>
           </div>
@@ -225,7 +226,7 @@ export default function TeamPage() {
             <div className="modal-footer">
               <button className="btn btn-ghost btn-sm" onClick={() => setShowInvite(false)}>Cancel</button>
               <button className="btn btn-primary btn-sm" onClick={handleInvite} disabled={inviting}>
-                {inviting ? <><span className="spinner" />Creating…</> : 'Create Admin'}
+                {inviting ? <><OrderMatrixSpinner size={20} />Creating…</> : 'Create Admin'}
               </button>
             </div>
           </div>
@@ -249,7 +250,7 @@ export default function TeamPage() {
             <div className="modal-footer">
               <button className="btn btn-ghost btn-sm" onClick={() => setEditTarget(null)}>Cancel</button>
               <button className="btn btn-primary btn-sm" onClick={handleEditSave} disabled={editing}>
-                {editing ? <><span className="spinner" />Saving…</> : 'Save'}
+                {editing ? <><OrderMatrixSpinner size={20} />Saving…</> : 'Save'}
               </button>
             </div>
           </div>

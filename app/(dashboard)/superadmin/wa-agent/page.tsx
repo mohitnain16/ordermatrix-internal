@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import api from '../../../../lib/api';
 import { SkRows } from '../../../../components/ui/Skeleton';
+import { OrderMatrixSpinner } from '../../../../components/ui/OrderMatrixLoader';
 
 interface OmTenant {
   _id: string;
@@ -260,7 +261,7 @@ export default function WaAgentPage() {
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button className="btn btn-ghost btn-sm" onClick={() => setBulkStep('editing')} disabled={bulkSaving}>Edit JSON</button>
                   <button className="btn btn-primary btn-sm" onClick={runBulkProvision} disabled={bulkSaving}>
-                    {bulkSaving ? <><span className="spinner" /> Provisioning…</> : 'Provision Batch'}
+                    {bulkSaving ? <><OrderMatrixSpinner size={20} /> Provisioning…</> : 'Provision Batch'}
                   </button>
                 </div>
               </div>

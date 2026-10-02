@@ -6,6 +6,7 @@ import api from '../../../../../lib/api';
 import { getAdmin, hasRole } from '../../../../../lib/auth';
 import { usePageTitle } from '../../../../../lib/page-title-context';
 import { Sk, SkStatCard, SkDetailCard } from '../../../../../components/ui/Skeleton';
+import OrderMatrixLoader, { OrderMatrixSpinner } from '../../../../../components/ui/OrderMatrixLoader';
 
 const fmt = (n: number) => `₹${new Intl.NumberFormat('en-IN').format(n || 0)}`;
 const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
@@ -104,7 +105,7 @@ function OverridePlanModal({ subId, current, onClose, onSuccess, toast }: any) {
         <div className="modal-footer">
           <button className="btn btn-ghost btn-sm" onClick={onClose}>Cancel</button>
           <button className="btn btn-primary btn-sm" onClick={submit} disabled={loading}>
-            {loading ? <span className="spinner" /> : 'Apply Override'}
+            {loading ? <OrderMatrixSpinner size={20} /> : 'Apply Override'}
           </button>
         </div>
       </div>
@@ -157,7 +158,7 @@ function ConfirmModal({ action, onConfirm, onCancel, loading, trialDays, setTria
             onClick={onConfirm}
             disabled={loading || (action.verifyText ? verifyValue !== action.verifyText : false)}
           >
-            {loading ? <span className="spinner" /> : action.confirmLabel}
+            {loading ? <OrderMatrixSpinner size={20} /> : action.confirmLabel}
           </button>
         </div>
       </div>
@@ -236,7 +237,7 @@ function OrderStatusModal({ order, tenantId, onClose, onSuccess, toast }: any) {
           <button className="btn btn-ghost btn-sm" onClick={onClose}>Cancel</button>
           {validNext.length > 0 && (
             <button className="btn btn-primary btn-sm" onClick={submit} disabled={loading || !status}>
-              {loading ? <span className="spinner" /> : 'Update Status'}
+              {loading ? <OrderMatrixSpinner size={20} /> : 'Update Status'}
             </button>
           )}
         </div>
@@ -307,7 +308,7 @@ function RecordPaymentModal({ order, tenantId, onClose, onSuccess, toast }: any)
         <div className="modal-footer">
           <button className="btn btn-ghost btn-sm" onClick={onClose}>Cancel</button>
           <button className="btn btn-primary btn-sm" onClick={submit} disabled={loading}>
-            {loading ? <span className="spinner" /> : 'Record Payment'}
+            {loading ? <OrderMatrixSpinner size={20} /> : 'Record Payment'}
           </button>
         </div>
       </div>
@@ -356,7 +357,7 @@ function AddCommentModal({ order, tenantId, onClose, onSuccess, toast }: any) {
         <div className="modal-footer">
           <button className="btn btn-ghost btn-sm" onClick={onClose}>Cancel</button>
           <button className="btn btn-primary btn-sm" onClick={submit} disabled={loading}>
-            {loading ? <span className="spinner" /> : 'Add Note'}
+            {loading ? <OrderMatrixSpinner size={20} /> : 'Add Note'}
           </button>
         </div>
       </div>
@@ -423,7 +424,7 @@ function DispatchModal({ order, tenantId, onClose, onSuccess, toast }: any) {
         <div className="modal-footer">
           <button className="btn btn-ghost btn-sm" onClick={onClose}>Cancel</button>
           <button className="btn btn-primary btn-sm" onClick={submit} disabled={loading}>
-            {loading ? <span className="spinner" /> : isAlreadyDispatched ? 'Update Courier' : 'Dispatch'}
+            {loading ? <OrderMatrixSpinner size={20} /> : isAlreadyDispatched ? 'Update Courier' : 'Dispatch'}
           </button>
         </div>
       </div>
@@ -492,7 +493,7 @@ function EditCustomerModal({ customer, tenantId, onClose, onSuccess, toast }: an
         <div className="modal-footer">
           <button className="btn btn-ghost btn-sm" onClick={onClose}>Cancel</button>
           <button className="btn btn-primary btn-sm" onClick={submit} disabled={loading}>
-            {loading ? <span className="spinner" /> : 'Save Changes'}
+            {loading ? <OrderMatrixSpinner size={20} /> : 'Save Changes'}
           </button>
         </div>
       </div>
@@ -1058,27 +1059,8 @@ export default function TenantDetailPage() {
   }
 
   if (loading) return (
-    <div className="animate-fade-in">
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
-        <div>
-          <Sk w={80} h={11} mb={8} />
-          <Sk w={220} h={24} mb={6} />
-          <Sk w={200} h={13} />
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <Sk w={90} h={32} r={7} /><Sk w={90} h={32} r={7} /><Sk w={100} h={32} r={7} />
-        </div>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginBottom: 20 }}>
-        {[0,1,2,3,4].map(i => <SkStatCard key={i} />)}
-      </div>
-      <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--line)', marginBottom: 20 }}>
-        {[0,1,2].map(i => <div key={i} style={{ padding: '9px 16px' }}><Sk w={70} h={13} /></div>)}
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-        <SkDetailCard rows={6} />
-        <SkDetailCard rows={3} />
-      </div>
+    <div className="flex-center animate-fade-in" style={{ minHeight: '60vh' }}>
+      <OrderMatrixLoader label="Loading tenant…" />
     </div>
   );
   if (!data) return (
@@ -1508,7 +1490,7 @@ export default function TenantDetailPage() {
               </div>
               <div className="card-footer">
                 <button className="btn btn-primary btn-sm" onClick={addNote} disabled={saving}>
-                  {saving ? <><span className="spinner" />Saving…</> : 'Add Note'}
+                  {saving ? <><OrderMatrixSpinner size={20} />Saving…</> : 'Add Note'}
                 </button>
               </div>
             </div>
@@ -1921,7 +1903,7 @@ export default function TenantDetailPage() {
                     <>
                       <button className="btn btn-ghost btn-sm" onClick={() => setSettingsDraft(null)} disabled={settingsSaving}>Cancel</button>
                       <button className="btn btn-primary btn-sm" onClick={saveSettings} disabled={settingsSaving}>
-                        {settingsSaving ? <><span className="spinner" />Saving…</> : 'Save Changes'}
+                        {settingsSaving ? <><OrderMatrixSpinner size={20} />Saving…</> : 'Save Changes'}
                       </button>
                     </>
                   ) : (
@@ -2040,7 +2022,7 @@ export default function TenantDetailPage() {
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button className="btn btn-ghost btn-sm" onClick={() => setWaAgentTemplatesDraft(null)} disabled={waAgentSaving}>Cancel</button>
                       <button className="btn btn-primary btn-sm" onClick={saveWaTemplates} disabled={waAgentSaving}>
-                        {waAgentSaving ? <><span className="spinner" />Saving…</> : 'Save'}
+                        {waAgentSaving ? <><OrderMatrixSpinner size={20} />Saving…</> : 'Save'}
                       </button>
                     </div>
                   )}
@@ -2080,7 +2062,7 @@ export default function TenantDetailPage() {
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
                               <button className="btn btn-ghost btn-sm" onClick={() => setWaAgentProvisionForm(null)} disabled={waAgentSaving}>Cancel</button>
                               <button className="btn btn-primary btn-sm" onClick={provisionWaAgent} disabled={waAgentSaving}>
-                                {waAgentSaving ? <><span className="spinner" />Provisioning…</> : 'Provision'}
+                                {waAgentSaving ? <><OrderMatrixSpinner size={20} />Provisioning…</> : 'Provision'}
                               </button>
                             </div>
                           </div>
@@ -2585,7 +2567,7 @@ export default function TenantDetailPage() {
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
                           <button className="btn btn-ghost btn-sm" onClick={() => setWaConvAgentConnectForm(null)} disabled={waConvAgentConnectSaving}>Cancel</button>
                           <button className="btn btn-primary btn-sm" onClick={connectWaConvAgent} disabled={waConvAgentConnectSaving}>
-                            {waConvAgentConnectSaving ? <><span className="spinner" />Saving…</> : 'Save'}
+                            {waConvAgentConnectSaving ? <><OrderMatrixSpinner size={20} />Saving…</> : 'Save'}
                           </button>
                         </div>
                       </div>
@@ -2594,7 +2576,7 @@ export default function TenantDetailPage() {
                     {(!waConvAgent.status || waConvAgent.status === 'not_configured') && canEdit && (
                       <div style={{ marginTop: 8 }}>
                         <button className="btn btn-ghost btn-sm" onClick={provisionWaConvAgent} disabled={waConvAgentConnectSaving}>
-                          {waConvAgentConnectSaving ? <><span className="spinner" />Provisioning…</> : 'Provision Agent'}
+                          {waConvAgentConnectSaving ? <><OrderMatrixSpinner size={20} />Provisioning…</> : 'Provision Agent'}
                         </button>
                       </div>
                     )}
@@ -2621,7 +2603,7 @@ export default function TenantDetailPage() {
                           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
                             <button className="btn btn-ghost btn-sm" onClick={() => setWaConvAgentConnectForm(null)} disabled={waConvAgentConnectSaving}>Cancel</button>
                             <button className="btn btn-primary btn-sm" onClick={connectWaConvAgent} disabled={waConvAgentConnectSaving}>
-                              {waConvAgentConnectSaving ? <><span className="spinner" />Connecting…</> : 'Connect'}
+                              {waConvAgentConnectSaving ? <><OrderMatrixSpinner size={20} />Connecting…</> : 'Connect'}
                             </button>
                           </div>
                         </div>
