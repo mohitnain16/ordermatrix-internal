@@ -567,6 +567,24 @@ select.admin-input { cursor: pointer; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ─── OrderMatrix Loader ─────────────────────── */
+:root {
+  --om-ink: var(--ink);
+  --om-bg: var(--page-bg);
+}
+
+.om-loader { display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; }
+.om-loader-label { font-size: 14px; color: var(--om-ink); opacity: 0.7; margin: 0; }
+.om-loader-fact { font-size: 12px; color: var(--om-ink); opacity: 0.45; max-width: 280px; margin: 0; line-height: 1.5; }
+
+.om-ring { fill: none; stroke: var(--om-ink); stroke-width: 10.617; }
+.om-dot { fill: var(--om-ink); transform-origin: center; transform-box: fill-box; transition: fill .25s, transform .25s, filter .25s; }
+.om-dot-accent { fill: #EC6240; transform-origin: center; transform-box: fill-box; transition: transform .25s, filter .25s; }
+.om-active.om-dot { fill: #EC6240; transform: scale(1.55); filter: drop-shadow(0 0 8px #EC6240); }
+.om-active.om-dot-accent { transform: scale(1.45); filter: drop-shadow(0 0 10px #EC6240); }
+.om-mesh-line { stroke: var(--om-ink); stroke-width: 1.4; opacity: 0.1; transition: stroke .25s, opacity .25s, filter .25s; }
+.om-line-active { stroke: #EC6240; opacity: 0.9; stroke-width: 2; filter: drop-shadow(0 0 4px #EC6240); }
+
 /* ─── Empty state ────────────────────────────── */
 .empty-state {
   display: flex;
