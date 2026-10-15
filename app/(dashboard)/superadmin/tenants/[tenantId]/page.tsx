@@ -52,6 +52,7 @@ function OverridePlanModal({ subId, current, onClose, onSuccess, toast }: any) {
   const [loading, setLoading] = useState(false);
 
   async function submit() {
+    if (!subId) { toast('No subscription record found — create one from the Subscriptions page first'); return; }
     setLoading(true);
     try {
       const body: any = {};
@@ -1167,9 +1168,9 @@ export default function TenantDetailPage() {
         />
       )}
 
-      {overrideOpen && sub && (
+      {overrideOpen && (
         <OverridePlanModal
-          subId={sub._id}
+          subId={sub?._id}
           current={sub}
           onClose={() => setOverrideOpen(false)}
           onSuccess={() => { setOverrideOpen(false); load(); }}
