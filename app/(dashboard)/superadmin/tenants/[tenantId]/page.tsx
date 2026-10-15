@@ -52,7 +52,8 @@ function OverridePlanModal({ tenantId: modalTenantId, current, onClose, onSucces
   const [loading, setLoading] = useState(false);
 
   async function submit() {
-    if (!subId) { toast('No subscription record found — create one from the Subscriptions page first'); return; }
+    const resolvedPlanId = form.planId || current?.planId;
+    if (!resolvedPlanId) { toast('Select a plan'); return; }
     setLoading(true);
     try {
       const body: any = { planId: resolvedPlanId };
