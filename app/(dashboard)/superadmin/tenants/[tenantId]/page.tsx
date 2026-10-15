@@ -42,7 +42,7 @@ const PLAN_OPTIONS = [
 
 const SUB_STATUS_OPTIONS = ['active', 'trialing', 'past_due', 'cancelled', 'paused'];
 
-function OverridePlanModal({ subId, current, onClose, onSuccess, toast }: any) {
+function OverridePlanModal({ tenantId: modalTenantId, current, onClose, onSuccess, toast }: any) {
   const [form, setForm] = useState({
     planId: current?.planId || '',
     status: current?.status || '',
@@ -52,16 +52,15 @@ function OverridePlanModal({ subId, current, onClose, onSuccess, toast }: any) {
   const [loading, setLoading] = useState(false);
 
   async function submit() {
-    if (!subId) { toast('No subscription record found — create one from the Subscriptions page first'); return; }
+    const resolvedPlanId = form.planId || current?.planId;
+    if (!resolvedPlanId) { toast('Select a plan'); return; }
     setLoading(true);
     try {
-      const body: any = {};
-      if (form.planId && form.planId !== current?.planId) body.planId = form.planId;
+      const body: any = { planId: resolvedPlanId };
       if (form.status && form.status !== current?.status) body.status = form.status;
       if (form.currentPeriodEnd) body.currentPeriodEnd = form.currentPeriodEnd;
       if (form.seats) body.seats = parseInt(form.seats);
-      if (!Object.keys(body).length) { toast('No changes to apply'); setLoading(false); return; }
-      await api.patch(`/admin/subscriptions/${subId}/override`, body);
+      await api.patch(`/admin/tenants/${modalTenantId}/plan`, body);
       toast('Plan override applied');
       onSuccess();
     } catch (e: any) {
@@ -1170,7 +1169,7 @@ export default function TenantDetailPage() {
 
       {overrideOpen && (
         <OverridePlanModal
-          subId={sub?._id}
+          tenantId={tenantId}
           current={sub}
           onClose={() => setOverrideOpen(false)}
           onSuccess={() => { setOverrideOpen(false); load(); }}
