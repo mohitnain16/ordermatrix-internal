@@ -19,6 +19,7 @@ import {
   Flame,
   BarChart3,
   Layers,
+  Store,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { AdminRole } from './auth';
@@ -51,6 +52,7 @@ export const NAV: NavGroup[] = [
     roles: ['superadmin', 'ops_admin'],
     items: [
       { href: '/superadmin/tenants',       label: 'Tenants',          icon: Building2   },
+      { href: '/superadmin/stores',        label: 'Stores',           icon: Store       },
       { href: '/superadmin/subscriptions', label: 'Subscriptions',    icon: CreditCard  },
       { href: '/superadmin/users',         label: 'All Users',        icon: Users       },
       { href: '/superadmin/coupons',       label: 'Coupons',          icon: Tag         },
