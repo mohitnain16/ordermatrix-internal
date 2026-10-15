@@ -45,6 +45,7 @@ type FormState = {
   fieldSchema: FieldRow[];
   categories: string[];
   statusFlowRaw: string;
+  storefrontRaw: string;
 };
 
 const EMPTY_FIELD_ROW: FieldRow = {
@@ -54,8 +55,17 @@ const EMPTY_FIELD_ROW: FieldRow = {
 function emptyForm(): FormState {
   return {
     key: '', label: '', icon: '', isActive: true,
-    defaultFeatureFlags: [], fieldSchema: [], categories: [], statusFlowRaw: '',
+    defaultFeatureFlags: [], fieldSchema: [], categories: [], statusFlowRaw: '', storefrontRaw: '',
   };
+}
+
+// Validates the storefront JSON (Vertical.storefront — docs/storefront/07). Empty = cleared.
+function storefrontError(raw: string): string | null {
+  if (!raw.trim()) return null;
+  let parsed: unknown;
+  try { parsed = JSON.parse(raw); } catch { return 'Invalid JSON'; }
+  if (typeof parsed !== 'object' || Array.isArray(parsed) || parsed === null) return 'Must be a JSON object';
+  return null;
 }
 
 function statusFlowError(raw: string): string | null {
@@ -88,6 +98,7 @@ export default function VerticalFormPage({ params }: { params: Promise<{ key: st
   const [toastMsg, setToastMsg] = useState('');
   const [toastErr, setToastErr] = useState('');
   const [sfError, setSfError] = useState<string | null>(null);
+  const [storefrontErr, setStorefrontErr] = useState<string | null>(null);
   const [tenantCount, setTenantCount] = useState(0);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
@@ -119,6 +130,9 @@ export default function VerticalFormPage({ params }: { params: Promise<{ key: st
         statusFlowRaw: v.workflowOverrides?.statusFlow
           ? JSON.stringify(v.workflowOverrides.statusFlow, null, 2)
           : '',
+        storefrontRaw: v.storefront && Object.keys(v.storefront).length
+          ? JSON.stringify(v.storefront, null, 2)
+          : '',
       });
     } catch (e: any) {
       toast(e?.response?.data?.error || 'Failed to load vertical', true);
@@ -139,6 +153,8 @@ export default function VerticalFormPage({ params }: { params: Promise<{ key: st
     }
     const sfErr = statusFlowError(form.statusFlowRaw);
     if (sfErr) { setSfError(sfErr); toast('Fix status flow errors before saving', true); return false; }
+    const storeErr = storefrontError(form.storefrontRaw);
+    if (storeErr) { setStorefrontErr(storeErr); toast('Fix storefront config JSON before saving', true); return false; }
     const names = form.fieldSchema.map(f => f.field).filter(Boolean);
     if (new Set(names).size !== names.length) {
       toast('Field schema has duplicate field names', true); return false;
@@ -151,11 +167,13 @@ export default function VerticalFormPage({ params }: { params: Promise<{ key: st
     if (form.statusFlowRaw.trim()) {
       statusFlow = JSON.parse(form.statusFlowRaw);
     }
+    const storefront = form.storefrontRaw.trim() ? JSON.parse(form.storefrontRaw) : {};
     return {
       label:               form.label.trim(),
       icon:                form.icon.trim() || undefined,
       isActive:            form.isActive,
       defaultFeatureFlags: form.defaultFeatureFlags,
+      storefront,
       fieldSchema: form.fieldSchema
         .filter(f => f.field.trim())
         .map(f => ({
@@ -563,6 +581,40 @@ export default function VerticalFormPage({ params }: { params: Promise<{ key: st
             <div className="alert alert-danger" style={{ marginTop: 8, fontSize: 12 }}>
               {sfError}
             </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Section 6: Storefront config (Vertical.storefront — JSON editor) ───── */}
+      <div className="admin-card" style={{ marginBottom: 20 }}>
+        <div className="card-header">
+          <div style={{ fontWeight: 600, fontSize: 13 }}>
+            Storefront
+            <span style={{
+              marginLeft: 8, fontSize: 10, padding: '2px 7px', borderRadius: 4,
+              background: 'var(--amber-bg, #fff8ed)', color: 'var(--amber)',
+              fontFamily: 'var(--font-mono)', fontWeight: 500,
+            }}>v1 — JSON editor</span>
+          </div>
+        </div>
+        <div className="card-body">
+          <div className="input-hint" style={{ marginBottom: 10 }}>
+            Vertical-agnostic storefront config the template reads: <code>variantAxes</code>, <code>productAttributes</code>,{' '}
+            <code>facets</code>, <code>priceBands</code>, <code>card</code>, <code>pdp.blocks</code>, <code>sizeGuide</code>,{' '}
+            <code>review</code>, <code>combos</code>, <code>copy</code>. See docs/storefront/07. Leave empty to clear. A structured builder is planned for v2.
+          </div>
+          <textarea
+            className="admin-input"
+            value={form.storefrontRaw}
+            onChange={e => { setForm(f => ({ ...f, storefrontRaw: e.target.value })); setStorefrontErr(null); }}
+            onBlur={() => setStorefrontErr(storefrontError(form.storefrontRaw))}
+            rows={16}
+            placeholder={`{\n  "facets": ["size", "price", "attr.fabric", "color"],\n  "pdp": { "blocks": ["gallery", "titlePrice", "size", "reviews"] },\n  "sizeGuide": { "enabled": true },\n  "card": { "showSizes": true, "showRating": true },\n  "copy": { "collectionNoun": "styles", "bagNoun": "bag" }\n}`}
+            style={{ fontFamily: 'var(--font-mono)', fontSize: 12, resize: 'vertical' }}
+            spellCheck={false}
+          />
+          {storefrontErr && (
+            <div className="alert alert-danger" style={{ marginTop: 8, fontSize: 12 }}>{storefrontErr}</div>
           )}
         </div>
       </div>
