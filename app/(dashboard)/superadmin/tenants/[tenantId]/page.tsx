@@ -510,7 +510,7 @@ export default function TenantDetailPage() {
   const [loading, setLoading] = useState(true);
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
-  type TabId = 'overview' | 'subscription' | 'signup' | 'notes' | 'orders' | 'customers' | 'deliveries' | 'flags' | 'analytics' | 'settings' | 'team' | 'overdue' | 'products' | 'invoices' | 'features' | 'wa-conv-agent';
+  type TabId = 'overview' | 'subscription' | 'signup' | 'notes' | 'orders' | 'customers' | 'deliveries' | 'flags' | 'analytics' | 'settings' | 'team' | 'overdue' | 'products' | 'invoices' | 'features' | 'wa-conv-agent' | 'storefront';
   const [tab, setTab] = useState<TabId>('overview');
   const loadedTabsRef = useRef<Set<TabId>>(new Set<TabId>(['overview']));
   const [toastMsg, setToastMsg] = useState('');
@@ -556,6 +556,8 @@ export default function TenantDetailPage() {
   const [settingsDraft, setSettingsDraft] = useState<any>(null);
   const [settingsSaving, setSettingsSaving] = useState(false);
   // wa-agent card (inside settings tab)
+  const [storefront, setStorefront] = useState<any>(null);
+  const [storefrontLoading, setStorefrontLoading] = useState(false);
   const [waAgent, setWaAgent] = useState<any>(null);
   const [waAgentLoading, setWaAgentLoading] = useState(false);
   const [waAgentProvisionForm, setWaAgentProvisionForm] = useState<any>(null);
@@ -625,6 +627,7 @@ export default function TenantDetailPage() {
   useEffect(() => { if (tab === 'features') firstVisit('features', loadFeatures); }, [tab]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (tab === 'wa-conv-agent') firstVisit('wa-conv-agent', loadWaConvAgent); }, [tab]);
+  useEffect(() => { if (tab === 'storefront') firstVisit('storefront', loadStorefront); }, [tab]);
 
   const navGroups = useMemo(() => [
     {
@@ -642,6 +645,7 @@ export default function TenantDetailPage() {
         { id: 'products', label: 'Products' },
         { id: 'invoices', label: 'Invoices' },
         { id: 'overdue', label: 'Outstanding' },
+        { id: 'storefront', label: 'Storefront' },
       ],
     },
     {
@@ -930,6 +934,27 @@ export default function TenantDetailPage() {
       toast('Templates saved');
     } catch (e: any) { toast(e?.response?.data?.error || 'Failed to save templates'); }
     setWaAgentSaving(false);
+  }
+
+  async function loadStorefront() {
+    setStorefrontLoading(true);
+    try {
+      const res = await api.get(`/admin/tenants/${tenantId}/storefront`);
+      setStorefront(res.data);
+    } catch { /**/ }
+    setStorefrontLoading(false);
+  }
+  async function verifyDomainOverride(domainId: string) {
+    try {
+      await api.post(`/admin/tenants/${tenantId}/storefront/domains/${domainId}/verify-override`);
+      await loadStorefront();
+    } catch { /**/ }
+  }
+  async function revercelDomain(domainId: string) {
+    try {
+      await api.post(`/admin/tenants/${tenantId}/storefront/domains/${domainId}/revercel`);
+      await loadStorefront();
+    } catch { /**/ }
   }
 
   async function loadWaConvAgent() {
@@ -2651,6 +2676,87 @@ export default function TenantDetailPage() {
                 </div>
               )}
             </div>
+          )}
+        </div>
+      )}
+
+      {tab === 'storefront' && (
+        <div className="animate-fade-in">
+          {storefrontLoading ? (
+            <div className="admin-card" style={{ padding: 24, color: 'var(--ink-4)' }}>Loading storefront…</div>
+          ) : !storefront || storefront.configured === false ? (
+            <div className="admin-card">
+              <div className="empty-state">
+                <div className="empty-state-icon">🛍️</div>
+                <div className="empty-state-title">No storefront configured</div>
+                <div className="empty-state-sub">This tenant has not set up a store yet.</div>
+                {storefront && storefront.domains && storefront.domains.length > 0 && (
+                  <div className="empty-state-sub" style={{ marginTop: 8 }}>Domains on record: {storefront.domains.map((d: any) => d.host).join(', ')}</div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Status + links */}
+              <div className="admin-card" style={{ marginBottom: 16 }}>
+                <div className="flex-between" style={{ flexWrap: 'wrap', gap: 12 }}>
+                  <div>
+                    <div className="cell-sub">Store status</div>
+                    <span className={`badge ${storefront.status === 'live' ? 'badge-green' : storefront.status === 'paused' ? 'badge-red' : 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>{storefront.status}</span>
+                    {storefront.brandName && <span style={{ marginLeft: 10 }}>{storefront.brandName}</span>}
+                  </div>
+                  {storefront.storeUrl && (
+                    <a href={storefront.storeUrl} target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm">Open store ↗</a>
+                  )}
+                </div>
+              </div>
+
+              {/* Payments + WhatsApp */}
+              <div className="admin-card" style={{ marginBottom: 16 }}>
+                <h3 className="card-title">Payments & WhatsApp</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16 }}>
+                  <div><span className="cell-sub">Razorpay mode</span><div>{storefront.razorpay.mode} {storefront.razorpay.testMode && <span className="badge badge-gray" style={{ fontSize: 10 }}>test</span>}</div></div>
+                  <div><span className="cell-sub">Key ID</span><div style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{storefront.razorpay.keyId || '—'}</div></div>
+                  <div><span className="cell-sub">Key secret</span><div>{storefront.razorpay.hasKeySecret ? <span className="badge badge-green">set</span> : <span className="badge badge-red">missing</span>}</div></div>
+                  <div><span className="cell-sub">Webhook secret</span><div>{storefront.razorpay.hasWebhookSecret ? <span className="badge badge-green">set</span> : <span className="badge badge-red">missing</span>}</div></div>
+                  <div><span className="cell-sub">WhatsApp mode</span><div style={{ textTransform: 'capitalize' }}>{storefront.whatsapp.mode}</div></div>
+                  <div><span className="cell-sub">WABA / phone</span><div style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{storefront.whatsapp.wabaId || '—'} / {storefront.whatsapp.phoneId || '—'}</div></div>
+                  <div><span className="cell-sub">WA token</span><div>{storefront.whatsapp.hasToken ? <span className="badge badge-green">set</span> : <span style={{ color: 'var(--ink-4)' }}>—</span>}</div></div>
+                  <div><span className="cell-sub">Templates approved</span><div>{Object.values(storefront.whatsapp.templatesApproved || {}).filter(Boolean).length} / {Object.keys(storefront.whatsapp.templatesApproved || {}).length || '—'}</div></div>
+                </div>
+              </div>
+
+              {/* Domains with superadmin overrides */}
+              <div className="admin-card">
+                <h3 className="card-title">Domains</h3>
+                <div className="table-shell">
+                  <table className="admin-table">
+                    <thead><tr><th>Host</th><th>Kind</th><th>Verified</th><th>Primary</th><th></th></tr></thead>
+                    <tbody>
+                      {(storefront.domains || []).map((d: any) => (
+                        <tr key={d._id}>
+                          <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}><a href={`https://${d.host}`} target="_blank" rel="noreferrer">{d.host}</a></td>
+                          <td>{d.kind}</td>
+                          <td>{d.verified ? <span className="badge badge-green">✓</span> : <span className="badge badge-red">✗</span>}</td>
+                          <td>{d.primary ? <span className="badge badge-gold">primary</span> : '—'}</td>
+                          <td style={{ display: 'flex', gap: 6 }}>
+                            {!d.verified && hasRole(admin, 'superadmin', 'ops_admin') && (
+                              <button className="btn btn-ghost btn-sm" onClick={() => verifyDomainOverride(d._id)}>Force verify</button>
+                            )}
+                            {d.kind === 'custom' && hasRole(admin, 'superadmin', 'ops_admin') && (
+                              <button className="btn btn-ghost btn-sm" onClick={() => revercelDomain(d._id)}>Re-add to Vercel</button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                      {(storefront.domains || []).length === 0 && (
+                        <tr><td colSpan={5} style={{ textAlign: 'center', padding: 24, color: 'var(--ink-4)' }}>No domains</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
           )}
         </div>
       )}
