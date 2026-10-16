@@ -20,7 +20,6 @@ import {
   BarChart3,
   Layers,
   Store,
-  Inbox,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { AdminRole } from './auth';
@@ -30,8 +29,6 @@ export interface NavItem {
   label: string;
   icon: LucideIcon;
   roles?: readonly AdminRole[];
-  /** If set, clicking POSTs this endpoint for SSO instead of navigating to href. */
-  ssoEndpoint?: string;
 }
 
 export interface NavGroup {
@@ -61,9 +58,6 @@ export const NAV: NavGroup[] = [
       { href: '/superadmin/users',         label: 'All Users',        icon: Users       },
       { href: '/superadmin/coupons',       label: 'Coupons',          icon: Tag         },
       { href: '/superadmin/wa-agent',      label: 'WhatsApp Agent',   icon: MessageCircle,
-        roles: ['superadmin', 'ops_admin', 'support'] as const },
-      { href: '#pulse-inbox', label: 'WhatsApp Inbox (Pulse)', icon: Inbox,
-        ssoEndpoint: '/api/wa-agent/sso-link',
         roles: ['superadmin', 'ops_admin', 'support'] as const },
     ],
   },

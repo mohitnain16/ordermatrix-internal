@@ -8,8 +8,7 @@ import {
   hasRole,
   type AdminRole,
 } from "../../lib/auth";
-import { NAV, type NavItem } from "../../lib/nav";
-import api from "../../lib/api";
+import { NAV } from "../../lib/nav";
 import {
   LogOut,
   ChevronRight,
@@ -39,7 +38,6 @@ export default function Sidebar({ expanded, onToggle }: SidebarProps) {
   const [flyout, setFlyout] = useState<{ label: string; y: number } | null>(
     null,
   );
-  const [ssoStates, setSsoStates] = useState<Record<string, 'idle' | 'loading' | 'error'>>({});
   const flyoutTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
@@ -58,20 +56,6 @@ export default function Sidebar({ expanded, onToggle }: SidebarProps) {
 
   function keepFlyout() {
     clearTimeout(flyoutTimer.current);
-  }
-
-  async function handleSso(item: NavItem) {
-    if (!item.ssoEndpoint) return;
-    const key = item.href;
-    setSsoStates((s) => ({ ...s, [key]: 'loading' }));
-    try {
-      const res = await api.post(item.ssoEndpoint);
-      window.open(res.data.url, '_blank', 'noopener');
-      setSsoStates((s) => ({ ...s, [key]: 'idle' }));
-    } catch {
-      setSsoStates((s) => ({ ...s, [key]: 'error' }));
-      setTimeout(() => setSsoStates((s) => ({ ...s, [key]: 'idle' })), 3000);
-    }
   }
 
   function logout() {
@@ -185,38 +169,6 @@ export default function Sidebar({ expanded, onToggle }: SidebarProps) {
               {allItems.map((item) => {
                 const Icon = item.icon;
                 const active = isActive(item.href);
-                if (item.ssoEndpoint) {
-                  const ss = ssoStates[item.href] ?? 'idle';
-                  return (
-                    <button
-                      key={item.href}
-                      onMouseEnter={(e) => showFlyout(ss === 'loading' ? 'Opening…' : ss === 'error' ? 'Error — retry' : item.label, e)}
-                      onMouseLeave={hideFlyout}
-                      onClick={() => handleSso(item)}
-                      disabled={ss === 'loading'}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        height: 34,
-                        borderRadius: 8,
-                        flexShrink: 0,
-                        background: "transparent",
-                        color: ss === 'error' ? "var(--red, #ef4444)" : "var(--sidebar-text)",
-                        transition: "all 0.15s",
-                        border: "none",
-                        cursor: ss === 'loading' ? "wait" : "pointer",
-                        width: "100%",
-                        padding: 0,
-                        opacity: ss === 'loading' ? 0.5 : 1,
-                        borderLeft: "3px solid transparent",
-                        fontFamily: "inherit",
-                      }}
-                    >
-                      <Icon size={16} strokeWidth={1.7} />
-                    </button>
-                  );
-                }
                 return (
                   <Link
                     key={item.href}
@@ -358,42 +310,6 @@ export default function Sidebar({ expanded, onToggle }: SidebarProps) {
                       {visible.map((item) => {
                         const Icon = item.icon;
                         const active = isActive(item.href);
-                        if (item.ssoEndpoint) {
-                          const ss = ssoStates[item.href] ?? 'idle';
-                          return (
-                            <button
-                              key={item.href}
-                              onClick={() => handleSso(item)}
-                              disabled={ss === 'loading'}
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 7,
-                                padding: "6px 7px",
-                                borderRadius: 7,
-                                marginBottom: 1,
-                                whiteSpace: "nowrap",
-                                background: "transparent",
-                                color: ss === 'error' ? "var(--red, #ef4444)" : "var(--sidebar-text)",
-                                fontSize: 12,
-                                fontWeight: 400,
-                                transition: "all 0.15s",
-                                border: "none",
-                                cursor: ss === 'loading' ? "wait" : "pointer",
-                                width: "100%",
-                                textAlign: "left",
-                                fontFamily: "inherit",
-                                opacity: ss === 'loading' ? 0.5 : 1,
-                                borderLeft: "3px solid transparent",
-                                borderTopLeftRadius: 7,
-                                borderBottomLeftRadius: 7,
-                              }}
-                            >
-                              <Icon size={13} strokeWidth={1.7} style={{ flexShrink: 0 }} />
-                              {ss === 'loading' ? 'Opening…' : ss === 'error' ? 'Error — retry' : item.label}
-                            </button>
-                          );
-                        }
                         return (
                           <Link
                             key={item.href}
