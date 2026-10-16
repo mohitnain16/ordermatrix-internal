@@ -17,7 +17,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'payment-rules',label: 'Payment Rules'  },
 ];
 
-const PORTAL_BASE = 'https://wa.ordermatrix.in';
+const PORTAL_BASE = process.env.NEXT_PUBLIC_PULSE_WEB_URL || 'https://pulse.ordermatrix.in';
 
 const fmtDate = (d: string | null) =>
   d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' } as any) : '—';
