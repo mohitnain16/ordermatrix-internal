@@ -40,4 +40,4 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 graphify-out/cost.json
-graphify-out/cache/
+graphify-out/
