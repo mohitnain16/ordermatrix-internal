@@ -7,6 +7,7 @@ import CommandPalette from '../../components/ui/CommandPalette';
 import { isLoggedIn, getAdmin } from '../../lib/auth';
 import { PageTitleProvider } from '../../lib/page-title-context';
 import { getAllowedRoles, ROLE_DEFAULT_REDIRECT } from '../../lib/routeRoles';
+import { ReactQueryProvider } from '../../lib/query-client';
 
 const MOBILE_BP = 768;
 
@@ -95,14 +96,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="mobile-sidebar-backdrop" onClick={close} />
       )}
       <CommandPalette open={paletteOpen} onClose={closePalette} />
-      <PageTitleProvider>
-        <div className="page-content">
-          <Topbar onToggle={toggle} onOpenPalette={openPalette} />
-          <main className="page-inner">
-            {children}
-          </main>
-        </div>
-      </PageTitleProvider>
+      <ReactQueryProvider>
+        <PageTitleProvider>
+          <div className="page-content">
+            <Topbar onToggle={toggle} onOpenPalette={openPalette} />
+            <main className="page-inner">
+              {children}
+            </main>
+          </div>
+        </PageTitleProvider>
+      </ReactQueryProvider>
     </div>
   );
 }
