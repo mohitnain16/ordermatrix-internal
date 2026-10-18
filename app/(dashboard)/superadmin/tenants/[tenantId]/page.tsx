@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { useParams, useRouter } from 'next/navigation';
 import { Calendar, UserCheck, ShieldOff } from 'lucide-react';
 import api from '../../../../../lib/api';
@@ -594,6 +595,43 @@ export default function TenantDetailPage() {
   const [waConvAgentConnectSaving, setWaConvAgentConnectSaving] = useState(false);
   const { setTitle } = usePageTitle();
 
+  const featureMutation = useMutation({
+    mutationFn: ({ featureKey, enabled }: { featureKey: string; enabled: boolean | null }) =>
+      api.patch(`/admin/tenants/${tenantId}/features`, { featureKey, enabled }),
+    onMutate: async ({ featureKey, enabled }) => {
+      const snapshot = featureRows.slice();
+      setFeatureRows(rows =>
+        rows.map(r => {
+          if (r.key !== featureKey) return r;
+          const override = enabled === null ? null : { ...r.override, enabled };
+          const effective = enabled === null ? r.planDefault : enabled;
+          return { ...r, override, effective };
+        }),
+      );
+      return snapshot;
+    },
+    onError: (_err, _vars, snapshot) => {
+      if (snapshot) setFeatureRows(snapshot);
+      toast('Failed to update feature override');
+    },
+    onSettled: () => { /* invalidate if/when queries migrate to TQ */ },
+  });
+
+  const flagMutation = useMutation({
+    mutationFn: ({ flag, enabled }: { flag: string; enabled: boolean }) =>
+      api.patch(`/admin/tenants/${tenantId}/flags`, { flag, enabled }),
+    onMutate: async ({ flag, enabled }) => {
+      const snapshot = { ...flags };
+      setFlags(f => ({ ...f, [flag]: enabled }));
+      return snapshot;
+    },
+    onError: (_err, _vars, snapshot) => {
+      if (snapshot) setFlags(snapshot);
+      toast('Failed to update flag');
+    },
+    onSettled: () => { /* invalidate if/when queries migrate to TQ */ },
+  });
+
   useEffect(() => { load(); }, [tenantId]);
   useEffect(() => {
     const name = data?.tenant?.businessName;
@@ -767,22 +805,8 @@ export default function TenantDetailPage() {
     setFeaturesLoading(false);
   }
 
-  async function patchFeature(featureKey: string, enabled: boolean | null) {
-    const prev = featureRows.slice();
-    setFeatureRows(rows =>
-      rows.map(r => {
-        if (r.key !== featureKey) return r;
-        const override = enabled === null ? null : { ...r.override, enabled };
-        const effective = enabled === null ? r.planDefault : enabled;
-        return { ...r, override, effective };
-      }),
-    );
-    try {
-      await api.patch(`/admin/tenants/${tenantId}/features`, { featureKey, enabled });
-    } catch {
-      setFeatureRows(prev);
-      toast('Failed to update feature override');
-    }
+  function patchFeature(featureKey: string, enabled: boolean | null) {
+    featureMutation.mutate({ featureKey, enabled });
   }
 
   function handleOverrideChange(f: any, val: 'on' | 'off' | 'plan') {
@@ -802,15 +826,8 @@ export default function TenantDetailPage() {
     }
   }
 
-  async function toggleFlag(flag: string, enabled: boolean) {
-    const prev = { ...flags };
-    setFlags(f => ({ ...f, [flag]: enabled }));
-    try {
-      await api.patch(`/admin/tenants/${tenantId}/flags`, { flag, enabled });
-    } catch {
-      setFlags(prev);
-      toast('Failed to update flag');
-    }
+  function toggleFlag(flag: string, enabled: boolean) {
+    flagMutation.mutate({ flag, enabled });
   }
 
   async function loadOrders(page: number, status: string) {
