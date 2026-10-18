@@ -211,7 +211,7 @@ export default function SalesPage() {
         </div>
         <div className="card-body">
           {trendLoading ? (
-            <div style={{ height: 260, background: 'var(--surface-3)', borderRadius: 8 }} />
+            <div className="sk" style={{ height: 260, width: '100%', borderRadius: 8 }} />
           ) : trend.length < 2 ? (
             <div className="empty-state" style={{ height: 260 }}>
               <div className="empty-icon">📈</div>
