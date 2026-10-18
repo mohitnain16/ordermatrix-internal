@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Calendar, UserCheck, ShieldOff } from 'lucide-react';
 import api from '../../../../../lib/api';
 import { getAdmin, hasRole } from '../../../../../lib/auth';
@@ -505,6 +505,7 @@ function EditCustomerModal({ customer, tenantId, onClose, onSuccess, toast }: an
 export default function TenantDetailPage() {
   const { tenantId } = useParams<{ tenantId: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const admin = getAdmin();
 
   const [data, setData] = useState<any>(null);
@@ -512,8 +513,15 @@ export default function TenantDetailPage() {
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
   type TabId = 'overview' | 'subscription' | 'signup' | 'notes' | 'orders' | 'customers' | 'deliveries' | 'flags' | 'analytics' | 'settings' | 'team' | 'overdue' | 'products' | 'invoices' | 'features' | 'wa-conv-agent' | 'storefront';
-  const [tab, setTab] = useState<TabId>('overview');
-  const loadedTabsRef = useRef<Set<TabId>>(new Set<TabId>(['overview']));
+  const [tab, setTab] = useState<TabId>(() => (searchParams.get('tab') as TabId) || 'overview');
+  const loadedTabsRef = useRef<Set<TabId>>(new Set<TabId>([(searchParams.get('tab') as TabId) || 'overview']));
+
+  function changeTab(next: TabId) {
+    setTab(next);
+    const sp = new URLSearchParams(searchParams.toString());
+    sp.set('tab', next);
+    router.replace(`?${sp.toString()}`, { scroll: false });
+  }
   const [toastMsg, setToastMsg] = useState('');
   const [trialDays, setTrialDays] = useState(14);
   const [deliveries, setDeliveries] = useState<any[]>([]);
@@ -1319,7 +1327,7 @@ export default function TenantDetailPage() {
           <select
             className="admin-input"
             value={tab}
-            onChange={e => setTab(e.target.value as TabId)}
+            onChange={e => changeTab(e.target.value as TabId)}
             style={{ maxWidth: 280 }}
           >
             {navGroups.map(group => (
@@ -1339,7 +1347,7 @@ export default function TenantDetailPage() {
                 <button
                   key={item.id}
                   className={`tenant-nav-item${tab === item.id ? ' active' : ''}`}
-                  onClick={() => setTab(item.id as typeof tab)}
+                  onClick={() => changeTab(item.id as typeof tab)}
                 >
                   {item.label}
                 </button>
