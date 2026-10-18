@@ -4,7 +4,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Plus, Trash2, GripVertical, Lock } from 'lucide-react';
 import api from '../../../../../lib/api';
-import OrderMatrixLoader, { OrderMatrixSpinner } from '../../../../../components/ui/OrderMatrixLoader';
+import { OrderMatrixSpinner } from '../../../../../components/ui/OrderMatrixLoader';
+import { FormSkeleton } from '../../../../../components/ui/Skeleton';
 
 // ── Feature flags grouped for the multi-select UI ─────────────────────────────
 // Keys mirror FEATURE_MATRIX in ordermatrix-api/src/config/pricing.js
@@ -269,7 +270,7 @@ export default function VerticalFormPage({ params }: { params: Promise<{ key: st
     }));
   }
 
-  if (loading) return <OrderMatrixLoader label="Loading vertical…" />;
+  if (loading) return <FormSkeleton fields={8} />;
 
   return (
     <div className="animate-fade-in" style={{ maxWidth: 840, paddingBottom: 48 }}>

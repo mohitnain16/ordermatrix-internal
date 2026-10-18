@@ -5,8 +5,8 @@ import { Calendar, UserCheck, ShieldOff } from 'lucide-react';
 import api from '../../../../../lib/api';
 import { getAdmin, hasRole } from '../../../../../lib/auth';
 import { usePageTitle } from '../../../../../lib/page-title-context';
-import { Sk, SkStatCard, SkDetailCard } from '../../../../../components/ui/Skeleton';
-import OrderMatrixLoader, { OrderMatrixSpinner } from '../../../../../components/ui/OrderMatrixLoader';
+import { Sk, SkStatCard, SkDetailCard, TableSkeleton, FormSkeleton } from '../../../../../components/ui/Skeleton';
+import { OrderMatrixSpinner } from '../../../../../components/ui/OrderMatrixLoader';
 
 const fmt = (n: number) => `₹${new Intl.NumberFormat('en-IN').format(n || 0)}`;
 const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
@@ -1084,8 +1084,16 @@ export default function TenantDetailPage() {
   }
 
   if (loading) return (
-    <div className="flex-center animate-fade-in" style={{ minHeight: '60vh' }}>
-      <OrderMatrixLoader label="Loading tenant…" />
+    <div className="animate-fade-in">
+      <div className="admin-card" style={{ marginBottom: 16, padding: '20px 24px' }}>
+        <Sk w={220} h={22} r={4} mb={10} />
+        <Sk w={280} h={13} r={3} mb={8} />
+        <div style={{ display: 'flex', gap: 8 }}>
+          <Sk w={64} h={22} r={99} />
+          <Sk w={52} h={22} r={99} />
+        </div>
+      </div>
+      <TableSkeleton rows={8} cols={5} />
     </div>
   );
   if (!data) return (
@@ -1551,7 +1559,7 @@ export default function TenantDetailPage() {
           </div>
 
           {ordersLoading ? (
-            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
+            <TableSkeleton rows={5} cols={5} />
           ) : (
             <>
               <div className="admin-card">
@@ -1681,7 +1689,7 @@ export default function TenantDetailPage() {
           </div>
 
           {customersLoading ? (
-            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
+            <TableSkeleton rows={5} cols={5} />
           ) : selectedCustomer ? (
             /* Customer detail panel */
             <div>
@@ -1788,7 +1796,7 @@ export default function TenantDetailPage() {
       {tab === 'deliveries' && (
         <div>
           {dlLoading ? (
-            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
+            <TableSkeleton rows={5} cols={5} />
           ) : (
             <div className="admin-card">
               <div className="table-shell">
@@ -1833,7 +1841,7 @@ export default function TenantDetailPage() {
       {tab === 'analytics' && (
         <div>
           {analyticsLoading ? (
-            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
+            <TableSkeleton rows={5} cols={5} />
           ) : analytics ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
@@ -1917,7 +1925,7 @@ export default function TenantDetailPage() {
       {tab === 'settings' && (
         <div>
           {settingsLoading ? (
-            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
+            <TableSkeleton rows={5} cols={5} />
           ) : tenantSettings ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
@@ -2148,7 +2156,7 @@ export default function TenantDetailPage() {
       {tab === 'team' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {teamLoading ? (
-            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
+            <TableSkeleton rows={5} cols={5} />
           ) : teamData ? (
             <>
               <div className="admin-card">
@@ -2210,7 +2218,7 @@ export default function TenantDetailPage() {
       {tab === 'overdue' && (
         <div>
           {overdueLoading ? (
-            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
+            <TableSkeleton rows={5} cols={5} />
           ) : (
             <div className="admin-card">
               <div className="card-header">
@@ -2276,7 +2284,7 @@ export default function TenantDetailPage() {
             />
           </div>
           {productsLoading ? (
-            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
+            <TableSkeleton rows={5} cols={5} />
           ) : (
             <div className="admin-card">
               <div className="table-shell">
@@ -2341,7 +2349,7 @@ export default function TenantDetailPage() {
       {tab === 'invoices' && (
         <div>
           {invoicesLoading ? (
-            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
+            <TableSkeleton rows={5} cols={5} />
           ) : (
             <div className="admin-card">
               <div className="table-shell">
@@ -2404,7 +2412,7 @@ export default function TenantDetailPage() {
       {tab === 'features' && hasRole(admin, 'superadmin', 'ops_admin', 'support') && (
         <div>
           {featuresLoading ? (
-            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
+            <TableSkeleton rows={5} cols={5} />
           ) : (
             <div className="admin-card">
               <div className="card-header">
@@ -2490,7 +2498,7 @@ export default function TenantDetailPage() {
       {tab === 'flags' && hasRole(admin, 'superadmin') && (
         <div>
           {flagsLoading ? (
-            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
+            <TableSkeleton rows={5} cols={5} />
           ) : (
             <div className="admin-card">
               <div className="card-header">
@@ -2523,7 +2531,7 @@ export default function TenantDetailPage() {
       {tab === 'wa-conv-agent' && hasRole(admin, 'superadmin', 'ops_admin', 'support') && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {waConvAgentLoading ? (
-            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
+            <TableSkeleton rows={5} cols={5} />
           ) : (
             <div className="admin-card">
               <div className="card-header">

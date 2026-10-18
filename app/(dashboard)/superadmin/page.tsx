@@ -2,8 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import api from '../../../lib/api';
-import { Sk, SkStatCard, SkRows, SkCardHeader } from '../../../components/ui/Skeleton';
-import OrderMatrixLoader from '../../../components/ui/OrderMatrixLoader';
+import { Sk, SkStatCard, SkRows, SkCardHeader, StatGridSkeleton, ChartSkeleton, TableSkeleton } from '../../../components/ui/Skeleton';
 
 const fmt = (n: number) => `₹${new Intl.NumberFormat('en-IN').format(n || 0)}`;
 const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '—';
@@ -46,8 +45,11 @@ export default function PulsePage() {
   }
 
   if (loading) return (
-    <div className="flex-center animate-fade-in" style={{ minHeight: '60vh' }}>
-      <OrderMatrixLoader label="Loading dashboard…" />
+    <div className="animate-fade-in">
+      <StatGridSkeleton n={4} />
+      <ChartSkeleton height={260} label="MRR" />
+      <ChartSkeleton height={260} label="ARR" />
+      <TableSkeleton rows={5} cols={5} />
     </div>
   );
 
