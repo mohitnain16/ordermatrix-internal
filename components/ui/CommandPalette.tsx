@@ -45,6 +45,11 @@ export default function CommandPalette({ open, onClose }: CommandPaletteProps) {
 
   useEffect(() => { setActiveIdx(0); }, [query]);
 
+  // Prefetch top 5 results whenever they change
+  useEffect(() => {
+    results.slice(0, 5).forEach(item => router.prefetch(item.href));
+  }, [results]); // eslint-disable-line react-hooks/exhaustive-deps
+
   function navigate(href: string) {
     router.push(href);
     onClose();
@@ -108,7 +113,7 @@ export default function CommandPalette({ open, onClose }: CommandPaletteProps) {
                 <button
                   key={item.href}
                   onClick={() => navigate(item.href)}
-                  onMouseEnter={() => setActiveIdx(i)}
+                  onMouseEnter={() => { setActiveIdx(i); router.prefetch(item.href); }}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 10, width: '100%',
                     padding: '8px 14px', border: 'none', textAlign: 'left',

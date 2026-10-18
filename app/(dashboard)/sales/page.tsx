@@ -2,8 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import api from '../../../lib/api';
-import { Sk, SkStatCard, SkRows } from '../../../components/ui/Skeleton';
-import OrderMatrixLoader from '../../../components/ui/OrderMatrixLoader';
+import { Sk, SkStatCard, SkRows, StatGridSkeleton, TableSkeleton } from '../../../components/ui/Skeleton';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const fmt = (n: number) => `₹${new Intl.NumberFormat('en-IN').format(n || 0)}`;
@@ -140,8 +139,9 @@ export default function SalesPage() {
     });
 
   if (loading) return (
-    <div className="flex-center animate-fade-in" style={{ minHeight: '60vh' }}>
-      <OrderMatrixLoader label="Loading sales data…" />
+    <div className="animate-fade-in">
+      <StatGridSkeleton n={4} />
+      <TableSkeleton rows={10} cols={6} />
     </div>
   );
 
@@ -211,7 +211,7 @@ export default function SalesPage() {
         </div>
         <div className="card-body">
           {trendLoading ? (
-            <div style={{ height: 260, background: 'var(--surface-3)', borderRadius: 8 }} />
+            <div className="sk" style={{ height: 260, width: '100%', borderRadius: 8 }} />
           ) : trend.length < 2 ? (
             <div className="empty-state" style={{ height: 260 }}>
               <div className="empty-icon">📈</div>

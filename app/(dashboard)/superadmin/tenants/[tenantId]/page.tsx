@@ -1,12 +1,13 @@
 'use client';
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useMutation } from '@tanstack/react-query';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Calendar, UserCheck, ShieldOff } from 'lucide-react';
 import api from '../../../../../lib/api';
 import { getAdmin, hasRole } from '../../../../../lib/auth';
 import { usePageTitle } from '../../../../../lib/page-title-context';
-import { Sk, SkStatCard, SkDetailCard } from '../../../../../components/ui/Skeleton';
-import OrderMatrixLoader, { OrderMatrixSpinner } from '../../../../../components/ui/OrderMatrixLoader';
+import { Sk, SkStatCard, SkDetailCard, TableSkeleton, FormSkeleton } from '../../../../../components/ui/Skeleton';
+import { OrderMatrixSpinner } from '../../../../../components/ui/OrderMatrixLoader';
 
 const fmt = (n: number) => `₹${new Intl.NumberFormat('en-IN').format(n || 0)}`;
 const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
@@ -504,6 +505,7 @@ function EditCustomerModal({ customer, tenantId, onClose, onSuccess, toast }: an
 export default function TenantDetailPage() {
   const { tenantId } = useParams<{ tenantId: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const admin = getAdmin();
 
   const [data, setData] = useState<any>(null);
@@ -511,8 +513,15 @@ export default function TenantDetailPage() {
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
   type TabId = 'overview' | 'subscription' | 'signup' | 'notes' | 'orders' | 'customers' | 'deliveries' | 'flags' | 'analytics' | 'settings' | 'team' | 'overdue' | 'products' | 'invoices' | 'features' | 'wa-conv-agent' | 'storefront';
-  const [tab, setTab] = useState<TabId>('overview');
-  const loadedTabsRef = useRef<Set<TabId>>(new Set<TabId>(['overview']));
+  const [tab, setTab] = useState<TabId>(() => (searchParams.get('tab') as TabId) || 'overview');
+  const loadedTabsRef = useRef<Set<TabId>>(new Set<TabId>([(searchParams.get('tab') as TabId) || 'overview']));
+
+  function changeTab(next: TabId) {
+    setTab(next);
+    const sp = new URLSearchParams(searchParams.toString());
+    sp.set('tab', next);
+    router.replace(`?${sp.toString()}`, { scroll: false });
+  }
   const [toastMsg, setToastMsg] = useState('');
   const [trialDays, setTrialDays] = useState(14);
   const [deliveries, setDeliveries] = useState<any[]>([]);
@@ -593,6 +602,43 @@ export default function TenantDetailPage() {
   const [waConvAgentConnectForm, setWaConvAgentConnectForm] = useState<any>(null);
   const [waConvAgentConnectSaving, setWaConvAgentConnectSaving] = useState(false);
   const { setTitle } = usePageTitle();
+
+  const featureMutation = useMutation({
+    mutationFn: ({ featureKey, enabled }: { featureKey: string; enabled: boolean | null }) =>
+      api.patch(`/admin/tenants/${tenantId}/features`, { featureKey, enabled }),
+    onMutate: async ({ featureKey, enabled }) => {
+      const snapshot = featureRows.slice();
+      setFeatureRows(rows =>
+        rows.map(r => {
+          if (r.key !== featureKey) return r;
+          const override = enabled === null ? null : { ...r.override, enabled };
+          const effective = enabled === null ? r.planDefault : enabled;
+          return { ...r, override, effective };
+        }),
+      );
+      return snapshot;
+    },
+    onError: (_err, _vars, snapshot) => {
+      if (snapshot) setFeatureRows(snapshot);
+      toast('Failed to update feature override');
+    },
+    onSettled: () => { /* invalidate if/when queries migrate to TQ */ },
+  });
+
+  const flagMutation = useMutation({
+    mutationFn: ({ flag, enabled }: { flag: string; enabled: boolean }) =>
+      api.patch(`/admin/tenants/${tenantId}/flags`, { flag, enabled }),
+    onMutate: async ({ flag, enabled }) => {
+      const snapshot = { ...flags };
+      setFlags(f => ({ ...f, [flag]: enabled }));
+      return snapshot;
+    },
+    onError: (_err, _vars, snapshot) => {
+      if (snapshot) setFlags(snapshot);
+      toast('Failed to update flag');
+    },
+    onSettled: () => { /* invalidate if/when queries migrate to TQ */ },
+  });
 
   useEffect(() => { load(); }, [tenantId]);
   useEffect(() => {
@@ -767,22 +813,8 @@ export default function TenantDetailPage() {
     setFeaturesLoading(false);
   }
 
-  async function patchFeature(featureKey: string, enabled: boolean | null) {
-    const prev = featureRows.slice();
-    setFeatureRows(rows =>
-      rows.map(r => {
-        if (r.key !== featureKey) return r;
-        const override = enabled === null ? null : { ...r.override, enabled };
-        const effective = enabled === null ? r.planDefault : enabled;
-        return { ...r, override, effective };
-      }),
-    );
-    try {
-      await api.patch(`/admin/tenants/${tenantId}/features`, { featureKey, enabled });
-    } catch {
-      setFeatureRows(prev);
-      toast('Failed to update feature override');
-    }
+  function patchFeature(featureKey: string, enabled: boolean | null) {
+    featureMutation.mutate({ featureKey, enabled });
   }
 
   function handleOverrideChange(f: any, val: 'on' | 'off' | 'plan') {
@@ -802,15 +834,8 @@ export default function TenantDetailPage() {
     }
   }
 
-  async function toggleFlag(flag: string, enabled: boolean) {
-    const prev = { ...flags };
-    setFlags(f => ({ ...f, [flag]: enabled }));
-    try {
-      await api.patch(`/admin/tenants/${tenantId}/flags`, { flag, enabled });
-    } catch {
-      setFlags(prev);
-      toast('Failed to update flag');
-    }
+  function toggleFlag(flag: string, enabled: boolean) {
+    flagMutation.mutate({ flag, enabled });
   }
 
   async function loadOrders(page: number, status: string) {
@@ -1084,8 +1109,16 @@ export default function TenantDetailPage() {
   }
 
   if (loading) return (
-    <div className="flex-center animate-fade-in" style={{ minHeight: '60vh' }}>
-      <OrderMatrixLoader label="Loading tenant…" />
+    <div className="animate-fade-in">
+      <div className="admin-card" style={{ marginBottom: 16, padding: '20px 24px' }}>
+        <Sk w={220} h={22} r={4} mb={10} />
+        <Sk w={280} h={13} r={3} mb={8} />
+        <div style={{ display: 'flex', gap: 8 }}>
+          <Sk w={64} h={22} r={99} />
+          <Sk w={52} h={22} r={99} />
+        </div>
+      </div>
+      <TableSkeleton rows={8} cols={5} />
     </div>
   );
   if (!data) return (
@@ -1294,7 +1327,7 @@ export default function TenantDetailPage() {
           <select
             className="admin-input"
             value={tab}
-            onChange={e => setTab(e.target.value as TabId)}
+            onChange={e => changeTab(e.target.value as TabId)}
             style={{ maxWidth: 280 }}
           >
             {navGroups.map(group => (
@@ -1314,7 +1347,7 @@ export default function TenantDetailPage() {
                 <button
                   key={item.id}
                   className={`tenant-nav-item${tab === item.id ? ' active' : ''}`}
-                  onClick={() => setTab(item.id as typeof tab)}
+                  onClick={() => changeTab(item.id as typeof tab)}
                 >
                   {item.label}
                 </button>
@@ -1551,7 +1584,7 @@ export default function TenantDetailPage() {
           </div>
 
           {ordersLoading ? (
-            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
+            <TableSkeleton rows={5} cols={5} />
           ) : (
             <>
               <div className="admin-card">
@@ -1681,7 +1714,7 @@ export default function TenantDetailPage() {
           </div>
 
           {customersLoading ? (
-            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
+            <TableSkeleton rows={5} cols={5} />
           ) : selectedCustomer ? (
             /* Customer detail panel */
             <div>
@@ -1788,7 +1821,7 @@ export default function TenantDetailPage() {
       {tab === 'deliveries' && (
         <div>
           {dlLoading ? (
-            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
+            <TableSkeleton rows={5} cols={5} />
           ) : (
             <div className="admin-card">
               <div className="table-shell">
@@ -1833,7 +1866,7 @@ export default function TenantDetailPage() {
       {tab === 'analytics' && (
         <div>
           {analyticsLoading ? (
-            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
+            <TableSkeleton rows={5} cols={5} />
           ) : analytics ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
@@ -1917,7 +1950,7 @@ export default function TenantDetailPage() {
       {tab === 'settings' && (
         <div>
           {settingsLoading ? (
-            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
+            <TableSkeleton rows={5} cols={5} />
           ) : tenantSettings ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
@@ -2148,7 +2181,7 @@ export default function TenantDetailPage() {
       {tab === 'team' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {teamLoading ? (
-            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
+            <TableSkeleton rows={5} cols={5} />
           ) : teamData ? (
             <>
               <div className="admin-card">
@@ -2210,7 +2243,7 @@ export default function TenantDetailPage() {
       {tab === 'overdue' && (
         <div>
           {overdueLoading ? (
-            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
+            <TableSkeleton rows={5} cols={5} />
           ) : (
             <div className="admin-card">
               <div className="card-header">
@@ -2276,7 +2309,7 @@ export default function TenantDetailPage() {
             />
           </div>
           {productsLoading ? (
-            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
+            <TableSkeleton rows={5} cols={5} />
           ) : (
             <div className="admin-card">
               <div className="table-shell">
@@ -2341,7 +2374,7 @@ export default function TenantDetailPage() {
       {tab === 'invoices' && (
         <div>
           {invoicesLoading ? (
-            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
+            <TableSkeleton rows={5} cols={5} />
           ) : (
             <div className="admin-card">
               <div className="table-shell">
@@ -2404,7 +2437,7 @@ export default function TenantDetailPage() {
       {tab === 'features' && hasRole(admin, 'superadmin', 'ops_admin', 'support') && (
         <div>
           {featuresLoading ? (
-            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
+            <TableSkeleton rows={5} cols={5} />
           ) : (
             <div className="admin-card">
               <div className="card-header">
@@ -2490,7 +2523,7 @@ export default function TenantDetailPage() {
       {tab === 'flags' && hasRole(admin, 'superadmin') && (
         <div>
           {flagsLoading ? (
-            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
+            <TableSkeleton rows={5} cols={5} />
           ) : (
             <div className="admin-card">
               <div className="card-header">
@@ -2523,7 +2556,7 @@ export default function TenantDetailPage() {
       {tab === 'wa-conv-agent' && hasRole(admin, 'superadmin', 'ops_admin', 'support') && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {waConvAgentLoading ? (
-            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><OrderMatrixSpinner /></div>
+            <TableSkeleton rows={5} cols={5} />
           ) : (
             <div className="admin-card">
               <div className="card-header">

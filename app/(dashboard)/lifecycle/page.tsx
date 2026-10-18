@@ -2,8 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import api from '../../../lib/api';
-import { SkRows } from '../../../components/ui/Skeleton';
-import { OrderMatrixSpinner } from '../../../components/ui/OrderMatrixLoader';
+import { SkRows, TableSkeleton } from '../../../components/ui/Skeleton';
 
 type Tenant = {
   _id: string;
@@ -92,7 +91,7 @@ export default function LifecyclePage() {
           <span style={{ fontSize: 11, color: 'var(--ink-4)', marginLeft: 4 }}>health &lt; 40 or inactive 14d+ with no orders</span>
         </div>
         {loading ? (
-          <div style={{ padding: '14px 18px', display: 'flex', justifyContent: 'center' }}><OrderMatrixSpinner size={20} /></div>
+          <div style={{ padding: '14px 18px' }}><TableSkeleton rows={4} cols={6} /></div>
         ) : churnQueue.length === 0 ? (
           <div style={{ padding: '14px 18px', fontSize: 13, color: 'var(--ink-4)' }}>No tenants at risk</div>
         ) : (

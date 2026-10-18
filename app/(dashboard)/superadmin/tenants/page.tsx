@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import api from '../../../../lib/api';
 import { SkRows } from '../../../../components/ui/Skeleton';
 
@@ -13,6 +14,7 @@ const PLAN_BADGE: Record<string, string> = {
 interface Tenant { _id: string; businessName: string; email: string; phone: string; planId: string; isActive: boolean; ordersThisMonth: number; createdAt: string; category: string; emailVerified: boolean | null; phoneVerified: boolean | null; }
 
 export default function TenantsPage() {
+  const router = useRouter();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -73,7 +75,7 @@ export default function TenantsPage() {
             {loading ? <SkRows rows={10} cols={10} /> : (
               <>
                 {tenants.map(t => (
-                  <tr key={t._id}>
+                  <tr key={t._id} onPointerEnter={() => router.prefetch(`/superadmin/tenants/${t._id}`)}>
                     <td data-label="Business"><span className="cell-main">{t.businessName}</span></td>
                     <td data-label="Email" style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{t.email}</td>
                     <td data-label="Phone" style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{t.phone}</td>

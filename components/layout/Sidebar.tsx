@@ -173,6 +173,7 @@ export default function Sidebar({ expanded, onToggle }: SidebarProps) {
                   <Link
                     key={item.href}
                     href={item.href}
+                    prefetch
                     onMouseEnter={(e) => showFlyout(item.label, e)}
                     onMouseLeave={hideFlyout}
                     style={{
@@ -314,6 +315,7 @@ export default function Sidebar({ expanded, onToggle }: SidebarProps) {
                           <Link
                             key={item.href}
                             href={item.href}
+                            prefetch
                             style={{
                               display: "flex",
                               alignItems: "center",
