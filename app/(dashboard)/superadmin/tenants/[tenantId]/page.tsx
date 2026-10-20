@@ -594,6 +594,7 @@ export default function TenantDetailPage() {
   // features tab
   const [featureRows, setFeatureRows] = useState<any[]>([]);
   const [featuresLoading, setFeaturesLoading] = useState(false);
+  const [featuresError, setFeaturesError] = useState<string | null>(null);
   // wa-conv-agent tab
   const [waConvAgent, setWaConvAgent] = useState<any>(null);
   const [waConvAgentLoading, setWaConvAgentLoading] = useState(false);
@@ -806,10 +807,13 @@ export default function TenantDetailPage() {
 
   async function loadFeatures() {
     setFeaturesLoading(true);
+    setFeaturesError(null);
     try {
       const res = await api.get(`/admin/tenants/${tenantId}/features`);
       setFeatureRows(res.data.features || []);
-    } catch { /**/ }
+    } catch (e: any) {
+      setFeaturesError(e?.response?.data?.error || e?.message || 'Failed to load features');
+    }
     setFeaturesLoading(false);
   }
 
@@ -2510,7 +2514,9 @@ export default function TenantDetailPage() {
                     ))}
                     {featureRows.length === 0 && (
                       <tr>
-                        <td colSpan={4} style={{ textAlign: 'center', padding: 40, color: 'var(--ink-4)' }}>No feature data</td>
+                        <td colSpan={4} style={{ textAlign: 'center', padding: 40, color: featuresError ? 'var(--red)' : 'var(--ink-4)' }}>
+                          {featuresError ? `No features returned — ${featuresError}` : 'No feature data'}
+                        </td>
                       </tr>
                     )}
                   </tbody>
