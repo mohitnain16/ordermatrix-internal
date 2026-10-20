@@ -1202,6 +1202,7 @@ export default function TenantDetailPage() {
 
       {overrideOpen && (
         <OverridePlanModal
+          tenantId={tenantId}
           subId={sub?._id}
           current={sub}
           onClose={() => setOverrideOpen(false)}
