@@ -757,7 +757,7 @@ export default function TenantDetailPage() {
 
   async function deleteStore() {
     try {
-      const verify = storefront?.primaryHost || storefront?.slug;
+      const verify = storefront?.primaryHost || storefront?.slug || 'delete';
       await api.delete(`/admin/tenants/${tenantId}/storefront`, { data: { confirm: verify, force: storefront?.status === 'live' } });
       toast('Store deleted');
       loadStorefront();
@@ -2764,7 +2764,7 @@ export default function TenantDetailPage() {
                         className="btn btn-danger btn-sm"
                         onClick={() => {
                           const live = storefront.status === 'live';
-                          const verify = storefront.primaryHost || storefront.slug || 'DELETE';
+                          const verify = storefront.primaryHost || storefront.slug || 'delete';
                           setConfirmAction({
                             type: 'deleteStore', level: 'danger',
                             title: live ? 'Delete LIVE store' : 'Delete store',
