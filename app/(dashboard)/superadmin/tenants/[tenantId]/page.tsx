@@ -755,6 +755,15 @@ export default function TenantDetailPage() {
     } catch (e: any) { toast(e?.response?.data?.error || 'Failed to impersonate'); }
   }
 
+  async function deleteStore() {
+    try {
+      const verify = storefront?.primaryHost || storefront?.slug;
+      await api.delete(`/admin/tenants/${tenantId}/storefront`, { data: { confirm: verify, force: storefront?.status === 'live' } });
+      toast('Store deleted');
+      loadStorefront();
+    } catch (e: any) { toast(e?.response?.data?.message || e?.response?.data?.error || 'Failed to delete store'); }
+  }
+
   async function handleConfirm() {
     if (!confirmAction) return;
     setActionLoading(true);
@@ -766,6 +775,7 @@ export default function TenantDetailPage() {
         case 'reactivate':             await toggleActive(); break;
         case 'featureOff':             await patchFeature(confirmAction._featureKey, false); break;
         case 'suspendWaConvAgent':     await suspendWaConvAgent(); break;
+        case 'deleteStore':            await deleteStore(); break;
       }
     } finally {
       setActionLoading(false);
@@ -2745,9 +2755,29 @@ export default function TenantDetailPage() {
                     <span className={`badge ${storefront.status === 'live' ? 'badge-green' : storefront.status === 'paused' ? 'badge-red' : 'badge-gray'}`} style={{ textTransform: 'capitalize' }}>{storefront.status}</span>
                     {storefront.brandName && <span style={{ marginLeft: 10 }}>{storefront.brandName}</span>}
                   </div>
-                  {storefront.storeUrl && (
-                    <a href={storefront.storeUrl} target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm">Open store ↗</a>
-                  )}
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    {storefront.storeUrl && (
+                      <a href={storefront.storeUrl} target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm">Open store ↗</a>
+                    )}
+                    {hasRole(admin, 'superadmin') && (
+                      <button
+                        className="btn btn-danger btn-sm"
+                        onClick={() => {
+                          const live = storefront.status === 'live';
+                          const verify = storefront.primaryHost || storefront.slug || 'DELETE';
+                          setConfirmAction({
+                            type: 'deleteStore', level: 'danger',
+                            title: live ? 'Delete LIVE store' : 'Delete store',
+                            detail: verify,
+                            message: live
+                              ? 'This store is published. Customers will get a 404. Config, domains, collections, coupons, variants, reviews and pages are removed. Orders, customers and credits are kept.'
+                              : 'Removes config, domains, collections, coupons, variants, reviews and pages. Orders, customers and credits are kept. The tenant can re-provision a fresh store from the dashboard.',
+                            verifyText: verify, confirmLabel: 'Delete store', confirmClass: 'btn-danger',
+                          });
+                        }}
+                      >Delete store</button>
+                    )}
+                  </div>
                 </div>
               </div>
 
