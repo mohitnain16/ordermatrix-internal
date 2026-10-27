@@ -514,7 +514,7 @@ export default function TenantDetailPage() {
   const [saving, setSaving] = useState(false);
   type TabId = 'overview' | 'subscription' | 'signup' | 'notes' | 'orders' | 'customers' | 'deliveries' | 'flags' | 'analytics' | 'settings' | 'team' | 'overdue' | 'products' | 'invoices' | 'features' | 'wa-conv-agent' | 'storefront';
   const [tab, setTab] = useState<TabId>(() => (searchParams.get('tab') as TabId) || 'overview');
-  const loadedTabsRef = useRef<Set<TabId>>(new Set<TabId>([(searchParams.get('tab') as TabId) || 'overview']));
+  const loadedTabsRef = useRef<Set<TabId>>(new Set<TabId>());
 
   function changeTab(next: TabId) {
     setTab(next);
