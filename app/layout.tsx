@@ -1,26 +1,9 @@
 import type { Metadata } from 'next';
-import { Bricolage_Grotesque, DM_Sans, Geist_Mono } from 'next/font/google';
+import { Urbanist } from 'next/font/google';
+import './wynlo.css';
 import './globals.css';
 
-const bricolage = Bricolage_Grotesque({
-  variable: '--font-bricolage',
-  subsets: ['latin'],
-  weight: ['400', '500', '600'],
-  display: 'swap',
-});
-
-const dmSans = DM_Sans({
-  variable: '--font-dm-sans',
-  subsets: ['latin'],
-  weight: ['400', '500', '600'],
-  display: 'swap',
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-  display: 'swap',
-});
+const urbanist = Urbanist({ subsets: ['latin'], variable: '--font', display: 'swap' });
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://admin.ordermatrix.in'),
@@ -47,7 +30,7 @@ export const metadata: Metadata = {
 const themeScript = `(function(){
   try{
     var KEY='om-theme';
-    function apply(m){document.documentElement.setAttribute('data-mode',m);}
+    function apply(m){document.documentElement.setAttribute('data-theme',m);}
     var stored=localStorage.getItem(KEY);
     apply(stored||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(e){
@@ -61,7 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${bricolage.variable} ${dmSans.variable} ${geistMono.variable} h-full`}
+      className={`${urbanist.variable} h-full`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />

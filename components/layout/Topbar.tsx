@@ -159,7 +159,7 @@ export default function Topbar({ onToggle, onOpenPalette }: TopbarProps) {
           <Bell size={16} strokeWidth={1.8} />
         </button>
 
-        {/* Dark mode toggle — wired via useTheme → data-mode on :root */}
+        {/* Dark mode toggle — wired via useTheme → data-theme on :root */}
         <button
           onClick={toggleTheme}
           title={mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}

@@ -25,7 +25,7 @@ export function useTheme() {
   useEffect(() => {
     const stored = readStoredPreference();
     setPreferenceState(stored);
-    const attr = document.documentElement.getAttribute('data-mode') as Mode | null;
+    const attr = document.documentElement.getAttribute('data-theme') as Mode | null;
     if (attr === 'dark' || attr === 'light') setMode(attr);
 
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
@@ -44,21 +44,21 @@ export function useTheme() {
       try { localStorage.removeItem(KEY); } catch (_) {}
       const system = getSystemMode();
       setMode(system);
-      document.documentElement.setAttribute('data-mode', system);
+      document.documentElement.setAttribute('data-theme', system);
     } else {
       setMode(pref);
-      document.documentElement.setAttribute('data-mode', pref);
+      document.documentElement.setAttribute('data-theme', pref);
       try { localStorage.setItem(KEY, pref); } catch (_) {}
     }
   }, []);
 
   const toggle = useCallback(() => {
     const current: Mode =
-      (document.documentElement.getAttribute('data-mode') as Mode | null) ?? getSystemMode();
+      (document.documentElement.getAttribute('data-theme') as Mode | null) ?? getSystemMode();
     const next: Mode = current === 'dark' ? 'light' : 'dark';
     setMode(next);
     setPreferenceState(next);
-    document.documentElement.setAttribute('data-mode', next);
+    document.documentElement.setAttribute('data-theme', next);
     try { localStorage.setItem(KEY, next); } catch (_) {}
   }, []);
 
