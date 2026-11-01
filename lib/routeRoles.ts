@@ -6,6 +6,8 @@ import type { AdminRole } from './auth';
 export const ROUTE_ROLES: { prefix: string; roles: readonly AdminRole[] }[] = [
   // Item-level superadmin-only overrides (narrower than their section)
   { prefix: '/superadmin/team',          roles: ['superadmin'] },
+  { prefix: '/superadmin/stores',        roles: ['superadmin'] },
+  { prefix: '/superadmin/storefront-plans', roles: ['superadmin'] },
   { prefix: '/superadmin/wa-agent',      roles: ['superadmin', 'ops_admin', 'support'] },
   // Wider-than-section overrides (support also allowed)
   { prefix: '/superadmin/live-activity', roles: ['superadmin', 'ops_admin', 'support'] },
@@ -28,7 +30,7 @@ export const ROUTE_ROLES: { prefix: string; roles: readonly AdminRole[] }[] = [
 // Where to land after a role-mismatch redirect (role's own home page)
 export const ROLE_DEFAULT_REDIRECT: Record<AdminRole, string> = {
   superadmin: '/superadmin',
-  ops_admin:  '/superadmin',
+  ops_admin:  '/superadmin/tenants',
   sales:      '/sales',
   support:    '/support',
 };
@@ -37,6 +39,8 @@ export const ROLE_DEFAULT_REDIRECT: Record<AdminRole, string> = {
 // (unrecognised paths are not restricted here — they'll 404 normally).
 // Matches longest prefix first so /superadmin/team beats /superadmin.
 export function getAllowedRoles(pathname: string): readonly AdminRole[] | null {
+  // Platform Pulse (exact /superadmin) is superadmin-only
+  if (pathname === '/superadmin') return ['superadmin'];
   const sorted = [...ROUTE_ROLES].sort((a, b) => b.prefix.length - a.prefix.length);
   for (const { prefix, roles } of sorted) {
     if (pathname === prefix || pathname.startsWith(prefix + '/')) {

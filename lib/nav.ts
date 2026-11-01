@@ -42,7 +42,8 @@ export const NAV: NavGroup[] = [
     section: 'Overview',
     roles: ['superadmin', 'ops_admin'],
     items: [
-      { href: '/superadmin',               label: 'Platform Pulse', icon: LayoutDashboard },
+      { href: '/superadmin',               label: 'Platform Pulse', icon: LayoutDashboard,
+        roles: ['superadmin'] as const },
       { href: '/superadmin/live-activity', label: 'Live Activity',  icon: Radio,
         roles: ['superadmin', 'ops_admin', 'support'] as const },
     ],
@@ -52,8 +53,6 @@ export const NAV: NavGroup[] = [
     roles: ['superadmin', 'ops_admin'],
     items: [
       { href: '/superadmin/tenants',       label: 'Tenants',          icon: Building2   },
-      { href: '/superadmin/stores',        label: 'Stores',           icon: Store       },
-      { href: '/superadmin/storefront-plans', label: 'Store Plans',   icon: Layers      },
       { href: '/superadmin/subscriptions', label: 'Subscriptions',    icon: CreditCard  },
       { href: '/superadmin/users',         label: 'All Users',        icon: Users       },
       { href: '/superadmin/coupons',       label: 'Coupons',          icon: Tag         },
