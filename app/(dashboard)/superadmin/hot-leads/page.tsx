@@ -113,7 +113,7 @@ export default function HotLeadsPage() {
 
       {loading ? (
         <div className="card" style={{ padding: '16px 20px' }}>
-          <SkRows rows={8} />
+          <table className="admin-table"><tbody><SkRows rows={8} cols={5} /></tbody></table>
         </div>
       ) : leads.length === 0 ? (
         <div className="card" style={{ padding: 40, textAlign: 'center', color: 'var(--ink-3)' }}>

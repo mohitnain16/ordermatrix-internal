@@ -75,14 +75,14 @@ export default function PulsePage() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 20 }}>
         <StatCard label="Total Tenants"  value={data.totalTenants}  sub={`${data.activeTenants} active`}                 color="var(--ink)" />
         <StatCard label="MRR"            value={fmt(data.mrr)}      sub={`ARR ${fmt(data.arr)}`}                         color="var(--green)" />
-        <StatCard label="Paid Tenants"   value={data.paidTenants}   sub={`${data.trialTenants} on trial`}                color="var(--blue)" />
+        <StatCard label="Paid Tenants"   value={data.paidTenants}   sub={`${data.trialTenants ?? 0} on trial`}                color="var(--blue)" />
         <StatCard label="Orders Today"   value={data.ordersToday}   sub={`${data.totalOrders.toLocaleString('en-IN')} total`} color="var(--accent)" />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 24 }}>
         <StatCard label="New This Month" value={data.newTenantsThisMonth}               color="var(--purple)" />
         <StatCard label="Total Users"    value={data.totalUsers}                        color="var(--ink-2)" />
-        <StatCard label="Trial Tenants"  value={data.trialTenants}                      color="var(--amber)" />
+        <StatCard label="Trial Tenants"  value={data.trialTenants ?? 0}                      color="var(--amber)" />
         <StatCard label="Total Orders"   value={data.totalOrders.toLocaleString('en-IN')} color="var(--ink-3)" />
       </div>
 
