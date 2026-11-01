@@ -19,7 +19,6 @@ import {
   Flame,
   BarChart3,
   Layers,
-  Store,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { AdminRole } from './auth';
