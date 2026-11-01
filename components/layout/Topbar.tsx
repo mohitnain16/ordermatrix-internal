@@ -143,6 +143,10 @@ export default function Topbar({ onToggle, onOpenPalette }: TopbarProps) {
 
       {/* Spacer */}
       <div style={{ flex: 1 }} />
+      {/* Mobile search icon */}
+      <button className="mobile-search-btn btn btn-icon" onClick={onOpenPalette} aria-label="Search">
+        <Search size={16} strokeWidth={1.8} />
+      </button>
 
       {/* Right actions */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>

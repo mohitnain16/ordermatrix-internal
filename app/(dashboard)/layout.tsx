@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Sidebar from '../../components/layout/Sidebar';
+import MobileNav from '../../components/layout/MobileNav';
 import Topbar from '../../components/layout/Topbar';
 import CommandPalette from '../../components/ui/CommandPalette';
 import { isLoggedIn, getAdmin } from '../../lib/auth';
@@ -92,9 +93,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="page-shell">
       <Sidebar expanded={expanded} isMobile={isMobile} onToggle={toggle} onClose={close} />
-      {expanded && isMobile && (
-        <div className="mobile-sidebar-backdrop" onClick={close} />
-      )}
+      {isMobile && <MobileNav open={expanded} onOpen={() => setExpanded(true)} onClose={close} onSearch={openPalette} />}
       <CommandPalette open={paletteOpen} onClose={closePalette} />
       <ReactQueryProvider>
         <PageTitleProvider>
