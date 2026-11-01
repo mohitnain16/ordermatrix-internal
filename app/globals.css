@@ -1,94 +1,41 @@
 @import "tailwindcss";
 
+/* Colour/shape tokens come from wynlo.css (same theme as app.ordermatrix.in, light + [data-theme=dark]).
+   This block only aliases internal-only names onto Wynlo tokens so existing pages keep working. */
 :root {
-  /* Typography */
-  --font-sans:    var(--font-dm-sans), 'Helvetica Neue', system-ui, sans-serif;
-  --font-heading: var(--font-bricolage), system-ui, sans-serif;
-  --font-mono:    var(--font-geist-mono), 'JetBrains Mono', monospace;
+  --page-bg: var(--bg);
+  --surface-hover: var(--card-2);
+  --ink-4: var(--muted);
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", monospace;
 
-  /* Page */
-  --page-bg: #F4F1EB;   /* Canvas */
+  --accent-hover: var(--accent-hi);
 
-  /* Sidebar — always dark, never flips */
-  --sidebar-bg: #0b0d10;
-  --sidebar-border: #1a1d24;
+  --green-soft: var(--good-soft);   --green-text: var(--good);
+  --red-soft:   var(--bad-soft);    --red-text:   var(--bad);
+  --amber-soft: var(--warn-soft);   --amber-text: var(--warn);
+  --blue:       var(--info);        --blue-soft:  var(--info-soft);   --blue-text: var(--info);
+  --purple:     var(--ch4);         --purple-soft: var(--ch4-soft);   --purple-text: var(--ch4-text);
+  --neutral-soft: var(--card-3);    --neutral-text: var(--ink-2);
+  --gold: var(--warn); --gold-soft: var(--warn-soft); --gold-text: var(--warn);
+
+  --radius-xs: 6px;
+  --shadow-md: var(--shadow);
+
+  /* Shell */
+  --sidebar-bg: var(--card);
+  --sidebar-border: var(--line);
   --sidebar-rail-width: 64px;
   --sidebar-panel-width: 200px;
-  --sidebar-text: #5a6072;
-  --sidebar-text-active: #ffffff;
-  --sidebar-accent: #F07A5A;    /* dark-adapted coral — legible on dark bg */
-  --sidebar-active-bg: rgba(236,98,64,0.18);
-  --sidebar-section-label: #2e3240;
-
-  /* Surfaces — warm cream hierarchy per DESIGN.md */
-  --surface: #E8E0D2;       /* surface-card: main card bg */
-  --surface-2: #EFE9DE;     /* surface-soft: card footers, thead, section bands */
-  --surface-3: #E0D5C0;     /* surface-cream-strong: ghost buttons, selected states */
-  --surface-hover: #EFE9DE; /* surface-soft: row hover lift */
-
-  /* Ink scale */
-  --ink: #0B0D10;
-  --ink-2: #2d3142;
-  --ink-3: #6B655D;
-  --ink-4: #B1ADA1;
-
-  /* Border */
-  --line: rgba(42,39,36,0.10);
-  --line-2: rgba(42,39,36,0.18);
-
-  /* Brand — Coral primary */
-  --accent: #EC6240;
-  --accent-hover: #C94E2F;
-  --accent-soft: #FDEEE9;
-  --accent-text: #EC6240;
-
-  /* Semantic */
-  --green: #16a34a;
-  --green-soft: #f0fdf4;
-  --green-text: #15803d;
-
-  --red: #dc2626;
-  --red-soft: #fef2f2;
-  --red-text: #b91c1c;
-
-  --amber: #d97706;
-  --amber-soft: #fffbeb;
-  --amber-text: #b45309;
-
-  --blue: #2563eb;
-  --blue-soft: #eff6ff;
-  --blue-text: #1d4ed8;
-
-  --purple: #7c3aed;
-  --purple-soft: #f5f3ff;
-  --purple-text: #6d28d9;
-
-  --neutral-soft: #f3f4f6;
-  --neutral-text: #374151;
-
-  /* Legacy aliases — keep pages working without edits */
-  --gold: #b45309;
-  --gold-soft: #fffbeb;
-  --gold-text: #b45309;
-
-  /* Shape */
-  --radius: 12px;
-  --radius-sm: 8px;
-  --radius-xs: 4px;
-
-  /* Shadow */
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.06);
-  --shadow: 0 1px 4px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.06);
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
-  --shadow-lg: 0 8px 32px rgba(0,0,0,0.14);
-
-  /* Legacy mono alias — kept for pages using var(--font-mono) directly */
-
-  /* Topbar */
+  --sidebar-text: var(--muted);
+  --sidebar-text-active: var(--accent-text);
+  --sidebar-accent: var(--accent);
+  --sidebar-active-bg: var(--accent-soft);
+  --sidebar-section-label: var(--muted);
   --topbar-height: 56px;
-  --topbar-bg: #F4F1EB;
+  --topbar-bg: var(--bg);
   --topbar-border: var(--line);
 }
+
 
 /* ─── Reset ────────────────────────────────────── */
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -361,7 +308,7 @@ body.sidebar-expanded .topbar {
   transform: none;
 }
 
-.btn-primary { background: var(--accent); color: #ffffff; }
+.btn-primary { background: var(--accent); color: var(--accent-ink); }
 .btn-primary:hover { background: var(--accent-hover); box-shadow: 0 2px 8px rgba(236,98,64,0.35); }
 
 .btn-ghost { background: var(--surface-3); color: var(--ink-2); }
@@ -371,7 +318,7 @@ body.sidebar-expanded .topbar {
 .btn-outline:hover { background: var(--surface-2); }
 
 .btn-danger { background: var(--red-soft); color: var(--red-text); }
-.btn-danger:hover { background: #fecaca; }
+.btn-danger:hover { background: var(--bad-soft); }
 
 .btn-sm { font-size: 12px; padding: 5px 10px; border-radius: var(--radius-xs); }
 .btn-icon { padding: 7px; border-radius: var(--radius-sm); }
@@ -579,7 +526,7 @@ select.admin-input { cursor: pointer; }
 
 .om-ring { fill: none; stroke: var(--om-ink); stroke-width: 10.617; }
 .om-dot { fill: var(--om-ink); transform-origin: center; transform-box: fill-box; transition: fill .25s, transform .25s, filter .25s; }
-.om-dot-accent { fill: #EC6240; transform-origin: center; transform-box: fill-box; transition: transform .25s, filter .25s; }
+.om-dot-accent { fill: var(--accent); transform-origin: center; transform-box: fill-box; transition: transform .25s, filter .25s; }
 .om-active.om-dot { fill: #EC6240; transform: scale(1.55); filter: drop-shadow(0 0 8px #EC6240); }
 .om-active.om-dot-accent { transform: scale(1.45); filter: drop-shadow(0 0 10px #EC6240); }
 .om-mesh-line { stroke: var(--om-ink); stroke-width: 1.4; opacity: 0.1; transition: stroke .25s, opacity .25s, filter .25s; }
@@ -1012,99 +959,6 @@ select.admin-input { cursor: pointer; }
   .tenant-header-row {
     flex-direction: column;
     align-items: flex-start;
-  }
-}
-
-/* ═══════════════════════════════════════════════
-   DARK MODE
-   [data-mode="dark"] wins over OS preference.
-   Set before paint by the inline themeScript.
-═══════════════════════════════════════════════ */
-[data-mode="dark"] {
-  --page-bg: #1F1D1B;
-  --surface: #292623;
-  --surface-2: #322F2B;
-  --surface-3: #3A3530;
-  --surface-hover: #322F2B;
-
-  --ink: #F4F1EB;
-  --ink-2: #D4CFC6;
-  --ink-3: #B1ADA1;
-  --ink-4: #7A756C;
-
-  --line: rgba(244,241,235,0.10);
-  --line-2: rgba(244,241,235,0.18);
-
-  --accent: #EC6240;
-  --accent-hover: #C94E2F;
-  --accent-soft: #3D2010;
-  --accent-text: #F07A5A;
-
-  --topbar-bg: #292623;
-  --topbar-border: rgba(244,241,235,0.08);
-
-  /* Semantic soft colors — dark */
-  --green-soft: rgba(22,163,74,0.18);
-  --green-text: #4ade80;
-  --red-soft: rgba(220,38,38,0.18);
-  --red-text: #f87171;
-  --amber-soft: rgba(217,119,6,0.18);
-  --amber-text: #fbbf24;
-  --blue-soft: rgba(37,99,235,0.18);
-  --blue-text: #60a5fa;
-  --purple-soft: rgba(124,58,237,0.18);
-  --purple-text: #a78bfa;
-  --neutral-soft: rgba(107,114,128,0.22);
-  --neutral-text: #d1d5db;
-
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.30);
-  --shadow: 0 1px 4px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.28);
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.40);
-  --shadow-lg: 0 8px 32px rgba(0,0,0,0.55);
-}
-
-/* OS-level dark preference — only when no explicit data-mode is set */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-mode="light"]):not([data-mode="dark"]) {
-    --page-bg: #1F1D1B;
-    --surface: #292623;
-    --surface-2: #322F2B;
-    --surface-3: #3A3530;
-    --surface-hover: #322F2B;
-
-    --ink: #F4F1EB;
-    --ink-2: #D4CFC6;
-    --ink-3: #B1ADA1;
-    --ink-4: #7A756C;
-
-    --line: rgba(244,241,235,0.10);
-    --line-2: rgba(244,241,235,0.18);
-
-    --accent: #EC6240;
-    --accent-hover: #C94E2F;
-    --accent-soft: #3D2010;
-    --accent-text: #F07A5A;
-
-    --topbar-bg: #292623;
-    --topbar-border: rgba(244,241,235,0.08);
-
-    --green-soft: rgba(22,163,74,0.18);
-    --green-text: #4ade80;
-    --red-soft: rgba(220,38,38,0.18);
-    --red-text: #f87171;
-    --amber-soft: rgba(217,119,6,0.18);
-    --amber-text: #fbbf24;
-    --blue-soft: rgba(37,99,235,0.18);
-    --blue-text: #60a5fa;
-    --purple-soft: rgba(124,58,237,0.18);
-    --purple-text: #a78bfa;
-    --neutral-soft: rgba(107,114,128,0.22);
-    --neutral-text: #d1d5db;
-
-    --shadow-sm: 0 1px 2px rgba(0,0,0,0.30);
-    --shadow: 0 1px 4px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.28);
-    --shadow-md: 0 4px 16px rgba(0,0,0,0.40);
-    --shadow-lg: 0 8px 32px rgba(0,0,0,0.55);
   }
 }
 
