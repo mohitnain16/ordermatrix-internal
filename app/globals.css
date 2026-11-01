@@ -24,8 +24,8 @@
   /* Shell */
   --sidebar-bg: var(--card);
   --sidebar-border: var(--line);
-  --sidebar-rail-width: 72px;
-  --sidebar-panel-width: 184px;
+  --sidebar-rail-width: 84px;
+  --sidebar-panel-width: 172px;
   --sidebar-text: var(--muted);
   --sidebar-text-active: var(--accent-text);
   --sidebar-accent: var(--accent);
@@ -1269,3 +1269,37 @@ select.admin-input { cursor: pointer; }
 @media (prefers-reduced-motion: reduce) { .msheet, .msheet-scrim, .mnav-ico { transition: none !important; } .msheet.open .msheet-item { animation: none; opacity: 1; transform: none; } }
 .mobile-search-btn { display: none; }
 @media (max-width: 767px) { .mobile-search-btn { display: inline-flex; border-radius: 50%; width: 40px; height: 40px; background: var(--card); box-shadow: var(--shadow); } .mobile-search-btn + * { margin-left: 0 !important; } }
+
+/* ─── Sidebar: single Wynlo panel (84px rail → 256px) ─── */
+.sidebar { position: fixed; inset: 0 auto 0 0; z-index: 50; display: flex; flex-direction: column; width: var(--sidebar-rail-width); background: var(--sidebar-bg); border-right: 1px solid var(--line); transition: width .25s cubic-bezier(.4,0,.2,1); overflow: hidden; }
+.sidebar.is-open { width: calc(var(--sidebar-rail-width) + var(--sidebar-panel-width)); }
+.sb-head { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 16px 0 12px; flex-shrink: 0; }
+.sidebar.is-open .sb-head { flex-direction: row; padding: 16px 16px 12px; gap: 12px; }
+.sb-logo { width: 40px; height: 40px; border-radius: 12px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font: 700 13px var(--font); letter-spacing: -.02em; text-decoration: none; flex-shrink: 0; box-shadow: var(--shadow); }
+.sb-title { display: none; flex: 1; min-width: 0; flex-direction: column; line-height: 1.2; }
+.sidebar.is-open .sb-title { display: flex; }
+.sb-title b { font-size: 16px; font-weight: 700; letter-spacing: -.01em; color: var(--ink); white-space: nowrap; }
+.sb-title small { font-size: 11px; color: var(--muted); }
+.sb-toggle { width: 32px; height: 32px; border-radius: 10px; border: 0; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); color: var(--ink-2); display: grid; place-items: center; cursor: pointer; flex-shrink: 0; transition: background .15s; }
+.sb-toggle:hover { background: var(--card-3); }
+.sb-nav { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 4px 12px; scrollbar-width: none; }
+.sb-nav::-webkit-scrollbar { display: none; }
+.sb-sep { border: 0; border-top: 1px solid var(--line); margin: 8px 6px; }
+.sb-label { font: 700 11px var(--font); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); padding: 0 12px; margin: 16px 0 6px; white-space: nowrap; }
+.sb-group:first-child .sb-label { margin-top: 6px; }
+.sb-item { display: flex; align-items: center; justify-content: center; gap: 12px; height: 44px; border-radius: 12px; margin-bottom: 2px; color: var(--ink-2); text-decoration: none; font: 600 14px var(--font); white-space: nowrap; transition: background .15s, color .15s; }
+.sb-item span { display: none; }
+.sidebar.is-open .sb-item { justify-content: flex-start; padding: 0 12px; height: 40px; }
+.sidebar.is-open .sb-item span { display: inline; }
+.sb-item:hover { background: var(--card-3); color: var(--ink); }
+.sb-item.active { background: var(--accent-soft); color: var(--accent-text, var(--accent)); }
+.sb-foot { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px 0; border-top: 1px solid var(--line); flex-shrink: 0; margin: 0 12px; }
+.sb-avatar { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; color: #fff; font: 700 12px var(--font); flex-shrink: 0; }
+.sb-user, .sb-out { display: none; }
+.sidebar.is-open .sb-foot { justify-content: flex-start; }
+.sidebar.is-open .sb-user { display: flex; flex: 1; min-width: 0; flex-direction: column; line-height: 1.25; }
+.sidebar.is-open .sb-out { display: grid; }
+.sb-user b { font-size: 13px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sb-user small { font-size: 11px; color: var(--muted); text-transform: capitalize; }
+.sb-out { width: 32px; height: 32px; place-items: center; border: 0; background: transparent; border-radius: 10px; color: var(--muted); cursor: pointer; }
+.sb-out:hover { background: var(--card-3); color: var(--bad); }
