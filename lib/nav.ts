@@ -106,3 +106,10 @@ export function resolveNavSection(pathname: string): string {
   }
   return best.section || 'Admin';
 }
+
+/** Active only for the longest matching nav href (so /support doesn't light up on /support/issues). */
+export function isNavActive(pathname: string, href: string): boolean {
+  if (href === '/superadmin' || href === '/sales') return pathname === href;
+  if (!pathname.startsWith(href)) return false;
+  return !NAV.some(g => g.items.some(i => i.href.length > href.length && i.href !== '/superadmin' && i.href !== '/sales' && pathname.startsWith(i.href)));
+}

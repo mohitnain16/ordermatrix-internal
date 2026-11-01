@@ -8,7 +8,7 @@ import {
   hasRole,
   type AdminRole,
 } from "../../lib/auth";
-import { NAV } from "../../lib/nav";
+import { NAV, isNavActive } from "../../lib/nav";
 import {
   LogOut,
   PanelLeftOpen,
@@ -64,10 +64,7 @@ export default function Sidebar({ expanded, onToggle }: SidebarProps) {
     router.push("/login");
   }
 
-  const isActive = (href: string) =>
-    href === "/superadmin" || href === "/sales"
-      ? pathname === href
-      : pathname.startsWith(href);
+  const isActive = (href: string) => isNavActive(pathname, href);
 
   const initials = admin?.name?.charAt(0).toUpperCase() || "?";
   const roleColor = ROLE_COLOR[admin?.role || ""] || "var(--ink-3)";

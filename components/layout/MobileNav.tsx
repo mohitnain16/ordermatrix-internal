@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Search, Ellipsis, LogOut, Moon, Sun } from 'lucide-react';
-import { NAV } from '../../lib/nav';
+import { NAV, isNavActive } from '../../lib/nav';
 import { getAdmin, clearAuth, hasRole, type AdminRole } from '../../lib/auth';
 import { useTheme } from '../../hooks/useTheme';
 
@@ -46,7 +46,7 @@ export default function MobileNav({ open, onOpen, onClose, onSearch }: Props) {
     .filter(g => g.items.length);
 
   const tabs = groups.slice(0, 4).map(g => g.items[0]);
-  const isActive = (href: string) => (href === '/superadmin' || href === '/sales' ? pathname === href : pathname.startsWith(href));
+  const isActive = (href: string) => isNavActive(pathname, href);
   const moreActive = !tabs.some(t => isActive(t.href)) && groups.some(g => g.items.some(i => isActive(i.href)));
 
   function logout() {
