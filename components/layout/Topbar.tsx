@@ -106,12 +106,12 @@ export default function Topbar({ onToggle, onOpenPalette }: TopbarProps) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 1, minWidth: 0, overflow: 'hidden' }}>
         {showBreadcrumb && (
           <>
-            <span style={{ fontSize: 13, color: 'var(--ink-3)', fontWeight: 400, flexShrink: 0 }}>{section}</span>
-            <span style={{ color: 'var(--ink-4)', fontSize: 13, flexShrink: 0 }}>/</span>
+            <span style={{ fontSize: 14, color: 'var(--muted)', fontWeight: 500, flexShrink: 0 }}>{section}</span>
+            <span style={{ color: 'var(--muted)', fontSize: 14, flexShrink: 0 }}>/</span>
           </>
         )}
         <span style={{
-          fontSize: 13, fontWeight: 600, color: 'var(--ink)',
+          fontSize: 14, fontWeight: 600, color: 'var(--ink)',
           letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>
           {pageTitle || section}
@@ -124,20 +124,20 @@ export default function Topbar({ onToggle, onOpenPalette }: TopbarProps) {
         onClick={onOpenPalette}
         style={{
           display: 'flex', alignItems: 'center', gap: 7,
-          height: 30, padding: '0 10px', marginLeft: 12,
-          border: '1px solid var(--line-2)', borderRadius: 7,
-          background: 'var(--surface-2)', cursor: 'pointer',
-          color: 'var(--ink-4)', fontSize: 12, fontFamily: 'var(--font-sans)',
-          flexShrink: 0, minWidth: 160,
+          height: 40, padding: '0 14px', marginLeft: 12,
+          border: 0, borderRadius: 14,
+          background: 'var(--card)', boxShadow: 'inset 0 0 0 1px var(--line), var(--shadow)', cursor: 'pointer',
+          color: 'var(--muted)', fontSize: 14, fontFamily: 'var(--font)',
+          flexShrink: 0, minWidth: 240,
           transition: 'border-color 0.15s',
         }}
       >
-        <Search size={12} strokeWidth={1.8} style={{ flexShrink: 0 }} />
+        <Search size={16} strokeWidth={1.8} style={{ flexShrink: 0 }} />
         <span style={{ flex: 1, textAlign: 'left' }}>Search…</span>
         <kbd style={{
-          fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--ink-4)',
-          background: 'var(--surface-3)', border: '1px solid var(--line-2)',
-          borderRadius: 4, padding: '1px 5px', flexShrink: 0,
+          fontFamily: 'var(--font)', fontSize: 11, fontWeight: 700, color: 'var(--muted)',
+          background: 'var(--card-3)', border: 0,
+          borderRadius: 6, padding: '2px 6px', flexShrink: 0,
         }}>⌘K</kbd>
       </button>
 
@@ -150,30 +150,30 @@ export default function Topbar({ onToggle, onOpenPalette }: TopbarProps) {
         <button
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            width: 32, height: 32, borderRadius: 8, border: 'none',
-            background: 'transparent', cursor: 'pointer', color: 'var(--ink-3)',
+            width: 40, height: 40, borderRadius: 14, border: 'none',
+            background: 'var(--card)', boxShadow: 'inset 0 0 0 1px var(--line), var(--shadow)', cursor: 'pointer', color: 'var(--ink-2)',
           }}
           aria-label="Notifications"
           title="Notifications"
         >
-          <Bell size={16} strokeWidth={1.8} />
+          <Bell size={18} strokeWidth={1.8} />
         </button>
 
-        {/* Dark mode toggle — wired via useTheme → data-mode on :root */}
+        {/* Dark mode toggle — wired via useTheme → data-theme on :root */}
         <button
           onClick={toggleTheme}
           title={mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
           aria-label={mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            width: 32, height: 32, borderRadius: 8, border: 'none',
-            background: 'transparent', cursor: 'pointer', color: 'var(--ink-3)',
+            width: 40, height: 40, borderRadius: 14, border: 'none',
+            background: 'var(--card)', boxShadow: 'inset 0 0 0 1px var(--line), var(--shadow)', cursor: 'pointer', color: 'var(--ink-2)',
             transition: 'color 0.15s',
           }}
         >
           {mode === 'dark'
-            ? <Sun  size={16} strokeWidth={1.8} />
-            : <Moon size={16} strokeWidth={1.8} />}
+            ? <Sun  size={18} strokeWidth={1.8} />
+            : <Moon size={18} strokeWidth={1.8} />}
         </button>
 
         {/* Avatar dropdown */}
@@ -204,9 +204,9 @@ export default function Topbar({ onToggle, onOpenPalette }: TopbarProps) {
             {dropdownOpen && (
               <div style={{
                 position: 'absolute', top: 'calc(100% + 6px)', right: 0,
-                background: 'var(--surface)', border: '1px solid var(--line-2)',
-                borderRadius: 10, padding: '8px 0',
-                minWidth: 180, boxShadow: '0 4px 18px rgba(11,13,16,0.10)',
+                background: 'var(--card)', border: 0,
+                borderRadius: 16, padding: '8px 6px',
+                minWidth: 200, boxShadow: 'var(--shadow-lg), inset 0 0 0 1px var(--line-2)',
                 zIndex: 200,
               }}>
                 {/* Identity */}

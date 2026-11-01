@@ -11,7 +11,6 @@ import {
 import { NAV } from "../../lib/nav";
 import {
   LogOut,
-  ChevronRight,
   PanelLeftOpen,
   PanelLeftClose,
 } from "lucide-react";
@@ -100,7 +99,7 @@ export default function Sidebar({ expanded, onToggle }: SidebarProps) {
         {/* Rail — always 64px */}
         <div
           style={{
-            width: 64,
+            width: "var(--sidebar-rail-width)",
             flexShrink: 0,
             display: "flex",
             flexDirection: "column",
@@ -117,18 +116,18 @@ export default function Sidebar({ expanded, onToggle }: SidebarProps) {
           >
             <div
               style={{
-                width: 36,
-                height: 36,
-                borderRadius: 10,
+                width: 40,
+                height: 40,
+                borderRadius: 12,
                 background: "var(--sidebar-accent)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 fontWeight: 700,
                 fontSize: 13,
-                color: "#fff",
+                color: "var(--accent-ink)",
                 letterSpacing: "-0.02em",
-                fontFamily: "var(--font-heading)",
+                fontFamily: "var(--font)",
               }}
             >
               OM
@@ -139,7 +138,7 @@ export default function Sidebar({ expanded, onToggle }: SidebarProps) {
           <button
             onClick={onToggle}
             title={expanded ? "Collapse sidebar" : "Expand sidebar"}
-            className="btn btn-icon"
+            className="btn btn-icon btn-ghost"
             style={{
               marginTop: 8,
               color: "var(--sidebar-text)",
@@ -180,21 +179,20 @@ export default function Sidebar({ expanded, onToggle }: SidebarProps) {
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      height: 34,
-                      borderRadius: active ? "0 8px 8px 0" : 8,
+                      height: 40,
+                      borderRadius: 12,
                       flexShrink: 0,
                       background: active
                         ? "var(--sidebar-active-bg)"
                         : "transparent",
                       color: active
-                        ? "var(--sidebar-accent)"
+                        ? "var(--sidebar-text-active)"
                         : "var(--sidebar-text)",
                       transition: "all 0.15s",
                       textDecoration: "none",
-                      borderLeft: `3px solid ${active ? "var(--sidebar-accent)" : "transparent"}`,
                     }}
                   >
-                    <Icon size={16} strokeWidth={active ? 2.2 : 1.7} />
+                    <Icon size={18} strokeWidth={active ? 2.2 : 1.8} />
                   </Link>
                 );
               })}
@@ -228,7 +226,7 @@ export default function Sidebar({ expanded, onToggle }: SidebarProps) {
         {/* Panel — slides in/out */}
         <div
           style={{
-            width: expanded ? 200 : 0,
+            width: expanded ? "var(--sidebar-panel-width)" : 0,
             overflow: "hidden",
             transition: "width 0.2s ease",
             borderRight: "1px solid var(--sidebar-border)",
@@ -239,7 +237,7 @@ export default function Sidebar({ expanded, onToggle }: SidebarProps) {
         >
           <div
             style={{
-              width: 200,
+              width: "var(--sidebar-panel-width)",
               display: "flex",
               flexDirection: "column",
               height: "100%",
@@ -250,16 +248,15 @@ export default function Sidebar({ expanded, onToggle }: SidebarProps) {
               style={{
                 padding: "16px 14px 10px",
                 flexShrink: 0,
-                borderBottom: "1px solid var(--sidebar-border)",
               }}
             >
               <div
                 style={{
-                  fontFamily: "var(--font-heading)",
-                  fontSize: 11,
-                  fontWeight: 600,
-                  color: "var(--sidebar-accent)",
-                  letterSpacing: "0.01em",
+                  fontFamily: "var(--font)",
+                  fontSize: 15,
+                  fontWeight: 700,
+                  color: "var(--ink)",
+                  letterSpacing: "-0.01em",
                 }}
               >
                 Admin Console
@@ -276,36 +273,23 @@ export default function Sidebar({ expanded, onToggle }: SidebarProps) {
                 );
                 return (
                   <div key={group.section}>
-                    {gi > 0 && (
-                      <div
-                        style={{
-                          borderTop: "1px solid var(--sidebar-border)",
-                          margin: "4px 8px 6px",
-                        }}
-                      />
-                    )}
+
                     {/* Section header — DM Mono, sentence case, muted */}
                     <div
                       style={{
-                        fontFamily: "var(--font-mono)",
-                        fontSize: 9,
-                        fontWeight: 500,
+                        fontFamily: "var(--font)",
+                        fontSize: 11,
+                        fontWeight: 700,
+                        textTransform: "uppercase",
                         color: "var(--sidebar-section-label)",
                         letterSpacing: "0.08em",
-                        padding: "0 14px",
-                        marginBottom: 2,
-                        marginTop: gi === 0 ? 6 : 0,
+                        padding: "0 18px",
+                        marginBottom: 6,
+                        marginTop: gi === 0 ? 8 : 18,
                       }}
                     >
                       {group.section}
                     </div>
-                    {/* Divider under header */}
-                    <div
-                      style={{
-                        borderTop: "1px solid var(--sidebar-border)",
-                        margin: "3px 8px 2px",
-                      }}
-                    />
 
                     <div style={{ padding: "0 8px" }}>
                       {visible.map((item) => {
@@ -319,38 +303,29 @@ export default function Sidebar({ expanded, onToggle }: SidebarProps) {
                             style={{
                               display: "flex",
                               alignItems: "center",
-                              gap: 7,
-                              padding: "6px 7px",
-                              borderRadius: 7,
-                              marginBottom: 1,
+                              gap: 10,
+                              padding: "9px 12px",
+                              borderRadius: 12,
+                              marginBottom: 2,
                               textDecoration: "none",
                               whiteSpace: "nowrap",
                               background: active
                                 ? "var(--sidebar-active-bg)"
                                 : "transparent",
                               color: active
-                                ? "var(--sidebar-accent)"
-                                : "var(--sidebar-text)",
-                              fontSize: 12,
-                              fontWeight: active ? 600 : 400,
+                                ? "var(--sidebar-text-active)"
+                                : "var(--ink-2)",
+                              fontSize: 14,
+                              fontWeight: 600,
                               transition: "all 0.15s",
-                              borderLeft: `3px solid ${active ? "var(--sidebar-accent)" : "transparent"}`,
-                              borderTopLeftRadius: active ? 2 : 7,
-                              borderBottomLeftRadius: active ? 2 : 7,
                             }}
                           >
                             <Icon
-                              size={13}
-                              strokeWidth={active ? 2.2 : 1.7}
+                              size={17}
+                              strokeWidth={active ? 2.2 : 1.8}
                               style={{ flexShrink: 0 }}
                             />
                             {item.label}
-                            {active && (
-                              <ChevronRight
-                                size={10}
-                                style={{ marginLeft: "auto", opacity: 0.5 }}
-                              />
-                            )}
                           </Link>
                         );
                       })}
@@ -416,18 +391,17 @@ export default function Sidebar({ expanded, onToggle }: SidebarProps) {
           onMouseLeave={hideFlyout}
           style={{
             position: "fixed",
-            left: 70,
+            left: "calc(var(--sidebar-rail-width) + 6px)",
             top: flyout.y,
             transform: "translateY(-50%)",
-            background: "var(--surface)",
-            border: "1px solid var(--line-2)",
-            borderRadius: 7,
-            padding: "5px 10px",
-            fontSize: 12,
-            fontWeight: 500,
-            color: "var(--ink-2)",
+            background: "var(--card)",
+            borderRadius: 10,
+            padding: "7px 12px",
+            fontSize: 13,
+            fontWeight: 600,
+            color: "var(--ink)",
             zIndex: 60,
-            boxShadow: "0 2px 10px rgba(0,0,0,0.09)",
+            boxShadow: "var(--shadow-lg), inset 0 0 0 1px var(--line-2)",
             pointerEvents: "auto",
             whiteSpace: "nowrap",
           }}
