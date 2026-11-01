@@ -24,14 +24,14 @@
   /* Shell */
   --sidebar-bg: var(--card);
   --sidebar-border: var(--line);
-  --sidebar-rail-width: 64px;
-  --sidebar-panel-width: 200px;
+  --sidebar-rail-width: 72px;
+  --sidebar-panel-width: 184px;
   --sidebar-text: var(--muted);
   --sidebar-text-active: var(--accent-text);
   --sidebar-accent: var(--accent);
   --sidebar-active-bg: var(--accent-soft);
   --sidebar-section-label: var(--muted);
-  --topbar-height: 56px;
+  --topbar-height: 64px;
   --topbar-bg: var(--bg);
   --topbar-border: var(--line);
 }
@@ -92,7 +92,6 @@ body.sidebar-expanded .topbar {
   right: 0;
   height: var(--topbar-height);
   background: var(--topbar-bg);
-  border-bottom: 1px solid var(--topbar-border);
   z-index: 40;
   display: flex;
   align-items: center;
@@ -981,7 +980,7 @@ select.admin-input { cursor: pointer; }
 
   /* Sidebar drawer */
   .sidebar {
-    transform: translateX(-264px);
+    transform: translateX(-256px);
     transition: transform 0.25s cubic-bezier(0.4,0,0.2,1), box-shadow 0.25s ease;
     box-shadow: none;
   }
