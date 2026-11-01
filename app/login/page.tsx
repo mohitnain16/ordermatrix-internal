@@ -42,9 +42,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh" }}>
+    <div className="login-shell" style={{ display: "flex", minHeight: "100vh" }}>
       {/* ── Left panel — dark branding ─────────────────── */}
       <div
+        className="login-hero"
         style={{
           width: "42%",
           flexShrink: 0,
@@ -148,6 +149,7 @@ export default function LoginPage() {
 
       {/* ── Right panel — form ──────────────────────────── */}
       <div
+        className="login-form"
         style={{
           flex: 1,
           background: "var(--page-bg)",
