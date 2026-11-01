@@ -44,7 +44,7 @@ body {
   background: var(--page-bg);
   color: var(--ink);
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: var(--fs-base);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
@@ -270,17 +270,19 @@ body.sidebar-expanded .topbar {
   display: flex;
   align-items: center;
   gap: 10px;
+  padding: 0 0 14px;
+  flex-wrap: wrap;
+}
+.admin-card > .table-filter-bar {
   padding: 14px 20px;
   border-bottom: 1px solid var(--line);
-  background: var(--surface);
-  flex-wrap: wrap;
 }
 
 /* ─── Buttons ────────────────────────────────── */
 /* .btn / .btn--* come from wynlo.css; these are the legacy modifier names the pages use */
 .btn-primary { background: var(--accent); color: var(--accent-ink); box-shadow: 0 6px 16px -8px var(--accent); border: 0; }
 .btn-primary:hover:not(:disabled) { background: var(--accent-hi); }
-.btn-ghost   { background: transparent; box-shadow: none; color: var(--ink-2); }
+.btn-ghost   { background: var(--card); color: var(--ink-2); }
 .btn-ghost:hover:not(:disabled) { background: var(--card-2); }
 .btn-outline { background: transparent; }
 .btn-danger  { background: var(--bad-soft); color: var(--bad); box-shadow: none; }
@@ -555,17 +557,17 @@ select.admin-input { cursor: pointer; }
 .tab-bar {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
   border-bottom: 1px solid var(--line);
   padding: 0 20px;
-  background: var(--surface);
+  overflow-x: auto;
 }
 
 .tab-btn {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--ink-3);
-  padding: 10px 14px;
+  font-size: var(--fs-base);
+  font-weight: 600;
+  color: var(--muted);
+  padding: 12px 14px;
   border: none;
   background: none;
   cursor: pointer;
@@ -579,8 +581,7 @@ select.admin-input { cursor: pointer; }
 .tab-btn:hover { color: var(--ink); }
 
 .tab-btn.active {
-  color: var(--accent);
-  font-weight: 600;
+  color: var(--ink);
   border-bottom-color: var(--accent);
 }
 
@@ -591,7 +592,6 @@ select.admin-input { cursor: pointer; }
   justify-content: space-between;
   padding: 12px 20px;
   border-top: 1px solid var(--line);
-  background: var(--surface);
   gap: 12px;
   flex-wrap: wrap;
 }
@@ -610,7 +610,7 @@ select.admin-input { cursor: pointer; }
 /* ─── Form label ─────────────────────────────── */
 .form-label {
   display: block;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--ink-2);
   margin-bottom: 6px;
@@ -1197,4 +1197,22 @@ select.admin-input { cursor: pointer; }
   .broadcast-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* ─── Small screens: pages size their grids inline, so collapse them here ─── */
+@media (max-width: 700px) {
+  .page-inner [style*="grid-template-columns: repeat(3"],
+  .page-inner [style*="grid-template-columns: repeat(4"],
+  .page-inner [style*="grid-template-columns: repeat(5"],
+  .page-inner [style*="grid-template-columns: repeat(6"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  .page-inner [style*="grid-template-columns: 1fr 1fr"],
+  .page-inner [style*="grid-template-columns: 2fr 1fr"],
+  .page-inner [style*="grid-template-columns: 1fr 2fr"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .admin-card { overflow-x: auto; }
+  .page-header { flex-wrap: wrap; gap: 12px; }
+  .page-header > div:first-child { flex: 1 1 220px; min-width: 0; }
 }

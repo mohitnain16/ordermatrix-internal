@@ -86,7 +86,7 @@ export default function LoginPage() {
               style={{
                 fontSize: 14,
                 fontWeight: 600,
-                color: "#ffffff",
+                color: "var(--ink)",
                 letterSpacing: "-0.01em",
               }}
             >
@@ -112,7 +112,7 @@ export default function LoginPage() {
             style={{
               fontSize: 32,
               fontWeight: 600,
-              color: "#ffffff",
+              color: "var(--ink)",
               fontFamily: "var(--font-heading)",
               letterSpacing: "-0.03em",
               lineHeight: 1.2,
