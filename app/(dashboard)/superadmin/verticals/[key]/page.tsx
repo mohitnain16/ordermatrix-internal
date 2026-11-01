@@ -367,17 +367,9 @@ export default function VerticalFormPage({ params }: { params: Promise<{ key: st
                 style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8, cursor: 'pointer' }}
                 onClick={() => setForm(f => ({ ...f, isActive: !f.isActive }))}
               >
-                <div style={{
-                  width: 36, height: 20, borderRadius: 10,
-                  background: form.isActive ? 'var(--green)' : 'var(--ink-4)',
-                  position: 'relative', transition: 'background 0.2s',
-                }}>
-                  <div style={{
-                    position: 'absolute', top: 2, left: form.isActive ? 18 : 2,
-                    width: 16, height: 16, borderRadius: '50%', background: '#fff',
-                    transition: 'left 0.2s',
-                  }} />
-                </div>
+                <button type="button" role="switch" aria-checked={form.isActive} className="switch">
+                  <i style={{ transform: form.isActive ? 'translateX(18px)' : undefined, transition: 'all .2s' }} />
+                </button>
                 <span style={{ fontSize: 13, color: 'var(--ink-2)' }}>{form.isActive ? 'Active' : 'Inactive'}</span>
               </div>
             </div>

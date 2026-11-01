@@ -44,7 +44,7 @@ body {
   background: var(--page-bg);
   color: var(--ink);
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: var(--fs-base);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
@@ -272,7 +272,6 @@ body.sidebar-expanded .topbar {
   gap: 10px;
   padding: 14px 20px;
   border-bottom: 1px solid var(--line);
-  background: var(--surface);
   flex-wrap: wrap;
 }
 
@@ -555,17 +554,17 @@ select.admin-input { cursor: pointer; }
 .tab-bar {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
   border-bottom: 1px solid var(--line);
   padding: 0 20px;
-  background: var(--surface);
+  overflow-x: auto;
 }
 
 .tab-btn {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--ink-3);
-  padding: 10px 14px;
+  font-size: var(--fs-base);
+  font-weight: 600;
+  color: var(--muted);
+  padding: 12px 14px;
   border: none;
   background: none;
   cursor: pointer;
@@ -579,8 +578,7 @@ select.admin-input { cursor: pointer; }
 .tab-btn:hover { color: var(--ink); }
 
 .tab-btn.active {
-  color: var(--accent);
-  font-weight: 600;
+  color: var(--ink);
   border-bottom-color: var(--accent);
 }
 
@@ -591,7 +589,6 @@ select.admin-input { cursor: pointer; }
   justify-content: space-between;
   padding: 12px 20px;
   border-top: 1px solid var(--line);
-  background: var(--surface);
   gap: 12px;
   flex-wrap: wrap;
 }
@@ -610,7 +607,7 @@ select.admin-input { cursor: pointer; }
 /* ─── Form label ─────────────────────────────── */
 .form-label {
   display: block;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--ink-2);
   margin-bottom: 6px;
