@@ -32,7 +32,8 @@ interface SidebarProps {
 export default function Sidebar({ expanded, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const admin = getAdmin();
+  const [admin, setAdmin] = useState<ReturnType<typeof getAdmin>>(null);
+  useEffect(() => { setAdmin(getAdmin()); }, []);
 
   const [flyout, setFlyout] = useState<{ label: string; y: number } | null>(
     null,
@@ -141,6 +142,8 @@ export default function Sidebar({ expanded, onToggle }: SidebarProps) {
             className="btn btn-icon btn-ghost"
             style={{
               marginTop: 8,
+              background: "transparent",
+              boxShadow: "none",
               color: "var(--sidebar-text)",
               transition: "color 0.15s",
             }}
