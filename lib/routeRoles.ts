@@ -6,8 +6,6 @@ import type { AdminRole } from './auth';
 export const ROUTE_ROLES: { prefix: string; roles: readonly AdminRole[] }[] = [
   // Item-level superadmin-only overrides (narrower than their section)
   { prefix: '/superadmin/team',          roles: ['superadmin'] },
-  { prefix: '/superadmin/stores',        roles: ['superadmin'] },
-  { prefix: '/superadmin/storefront-plans', roles: ['superadmin'] },
   { prefix: '/superadmin/wa-agent',      roles: ['superadmin', 'ops_admin', 'support'] },
   // Wider-than-section overrides (support also allowed)
   { prefix: '/superadmin/live-activity', roles: ['superadmin', 'ops_admin', 'support'] },
