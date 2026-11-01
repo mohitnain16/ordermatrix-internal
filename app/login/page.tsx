@@ -2,7 +2,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import api from "../../lib/api";
-import { setAuth, isLoggedIn } from "../../lib/auth";
+import { setAuth, isLoggedIn, getAdmin, type AdminRole } from "../../lib/auth";
+import { ROLE_DEFAULT_REDIRECT } from "../../lib/routeRoles";
 import { OrderMatrixSpinner } from "../../components/ui/OrderMatrixLoader";
 
 export default function LoginPage() {
@@ -13,7 +14,8 @@ export default function LoginPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (isLoggedIn()) router.replace("/superadmin");
+    const a = getAdmin();
+    if (isLoggedIn() && a) router.replace(ROLE_DEFAULT_REDIRECT[a.role]);
   }, [router]);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -29,7 +31,7 @@ export default function LoginPage() {
       setAuth(res.data.token, res.data.admin);
       const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
       document.cookie = `om_admin_token=${res.data.token}; path=/; max-age=28800; SameSite=Strict${secure}`;
-      router.replace("/superadmin");
+      router.replace(ROLE_DEFAULT_REDIRECT[res.data.admin.role as AdminRole] || "/superadmin");
     } catch (err: any) {
       setError(
         err?.response?.data?.error || "Login failed. Check your credentials.",
