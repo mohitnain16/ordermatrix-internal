@@ -1303,3 +1303,11 @@ select.admin-input { cursor: pointer; }
 .sb-user small { font-size: 11px; color: var(--muted); text-transform: capitalize; }
 .sb-out { width: 32px; height: 32px; place-items: center; border: 0; background: transparent; border-radius: 10px; color: var(--muted); cursor: pointer; }
 .sb-out:hover { background: var(--card-3); color: var(--bad); }
+
+/* ─── Login: stack on narrow screens ─── */
+@media (max-width: 900px) {
+  .login-shell { flex-direction: column !important; }
+  .login-hero { width: 100% !important; padding: 20px 20px 16px !important; border-right: 0 !important; border-bottom: 1px solid var(--line); }
+  .login-hero > :not(:first-child) { display: none !important; }
+  .login-form { padding: 28px 16px !important; align-items: flex-start !important; }
+}
