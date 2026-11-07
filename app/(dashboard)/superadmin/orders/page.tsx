@@ -14,6 +14,8 @@ export default function AdminOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [q, setQ] = useState('');
+  const [tab, setTab] = useState<'all' | 'deleted'>('all');
+  const [deleted, setDeleted] = useState<{ orderId: string; tenantName: string; deletedBy: string; trashedAt: string }[]>([]);
   const LIMIT = 25;
 
   const load = useCallback(async () => {
@@ -27,6 +29,10 @@ export default function AdminOrdersPage() {
   }, [page, q]);
 
   useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    if (tab !== 'deleted') return;
+    api.get('/admin/orders/deleted').then(r => setDeleted(r.data.orders)).catch(() => {});
+  }, [tab]);
 
   const pages = Math.ceil(total / LIMIT);
 
@@ -49,6 +55,33 @@ export default function AdminOrdersPage() {
         </div>
       </div>
 
+      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+        <button className={`btn btn-sm ${tab === 'all' ? '' : 'btn-ghost'}`} onClick={() => setTab('all')}>All orders</button>
+        <button className={`btn btn-sm ${tab === 'deleted' ? '' : 'btn-ghost'}`} onClick={() => setTab('deleted')}>Deleted</button>
+      </div>
+
+      {tab === 'deleted' ? (
+        <div className="admin-card">
+          <div className="table-shell">
+            <table className="admin-table">
+              <thead><tr><th>Order ID</th><th>Tenant</th><th>Deleted by</th><th>Deleted at</th></tr></thead>
+              <tbody>
+                {deleted.map(o => (
+                  <tr key={o.orderId}>
+                    <td className="cell-mono" style={{ fontSize: 12 }}>{o.orderId}</td>
+                    <td>{o.tenantName}</td>
+                    <td>{o.deletedBy}</td>
+                    <td style={{ fontSize: 11, color: 'var(--ink-4)' }}>{fmtTs(o.trashedAt)}</td>
+                  </tr>
+                ))}
+                {deleted.length === 0 && (
+                  <tr><td colSpan={4}><div className="empty-state"><div className="empty-state-title">No deleted orders</div></div></td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : (
       <div className="admin-card">
         <div className="table-shell">
           <table className="admin-table">
@@ -78,8 +111,9 @@ export default function AdminOrdersPage() {
           </table>
         </div>
       </div>
+      )}
 
-      {pages > 1 && (
+      {tab === 'all' && pages > 1 && (
         <div className="pagination">
           <button className="btn btn-ghost btn-sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>← Prev</button>
           <span className="pagination-info">Page {page} of {pages}</span>
