@@ -12,6 +12,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/superadmin/tenants':        'Tenants',
   '/superadmin/subscriptions':  'Subscriptions',
   '/superadmin/users':          'All Users',
+  '/superadmin/orders':         'Orders',
   '/superadmin/audit-log':      'Audit Log',
   '/superadmin/enquiries':      'Enquiries',
   '/superadmin/coupons':        'Coupons',

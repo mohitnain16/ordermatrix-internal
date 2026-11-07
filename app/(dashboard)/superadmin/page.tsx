@@ -32,6 +32,7 @@ const PLAN_COLOR: Record<string, string> = {
 export default function PulsePage() {
   const [data, setData] = useState<PulseData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [orderStats, setOrderStats] = useState<{ total: number; today: number; last7d: number; last30d: number } | null>(null);
 
   useEffect(() => { load(); }, []);
 
@@ -40,6 +41,10 @@ export default function PulsePage() {
     try {
       const res = await api.get('/admin/pulse');
       setData(res.data);
+    } catch { /**/ }
+    try {
+      const os = await api.get('/admin/orders/stats');
+      setOrderStats(os.data);
     } catch { /**/ }
     setLoading(false);
   }
@@ -85,6 +90,15 @@ export default function PulsePage() {
         <StatCard label="Trial Tenants"  value={data.trialTenants ?? 0}                      color="var(--amber)" />
         <StatCard label="Total Orders"   value={data.totalOrders.toLocaleString('en-IN')} color="var(--ink-3)" />
       </div>
+
+      {orderStats && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 24 }}>
+          <StatCard label="Orders Generated Today" value={orderStats.today.toLocaleString('en-IN')}   color="var(--accent)" />
+          <StatCard label="Last 7 Days"            value={orderStats.last7d.toLocaleString('en-IN')}  color="var(--blue)" />
+          <StatCard label="Last 30 Days"           value={orderStats.last30d.toLocaleString('en-IN')} color="var(--green)" />
+          <StatCard label="All-time Orders"        value={orderStats.total.toLocaleString('en-IN')}   color="var(--ink-3)" />
+        </div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
         {/* Plan Breakdown */}
