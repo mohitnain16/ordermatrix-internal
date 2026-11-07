@@ -4,6 +4,7 @@ import {
   CreditCard,
   Users,
   FileText,
+  ShoppingBag,
   TrendingUp,
   Headphones,
   Activity,
@@ -53,6 +54,7 @@ export const NAV: NavGroup[] = [
     items: [
       { href: '/superadmin/tenants',       label: 'Tenants',          icon: Building2   },
       { href: '/superadmin/subscriptions', label: 'Subscriptions',    icon: CreditCard  },
+      { href: '/superadmin/orders',        label: 'Orders',        icon: ShoppingBag, roles: ['superadmin', 'ops_admin'] as const },
       { href: '/superadmin/users',         label: 'All Users',        icon: Users       },
       { href: '/superadmin/coupons',       label: 'Coupons',          icon: Tag         },
       { href: '/superadmin/wa-agent',      label: 'WhatsApp Agent',   icon: MessageCircle,
