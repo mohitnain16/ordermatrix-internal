@@ -60,6 +60,8 @@ export const NAV: NavGroup[] = [
       { href: '/superadmin/coupons',       label: 'Coupons',          icon: Tag         },
       { href: '/superadmin/wa-agent',      label: 'WhatsApp Agent',   icon: MessageCircle,
         roles: ['superadmin', 'ops_admin', 'support'] as const },
+      { href: '/superadmin/wa-templates',  label: 'WA Templates',     icon: MessageCircle,
+        roles: ['superadmin'] as const },
     ],
   },
   {
