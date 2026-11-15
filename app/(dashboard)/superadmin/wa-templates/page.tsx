@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import api from '../../../../lib/api';
 import { Sk, SkRows } from '../../../../components/ui/Skeleton';
 
-interface TemplateRow { status: string; template: string; enabled: boolean }
+interface TemplateRow { status: string; template: string; enabled: boolean; available?: boolean }
 interface Config { masterEnabled: boolean; templates: TemplateRow[] }
 
 function Toggle({ checked, disabled, onChange, label }: { checked: boolean; disabled?: boolean; onChange: (v: boolean) => void; label: string }) {
@@ -126,9 +126,9 @@ export default function WaTemplatesPage() {
                 {cfg.templates.map((t) => (
                   <tr key={t.status}>
                     <td><span className="cell-main">{LABELS[t.status] || t.status}</span></td>
-                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{t.template}</td>
+                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{t.template}{t.available === false && <span className="badge badge-gray" style={{ marginLeft: 8, fontSize: 10 }}>Template not created</span>}</td>
                     <td>
-                      <Toggle label={LABELS[t.status] || t.status} checked={t.enabled} disabled={saving === t.status} onChange={(v) => save(t.status, { statuses: { [t.status]: v } })} />
+                      <Toggle label={LABELS[t.status] || t.status} checked={t.enabled} disabled={saving === t.status || t.available === false} onChange={(v) => save(t.status, { statuses: { [t.status]: v } })} />
                     </td>
                   </tr>
                 ))}
