@@ -1,9 +1,36 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import api from '../../../../lib/api';
+import { Sk, SkRows } from '../../../../components/ui/Skeleton';
 
 interface TemplateRow { status: string; template: string; enabled: boolean }
 interface Config { masterEnabled: boolean; templates: TemplateRow[] }
+
+function Toggle({ checked, disabled, onChange, label }: { checked: boolean; disabled?: boolean; onChange: (v: boolean) => void; label: string }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+      style={{
+        position: 'relative', width: 40, height: 22, borderRadius: 999, border: 0, padding: 0,
+        background: checked ? 'var(--green, #16a34a)' : 'var(--line, #d4d4d8)',
+        cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.6 : 1,
+        transition: 'background .15s', flexShrink: 0,
+      }}
+    >
+      <span
+        style={{
+          position: 'absolute', top: 2, left: checked ? 20 : 2, width: 18, height: 18, borderRadius: '50%',
+          background: '#fff', boxShadow: '0 1px 2px rgba(0,0,0,.25)', transition: 'left .15s',
+        }}
+      />
+    </button>
+  );
+}
 
 const LABELS: Record<string, string> = {
   new: 'Order placed',
@@ -57,7 +84,27 @@ export default function WaTemplatesPage() {
 
       {error && <p style={{ color: 'var(--red, #c00)', marginBottom: 12 }}>{error}</p>}
       {!cfg ? (
-        <p>Loading…</p>
+        <>
+          <div className="admin-card" style={{ marginBottom: 16 }}>
+            <div className="card-header flex-between">
+              <div style={{ flex: 1 }}>
+                <Sk w="220px" h={14} mb={8} />
+                <Sk w="340px" h={11} />
+              </div>
+              <Sk w={40} h={22} r={999} />
+            </div>
+          </div>
+          <div className="admin-card">
+            <table className="admin-table">
+              <thead>
+                <tr><th>Order status</th><th>Template</th><th>Send</th></tr>
+              </thead>
+              <tbody>
+                <SkRows n={7} cols={3} />
+              </tbody>
+            </table>
+          </div>
+        </>
       ) : (
         <>
           <div className="admin-card" style={{ marginBottom: 16 }}>
@@ -66,15 +113,7 @@ export default function WaTemplatesPage() {
                 <strong>Customer order notifications</strong>
                 <p className="page-sub">Master switch. When off, no order message is sent for any status.</p>
               </div>
-              <label style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <input
-                  type="checkbox"
-                  checked={cfg.masterEnabled}
-                  disabled={saving === 'master'}
-                  onChange={(e) => save('master', { masterEnabled: e.target.checked })}
-                />
-                {cfg.masterEnabled ? 'On' : 'Off'}
-              </label>
+              <Toggle label="Customer order notifications" checked={cfg.masterEnabled} disabled={saving === 'master'} onChange={(v) => save('master', { masterEnabled: v })} />
             </div>
           </div>
 
@@ -89,15 +128,7 @@ export default function WaTemplatesPage() {
                     <td><span className="cell-main">{LABELS[t.status] || t.status}</span></td>
                     <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{t.template}</td>
                     <td>
-                      <label style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                        <input
-                          type="checkbox"
-                          checked={t.enabled}
-                          disabled={saving === t.status}
-                          onChange={(e) => save(t.status, { statuses: { [t.status]: e.target.checked } })}
-                        />
-                        {t.enabled ? 'On' : 'Off'}
-                      </label>
+                      <Toggle label={LABELS[t.status] || t.status} checked={t.enabled} disabled={saving === t.status} onChange={(v) => save(t.status, { statuses: { [t.status]: v } })} />
                     </td>
                   </tr>
                 ))}
