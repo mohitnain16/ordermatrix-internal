@@ -8,6 +8,7 @@ export const ROUTE_ROLES: { prefix: string; roles: readonly AdminRole[] }[] = [
   { prefix: '/superadmin/team',          roles: ['superadmin'] },
   { prefix: '/superadmin/wa-templates', roles: ['superadmin'] },
   { prefix: '/superadmin/email-templates', roles: ['superadmin'] },
+  { prefix: '/superadmin/wa-usage',      roles: ['superadmin', 'ops_admin'] },
   { prefix: '/superadmin/wa-agent',      roles: ['superadmin', 'ops_admin', 'support'] },
   // Wider-than-section overrides (support also allowed)
   { prefix: '/superadmin/live-activity', roles: ['superadmin', 'ops_admin', 'support'] },
