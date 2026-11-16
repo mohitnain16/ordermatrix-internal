@@ -62,6 +62,8 @@ export const NAV: NavGroup[] = [
         roles: ['superadmin', 'ops_admin', 'support'] as const },
       { href: '/superadmin/wa-templates',  label: 'WA Templates',     icon: MessageCircle,
         roles: ['superadmin'] as const },
+      { href: '/superadmin/email-templates', label: 'Email Templates', icon: Mail,
+        roles: ['superadmin'] as const },
     ],
   },
   {
