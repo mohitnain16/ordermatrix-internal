@@ -4,6 +4,7 @@ import Link from 'next/link';
 import api from '../../../../lib/api';
 import { SkRows } from '../../../../components/ui/Skeleton';
 import { OrderMatrixSpinner } from '../../../../components/ui/OrderMatrixLoader';
+import OrderIntakeCard from '../../../../components/wa-agent/OrderIntakeCard';
 
 interface OmTenant {
   _id: string;
@@ -355,6 +356,8 @@ export default function WaAgentPage() {
           })()}
         </div>
       )}
+
+      {bulkStep === 'idle' && <OrderIntakeCard />}
 
       {bulkStep === 'idle' && (
         <div className="admin-card">
