@@ -4,7 +4,7 @@ import api from '../../../../lib/api';
 import { Sk, SkRows } from '../../../../components/ui/Skeleton';
 
 interface TemplateRow { status: string; template: string; enabled: boolean; available?: boolean }
-interface Config { masterEnabled: boolean; templates: TemplateRow[] }
+interface Config { masterEnabled: boolean; billLink?: boolean; billLinkTemplate?: string; templates: TemplateRow[] }
 
 function Toggle({ checked, disabled, onChange, label }: { checked: boolean; disabled?: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
@@ -114,6 +114,20 @@ export default function WaTemplatesPage() {
                 <p className="page-sub">Master switch. When off, no order message is sent for any status.</p>
               </div>
               <Toggle label="Customer order notifications" checked={cfg.masterEnabled} disabled={saving === 'master'} onChange={(v) => save('master', { masterEnabled: v })} />
+            </div>
+          </div>
+
+          <div className="admin-card" style={{ marginBottom: 16 }}>
+            <div className="card-header flex-between">
+              <div>
+                <strong>Bill link in the dispatched message</strong>
+                <p className="page-sub">
+                  Sends the dispatched message with a button to the customer&apos;s bill, for tenants that have &quot;Send bill at dispatch&quot; on.
+                  Turn on only after Meta has approved{' '}
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{cfg.billLinkTemplate || 'om_order_dispatched_bill'}</span>.
+                </p>
+              </div>
+              <Toggle label="Bill link in the dispatched message" checked={!!cfg.billLink} disabled={saving === 'billLink'} onChange={(v) => save('billLink', { billLink: v })} />
             </div>
           </div>
 
