@@ -21,6 +21,7 @@ import {
   BarChart3,
   Layers,
   Truck,
+  ExternalLink,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { AdminRole } from './auth';
@@ -99,6 +100,8 @@ export const NAV: NavGroup[] = [
       { href: '/superadmin/verticals', label: 'Verticals',  icon: Layers,      roles: ['superadmin'] as const  },
       { href: '/superadmin/couriers',  label: 'Couriers',   icon: Truck,       roles: ['superadmin'] as const  },
       { href: '/superadmin/team',      label: 'Team',       icon: ShieldCheck, roles: ['superadmin'] as const  },
+      // Signs the admin in to the Pulse admin console (separate app) and leaves this portal
+      { href: '/superadmin/pulse-admin', label: 'Pulse Admin', icon: ExternalLink                                },
     ],
   },
 ];
